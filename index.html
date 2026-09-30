@@ -123,9 +123,18 @@ body.editing .et[contenteditable]:focus{outline:2px solid var(--exec);background
 .layer-arrow{text-align:center;color:var(--fi-muted);font-size:.72rem;font-weight:600}
 @media(max-width:700px){.layer{grid-template-columns:1fr;gap:4px}}
 .num{width:24px;height:24px;border-radius:6px;background:color-mix(in srgb,var(--fam) 12%,transparent);color:var(--fam);display:inline-grid;place-items:center;font-size:.72rem;font-weight:800;flex:none}
-.pri h4{display:flex;gap:8px;align-items:center;margin-bottom:6px;font-size:.9rem}
-.pri p{color:var(--fi-muted);font-size:.82rem}
 .phases{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.phases.seq{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:22px}
+.phases.seq .phase{position:relative}
+.phases.seq .phase:not(:last-child)::after{content:"";position:absolute;right:-16px;top:22px;width:9px;height:9px;border-top:2px solid var(--doc);border-right:2px solid var(--doc);transform:rotate(45deg)}
+.trilha-w{margin:10px 0 2px}.trilha-w .k b{color:var(--exec)}
+.trilha{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:3px}
+.tr-s{display:flex;flex-direction:column;gap:3px;min-width:0}
+.tr-s::before{content:"";height:6px;border-radius:3px;background:var(--fi-line,#dfe3e8)}
+.tr-s b{font-size:.62rem;font-weight:600;color:var(--fi-muted);text-align:center}
+.tr-s.feito::before{background:color-mix(in srgb,var(--exec) 45%,#dfe3e8)}
+.tr-s.atual::before{background:var(--exec)}
+.tr-s.atual b{color:var(--exec);font-weight:800}
 .phase{padding:14px;display:flex;flex-direction:column;gap:6px}
 .phase .n{font-size:1.5rem;font-weight:800;color:var(--doc);line-height:1}
 .phase h4{font-size:.9rem}
@@ -261,27 +270,26 @@ dialog::backdrop{background:rgba(9,12,16,.55)}
    ADM → Dados → Restaurar. Referência a participante = "@id";
    qualquer outro texto é texto livre (ex.: "Gestor da área").
    ===================================================================== */
-const SCHEMA = 2;
+const SCHEMA = 3;
 const SEED = {
   schema: SCHEMA,
   textos: {
-    visao: { t: 'Visão Geral', d: 'Objetivo, conceito e princípios do projeto da Plataforma Corporativa Fiorella.' },
+    visao: { t: 'Visão Geral', d: 'Objetivo, conceito e roadmap geral do projeto da Plataforma Corporativa Fiorella.' },
     equipe: { t: 'Equipe e Governança', d: 'Papéis definidos para evitar sobreposição, dependência externa e gargalos de decisão.' },
     sistemas: { t: 'Arquitetura e Sistemas', d: 'Protheus, Plataforma Fiorella, sistemas internos, equipamentos, serviços externos e futuras integrações.' },
     modulos: { t: 'Módulos e Projetos', d: 'Situação, responsáveis e próximos passos de cada frente do projeto.' },
     processos: { t: 'Processos', d: 'Cadastro de processos: área, responsável, executor, aprovador, consultado, informado, suplente, prazo, escalonamento, integração e status.' },
-    implantacao: { t: 'Implantação', d: 'Fluxo padrão repetido em cada processo ou módulo e em que etapa cada item está.' },
+    implantacao: { t: 'Implantação', d: 'Roadmap individual: cada módulo e cada processo percorre as mesmas 6 etapas, em sequência. Os itens andam em paralelo, cada um no seu ritmo.' },
     backlog: { t: 'Ideias / Backlog', d: 'Novas funcionalidades e melhorias ainda não aprovadas. Uma ideia aprovada pode virar módulo ou processo.' },
     adm: { t: 'Administração', d: 'Cadastros-base que alimentam as demais guias. Um participante cadastrado uma única vez pode aparecer como sponsor, responsável, executor, aprovador, consultado, informado ou suplente em qualquer item.' },
     sec: {
       conceito: 'Conceito: Protheus + Plataforma Fiorella + IA',
-      principios: 'Princípios do projeto',
-      fases: 'Fases macro',
-      fasesNota: 'Sequência inicial sugerida; poderá ser reordenada após o mapeamento.',
+      fases: 'Roadmap geral do projeto — fases sequenciais',
+      fasesNota: 'Uma fase começa quando a anterior entrega sua base (0 → 5). Dentro de cada fase, os módulos avançam em paralelo, cada um no seu roadmap individual.',
       refs: 'Referências de processo por setor',
       refsFuncao: 'Fornecer informações sobre as rotinas atuais da área (AS-IS)',
       blocos: 'Arquitetura funcional da plataforma',
-      fluxo: 'Fluxo de implantação',
+      fluxo: 'Roadmap individual — 6 etapas sequenciais, iguais para todo módulo e processo',
       quadro: 'Onde cada item está',
       setaIA: '↕ atua sobre os dados estruturados da plataforma',
       setaProtheus: '↕ integração: a plataforma fica “abaixo” do Protheus, sem substituí-lo',
@@ -299,12 +307,6 @@ const SEED = {
       { id: 'ia', nome: 'IA', sub: 'Camada transversal', desc: 'Camada transversal sobre dados estruturados: pesquisa, resumos, análise de gargalos, documentos, alertas e agentes controlados.' },
       { id: 'plataforma', nome: 'Plataforma Fiorella', sub: 'Gestão e execução', desc: 'Ser o ambiente cotidiano de gestão e execução dos processos internos e relacionamento entre áreas.' },
       { id: 'protheus', nome: 'Protheus', sub: 'ERP · sistema oficial', desc: 'Permanecer como ERP e sistema oficial para registros transacionais, fiscais, contábeis, financeiros, estoque e demais funções próprias.' },
-    ],
-    principios: [
-      { id: 'pr1', t: 'Processo', d: 'Todo processo relevante deve ter dono, executor, prazo, aprovador, evidência de execução e escalonamento.' },
-      { id: 'pr2', t: 'Comunicação', d: 'Mensagem não substitui tarefa, aprovação ou processo. Comunicações relevantes devem estar vinculadas ao contexto.' },
-      { id: 'pr3', t: 'Auditoria', d: 'Registrar quem fez, o que fez, quando fez, alterações, aprovações e histórico.' },
-      { id: 'pr4', t: 'Adoção', d: 'Processo implantado deve ser medido quanto a uso, SLA e conformidade; não basta estar documentado.' },
     ],
     fases: [
       { id: 'f0', n: '0', nome: 'Mapeamento', obj: 'Entender processos atuais e necessidades', ent: 'AS-IS, gargalos, responsáveis, sistemas e prioridades', lid: ['@wesley', '@roseli', 'Áreas'] },
@@ -328,7 +330,6 @@ const SEED = {
 
   listas: {
     prioridades: ['Alta', 'Média', 'Baixa'],
-    ondas: ['Fundação', 'Núcleo', 'Prioritário', 'Integrações', 'Expansão', 'Evolução'],
     stModulo: ['Planejamento', 'Em andamento', 'Em homologação', 'Em produção', 'Pausado'],
     stProcesso: ['A mapear', 'Em mapeamento', 'Em definição', 'Aprovado', 'Implantado', 'Em revisão'],
     stIdeia: ['Nova', 'Em análise', 'Aprovada', 'Descartada'],
@@ -418,19 +419,19 @@ const SEED = {
   ],
 
   modulos: [
-    { id: 'nucleo', nome: 'Núcleo Corporativo', sponsor: ['@flavio', '@victor'], dono: [], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Alta', dep: 'Arquitetura base', onda: 'Fundação', status: 'Planejamento', etapa: 'levantamento', escopo: 'Usuários, estrutura organizacional, permissões, notificações, auditoria e pesquisa.', proximos: 'Definir arquitetura base e dono funcional.' },
-    { id: 'bpm', nome: 'BPM / Workflow', sponsor: ['@victor'], dono: ['@victor'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Alta', dep: 'Núcleo Corporativo', onda: 'Núcleo', status: 'Planejamento', etapa: 'levantamento', escopo: 'Processos, etapas, responsáveis, SLA, escalonamentos e histórico.', proximos: 'Consolidar o modelo de cadastro de processos (guia Processos).' },
-    { id: 'crm', nome: 'CRM Comercial', sponsor: ['@victor'], dono: ['Comercial'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: ['@roseli'], prioridade: 'Alta', dep: 'Protheus / BPM', onda: 'Prioritário', status: 'Planejamento', etapa: 'levantamento', escopo: 'Clientes, contatos, oportunidades, visitas, pedidos, preços, comissões, crédito e histórico.', proximos: 'Levantamento AS-IS do Comercial com Roseli.' },
-    { id: 'comunicacao', nome: 'Portal de Comunicação entre Setores', sponsor: ['@victor'], dono: [], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Alta', dep: 'BPM / usuários', onda: 'Núcleo', status: 'Planejamento', etapa: 'levantamento', escopo: 'Chat individual, grupos, canais e conversas vinculadas a processos.', proximos: 'Definir dono funcional e regras “mensagem ≠ tarefa”.' },
-    { id: 'compras', nome: 'Compras / Ordens de Serviço', sponsor: ['@flavio', '@victor'], dono: ['Compras'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Alta', dep: 'Protheus / aprovações', onda: 'Prioritário', status: 'Planejamento', etapa: 'levantamento', escopo: 'Solicitações, cotações, aprovações, pedidos e fornecedores.', proximos: 'Mapear solicitação de compra e alçadas com Marcelo.' },
-    { id: 'nfe', nome: 'Gestão de NF-e Recebidas', sponsor: ['@flavio'], dono: ['Fiscal / Compras'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Média', dep: 'API Portal NF-e', onda: 'Integrações', status: 'Planejamento', etapa: 'levantamento', escopo: 'Captura, conferência e gestão das NF-e recebidas.', proximos: 'Avaliar API do portal NF-e.' },
-    { id: 'producao', nome: 'Produção Digital', sponsor: ['@flavio'], dono: ['Produção'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Alta', dep: 'Protheus / chão de fábrica', onda: 'Prioritário', status: 'Planejamento', etapa: 'levantamento', escopo: 'Digitalização de controles, apontamentos, indicadores e integrações industriais.', proximos: 'Inventariar controles em papel da Produção.' },
-    { id: 'qualidade', nome: 'Qualidade / RNC', sponsor: ['@victor'], dono: ['Qualidade'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: ['@roseli'], prioridade: 'Alta', dep: 'CRM / Produção', onda: 'Prioritário', status: 'Planejamento', etapa: 'levantamento', escopo: 'RNC, reclamações, inspeções, testes, laudos e rastreabilidade. Roseli como interface comercial.', proximos: 'Mapear fluxo de RNC de cliente com Ângelo.' },
-    { id: 'manutencao', nome: 'Manutenção', sponsor: ['@flavio'], dono: ['Manutenção'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Média', dep: 'Compras / Produção', onda: 'Expansão', status: 'Planejamento', etapa: 'levantamento', escopo: 'Chamados, preventiva, corretiva, equipamentos, peças e histórico.', proximos: '' },
-    { id: 'financeiro', nome: 'Financeiro / Cobrança', sponsor: ['@flavio'], dono: ['Financeiro'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Média', dep: 'Protheus / bancos', onda: 'Expansão', status: 'Planejamento', etapa: 'levantamento', escopo: 'Cobranças, cartões, bancos, DDA, boletos e análises.', proximos: '' },
-    { id: 'rh', nome: 'RH / Obrigações', sponsor: ['@flavio'], dono: ['RH'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Média', dep: 'Portais externos', onda: 'Expansão', status: 'Planejamento', etapa: 'levantamento', escopo: 'Obrigações, documentos, admissões e vencimentos.', proximos: '' },
-    { id: 'contratos', nome: 'Contratos / Jurídico', sponsor: ['@victor'], dono: [], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Média', dep: 'Documentos / alertas', onda: 'Expansão', status: 'Planejamento', etapa: 'levantamento', escopo: 'Contratos, documentos, processos e alertas de vencimento.', proximos: '' },
-    { id: 'ia', nome: 'Camada de IA', sponsor: ['@flavio', '@victor'], dono: ['Comitê Diretor'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: ['Por módulo'], prioridade: 'Média', dep: 'Dados estruturados', onda: 'Evolução', status: 'Planejamento', etapa: 'levantamento', escopo: 'Pesquisa, resumos, análise de gargalos, documentos, alertas e agentes controlados.', proximos: '' },
+    { id: 'nucleo', nome: 'Núcleo Corporativo', sponsor: ['@flavio', '@victor'], dono: [], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Alta', dep: 'Arquitetura base', status: 'Planejamento', etapa: 'levantamento', escopo: 'Usuários, estrutura organizacional, permissões, notificações, auditoria e pesquisa.', proximos: 'Definir arquitetura base e dono funcional.' },
+    { id: 'bpm', nome: 'BPM / Workflow', sponsor: ['@victor'], dono: ['@victor'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Alta', dep: 'Núcleo Corporativo', status: 'Planejamento', etapa: 'levantamento', escopo: 'Processos, etapas, responsáveis, SLA, escalonamentos e histórico.', proximos: 'Consolidar o modelo de cadastro de processos (guia Processos).' },
+    { id: 'crm', nome: 'CRM Comercial', sponsor: ['@victor'], dono: ['Comercial'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: ['@roseli'], prioridade: 'Alta', dep: 'Protheus / BPM', status: 'Planejamento', etapa: 'levantamento', escopo: 'Clientes, contatos, oportunidades, visitas, pedidos, preços, comissões, crédito e histórico.', proximos: 'Levantamento AS-IS do Comercial com Roseli.' },
+    { id: 'comunicacao', nome: 'Portal de Comunicação entre Setores', sponsor: ['@victor'], dono: [], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Alta', dep: 'BPM / usuários', status: 'Planejamento', etapa: 'levantamento', escopo: 'Chat individual, grupos, canais e conversas vinculadas a processos.', proximos: 'Definir dono funcional e regras “mensagem ≠ tarefa”.' },
+    { id: 'compras', nome: 'Compras / Ordens de Serviço', sponsor: ['@flavio', '@victor'], dono: ['Compras'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Alta', dep: 'Protheus / aprovações', status: 'Planejamento', etapa: 'levantamento', escopo: 'Solicitações, cotações, aprovações, pedidos e fornecedores.', proximos: 'Mapear solicitação de compra e alçadas com Marcelo.' },
+    { id: 'nfe', nome: 'Gestão de NF-e Recebidas', sponsor: ['@flavio'], dono: ['Fiscal / Compras'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Média', dep: 'API Portal NF-e', status: 'Planejamento', etapa: 'levantamento', escopo: 'Captura, conferência e gestão das NF-e recebidas.', proximos: 'Avaliar API do portal NF-e.' },
+    { id: 'producao', nome: 'Produção Digital', sponsor: ['@flavio'], dono: ['Produção'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Alta', dep: 'Protheus / chão de fábrica', status: 'Planejamento', etapa: 'levantamento', escopo: 'Digitalização de controles, apontamentos, indicadores e integrações industriais.', proximos: 'Inventariar controles em papel da Produção.' },
+    { id: 'qualidade', nome: 'Qualidade / RNC', sponsor: ['@victor'], dono: ['Qualidade'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: ['@roseli'], prioridade: 'Alta', dep: 'CRM / Produção', status: 'Planejamento', etapa: 'levantamento', escopo: 'RNC, reclamações, inspeções, testes, laudos e rastreabilidade. Roseli como interface comercial.', proximos: 'Mapear fluxo de RNC de cliente com Ângelo.' },
+    { id: 'manutencao', nome: 'Manutenção', sponsor: ['@flavio'], dono: ['Manutenção'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Média', dep: 'Compras / Produção', status: 'Planejamento', etapa: 'levantamento', escopo: 'Chamados, preventiva, corretiva, equipamentos, peças e histórico.', proximos: '' },
+    { id: 'financeiro', nome: 'Financeiro / Cobrança', sponsor: ['@flavio'], dono: ['Financeiro'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Média', dep: 'Protheus / bancos', status: 'Planejamento', etapa: 'levantamento', escopo: 'Cobranças, cartões, bancos, DDA, boletos e análises.', proximos: '' },
+    { id: 'rh', nome: 'RH / Obrigações', sponsor: ['@flavio'], dono: ['RH'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Média', dep: 'Portais externos', status: 'Planejamento', etapa: 'levantamento', escopo: 'Obrigações, documentos, admissões e vencimentos.', proximos: '' },
+    { id: 'contratos', nome: 'Contratos / Jurídico', sponsor: ['@victor'], dono: [], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Média', dep: 'Documentos / alertas', status: 'Planejamento', etapa: 'levantamento', escopo: 'Contratos, documentos, processos e alertas de vencimento.', proximos: '' },
+    { id: 'ia', nome: 'Camada de IA', sponsor: ['@flavio', '@victor'], dono: ['Comitê Diretor'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: ['Por módulo'], prioridade: 'Média', dep: 'Dados estruturados', status: 'Planejamento', etapa: 'levantamento', escopo: 'Pesquisa, resumos, análise de gargalos, documentos, alertas e agentes controlados.', proximos: '' },
   ],
 
   processos: [
@@ -441,7 +442,7 @@ const SEED = {
 
   ideias: [
     { id: 'i1', titulo: 'Integração do Dinamômetro com Qualidade', area: 'qualidade', autor: [], desc: 'Registrar automaticamente os resultados de ensaio, vinculando-os a laudos e à rastreabilidade do lote.', beneficio: 'Elimina digitação e dá rastreabilidade.', prioridade: 'Média', status: 'Nova' },
-    { id: 'i2', titulo: 'Painel de adoção por processo', area: 'processos', autor: [], desc: 'Indicadores de uso, SLA e conformidade de cada processo implantado.', beneficio: 'Atende ao princípio de adoção.', prioridade: 'Média', status: 'Nova' },
+    { id: 'i2', titulo: 'Painel de adoção por processo', area: 'processos', autor: [], desc: 'Indicadores de uso, SLA e conformidade de cada processo implantado.', beneficio: 'Mostra se o processo está sendo usado de fato.', prioridade: 'Média', status: 'Nova' },
     { id: 'i3', titulo: 'Agente de IA para pesquisa em documentos e processos', area: 'ti', autor: [], desc: 'Perguntas em linguagem natural sobre processos, contratos e históricos da plataforma.', beneficio: 'Acesso rápido à informação.', prioridade: 'Baixa', status: 'Nova' },
     { id: 'i4', titulo: 'Apontamentos de produção pelo celular', area: 'producao', autor: [], desc: 'Tela simplificada para apontamentos no chão de fábrica.', beneficio: 'Substitui controles em papel.', prioridade: 'Média', status: 'Nova' },
   ],
@@ -462,7 +463,7 @@ const ADM_ROOTS = ['participantes', 'areas', 'tipos', 'listas'];
 
 /* Novos itens */
 const NEW = {
-  modulos: () => ({ nome: 'Novo módulo', sponsor: [], dono: [], coord: [], dev: [], proc: [], keyuser: [], prioridade: 'Média', dep: '', onda: '', status: 'Planejamento', etapa: 'levantamento', escopo: '', proximos: '' }),
+  modulos: () => ({ nome: 'Novo módulo', sponsor: [], dono: [], coord: [], dev: [], proc: [], keyuser: [], prioridade: 'Média', dep: '', status: 'Planejamento', etapa: 'levantamento', escopo: '', proximos: '' }),
   processos: () => ({ nome: 'Novo processo', area: ui.procArea && ui.procArea !== '*' ? ui.procArea : '', modulo: '', resp: [], exec: [], aprov: [], cons: [], inf: [], sup: [], prazo: '', escal: '', integ: '', status: 'A mapear', etapa: 'levantamento', obs: '' }),
   sistemas: () => ({ nome: 'Novo sistema', cat: '', desc: '', integ: '', resp: [], status: 'A mapear' }),
   ideias: () => ({ titulo: 'Nova ideia', area: '', autor: USER_TOK ? [USER_TOK] : [], desc: '', beneficio: '', prioridade: 'Média', status: 'Nova' }),
@@ -470,7 +471,6 @@ const NEW = {
   areas: () => ({ nome: 'Nova área', mapear: 'Sim', referencia: [] }),
   tipos: () => ({ nome: 'Novo tipo', grupo: '', desc: '' }),
   blocos: () => ({ nome: 'Novo bloco', escopo: '', integ: '', obs: '' }),
-  'projeto.principios': () => ({ t: 'Novo princípio', d: '' }),
   'projeto.fases': () => ({ n: String(S.projeto.fases.length), nome: 'Nova fase', obj: '', ent: '', lid: [] }),
 };
 
@@ -481,7 +481,7 @@ const clone = o => JSON.parse(JSON.stringify(o));
 let S = clone(SEED);
 let sb = null, canEdit = false, isAdm = false, USER_TOK = '';
 let VER = 0, META = { em: null, por: null };
-const ui = { tab: 'modulos', edit: false, procArea: '*', procStatus: '', procQ: '', procMod: '', procView: 'cards', modPrio: '', modOnda: '', modQ: '', modView: 'cards', implKind: 'modulos', ideiaStatus: '', admSec: 'participantes', focus: '' };
+const ui = { tab: 'modulos', edit: false, procArea: '*', procStatus: '', procQ: '', procMod: '', procView: 'cards', modPrio: '', modQ: '', modView: 'cards', implKind: 'modulos', ideiaStatus: '', admSec: 'participantes', focus: '' };
 
 /* Garante o formato atual (dados antigos / importados) */
 function migrate(d) {
@@ -500,15 +500,22 @@ function migrate(d) {
   }
   let n = 0;
   const ids = arr => (arr || []).forEach(x => { if (!x.id) x.id = 'x' + Date.now().toString(36) + (n++); });
-  ids(d.projeto.principios); ids(d.projeto.fases); ids(d.blocos);
+  ids(d.projeto.fases); ids(d.blocos);
   const etIds = d.etapas.map(e => e.id), porNome = Object.fromEntries(d.etapas.map(e => [e.nome, e.id]));
   ['modulos', 'processos'].forEach(c => (d[c] || []).forEach(x => { if (!etIds.includes(x.etapa)) x.etapa = porNome[x.etapa] || etIds[0]; }));
+  /* versão 3: sem ondas e sem princípios; textos dos roadmaps atualizados */
+  delete d.listas.ondas; delete d.projeto.principios; delete d.textos.sec.principios;
+  (d.modulos || []).forEach(m => { delete m.onda; });
+  if ((d.schema || 0) < 3) {
+    ['fases', 'fasesNota', 'fluxo'].forEach(k => { d.textos.sec[k] = SEED.textos.sec[k]; });
+    d.textos.visao.d = SEED.textos.visao.d; d.textos.implantacao.d = SEED.textos.implantacao.d;
+  }
   delete d.tarefas; delete d._savedAt;
   d.schema = SCHEMA;
   return d;
 }
 
-/* Caminhos: "modulos.#crm.escopo", "projeto.principios.#pr1.d", "textos.visao.t" */
+/* Caminhos: "modulos.#crm.escopo", "projeto.fases.#f1.nome", "textos.visao.t" */
 function walk(o, segs) {
   for (const s of segs) { if (o == null) return undefined; o = s[0] === '#' ? (Array.isArray(o) ? o.find(x => x.id === s.slice(1)) : undefined) : o[s]; }
   return o;
@@ -648,6 +655,14 @@ function PPL(p, o = {}) {
 const RM = (col, id) => edCol(col.split('.')[0]) ? `<button class="rm" data-act="rm" data-col="${esc(col)}" data-id="${esc(id)}" title="Excluir">✕</button>` : '';
 const ADD = (col, label) => edCol(col.split('.')[0]) ? `<button class="fi-btn fi-btn--primary" data-act="add" data-col="${esc(col)}">＋ ${esc(label)}</button>` : '';
 
+/* Roadmap individual: as 6 etapas em sequência, com a etapa atual destacada */
+function trilha(x) {
+  const i = S.etapas.findIndex(e => e.id === x.etapa);
+  return `<div class="trilha-w"><div class="k">Roadmap individual · etapa ${i + 1} de ${S.etapas.length}: <b>${esc((S.etapas[i] || {}).nome || '—')}</b></div>
+    <div class="trilha">${S.etapas.map((e, k) =>
+    `<span class="tr-s${k < i ? ' feito' : k === i ? ' atual' : ''}" title="${k + 1}. ${esc(e.nome)}"><b>${k + 1}</b></span>`).join('')}</div></div>`;
+}
+
 /* Vínculos de um participante em todo o projeto */
 function usage(pid) {
   const tok = '@' + pid, out = [];
@@ -722,7 +737,6 @@ function vModulos() {
     <div class="toolbar">
       <input class="fi-input search" placeholder="Buscar módulo, pessoa, dependência…" data-ui="modQ" value="${esc(ui.modQ)}">
       <select class="fi-select" data-ui="modPrio">${optList(S.listas.prioridades, ui.modPrio, 'Todas as prioridades')}</select>
-      <select class="fi-select" data-ui="modOnda">${optList(S.listas.ondas, ui.modOnda, 'Todas as ondas')}</select>
       <span style="flex:1"></span>
       <div class="seg"><button class="${ui.modView === 'cards' ? 'on' : ''}" data-act="view" data-k="modView" data-id="cards">Cartões</button><button class="${ui.modView === 'planilha' ? 'on' : ''}" data-act="view" data-k="modView" data-id="planilha">Planilha</button></div>
     </div>
@@ -731,16 +745,16 @@ function vModulos() {
 }
 function fillModulos() {
   const q = norm(ui.modQ), ord = { 'Alta': 0, 'Média': 1, 'Baixa': 2 };
-  const l = S.modulos.filter(m => (!ui.modPrio || m.prioridade === ui.modPrio) && (!ui.modOnda || m.onda === ui.modOnda) &&
+  const l = S.modulos.filter(m => (!ui.modPrio || m.prioridade === ui.modPrio) &&
     (!q || norm([m.nome, m.dep, m.escopo, m.proximos, ...PEOPLE_FIELDS.modulos.flatMap(([k]) => (m[k] || []).map(tokName))].join(' ')).includes(q)));
   if (!ui.edit) l.sort((a, b) => (ord[a.prioridade] ?? 3) - (ord[b.prioridade] ?? 3));
   if (!l.length) { $('#list').innerHTML = `<div class="fi-card fi-empty">Nenhum módulo encontrado.</div>`; return; }
   const P = (m, k) => `modulos.#${m.id}.${k}`;
   if (ui.modView === 'planilha') {
     $('#list').innerHTML = `<div class="fi-table-wrap"><table class="fi-table sheet"><thead><tr>
-      <th>Módulo</th><th>Prioridade</th><th>Onda</th><th>Situação</th><th>Etapa</th><th>Sponsor</th><th>Dono funcional</th><th>Coord. técnico</th><th>Desenvolvimento</th><th>Processos</th><th>Key User</th><th>Dependências</th><th>Próximos passos</th><th></th></tr></thead>
+      <th>Módulo</th><th>Prioridade</th><th>Situação</th><th>Etapa</th><th>Sponsor</th><th>Dono funcional</th><th>Coord. técnico</th><th>Desenvolvimento</th><th>Processos</th><th>Key User</th><th>Dependências</th><th>Próximos passos</th><th></th></tr></thead>
       <tbody>${l.map(m => `<tr>
-        <td class="wide"><b>${T(P(m, 'nome'), { one: 1 })}</b></td><td class="nw">${SEL(P(m, 'prioridade'), 'prioridades')}</td><td class="nw">${SEL(P(m, 'onda'), 'ondas')}</td>
+        <td class="wide"><b>${T(P(m, 'nome'), { one: 1 })}</b></td><td class="nw">${SEL(P(m, 'prioridade'), 'prioridades')}</td>
         <td class="nw">${SEL(P(m, 'status'), 'stModulo')}</td><td class="nw">${REF(P(m, 'etapa'), 'etapas')}</td>
         ${PEOPLE_FIELDS.modulos.map(([k]) => `<td>${PPL(P(m, k))}</td>`).join('')}
         <td>${T(P(m, 'dep'))}</td><td class="wide">${T(P(m, 'proximos'))}</td><td class="nw">${RM('modulos', m.id)}</td></tr>`).join('')}
@@ -751,8 +765,9 @@ function fillModulos() {
     const np = S.processos.filter(p => p.modulo === m.id).length;
     return `<div class="fi-card item">
       <div class="card-top"><div class="grow"><h3>${T(P(m, 'nome'), { one: 1 })}</h3>
-        <div class="sub">Onda: ${SEL(P(m, 'onda'), 'ondas', { empty: '—' })} · Dependências: ${T(P(m, 'dep'), { ph: '—' })}</div></div>${RM('modulos', m.id)}</div>
+        <div class="sub">Dependências: ${T(P(m, 'dep'), { ph: '—' })}</div></div>${RM('modulos', m.id)}</div>
       <div class="row">${SEL(P(m, 'prioridade'), 'prioridades', { title: 'Prioridade' })}${SEL(P(m, 'status'), 'stModulo', { title: 'Situação' })}<span class="tag">Etapa: ${REF(P(m, 'etapa'), 'etapas')}</span></div>
+      ${trilha(m)}
       ${T(P(m, 'escopo'), { tag: 'div', cls: 'txt' })}
       <div class="kv">${PEOPLE_FIELDS.modulos.map(([k, lb]) => `<div><div class="k">${lb}</div>${PPL(P(m, k))}</div>`).join('')}</div>
       <div class="next"><div class="k">Próximos passos</div>${T(P(m, 'proximos'), { tag: 'div', ph: 'A definir' })}</div>
@@ -805,7 +820,7 @@ function fillProcessos() {
   const L = { resp: 'R', exec: 'E', aprov: 'A', cons: 'C', inf: 'I', sup: 'S' };
   $('#list').innerHTML = `<div class="fi-grid fi-grid--2">${l.map(p => `<div class="fi-card proc">
       <div class="proc-top"><div class="grow" style="flex:1;min-width:0"><h3>${T(P(p, 'nome'), { one: 1 })}</h3>
-        <div class="sub row">${REF(P(p, 'area'), 'areas', { tag: 1, empty: 'Sem área' })}<span class="tag">Módulo: ${REF(P(p, 'modulo'), 'modulos')}</span>${SEL(P(p, 'status'), 'stProcesso')}<span class="tag">Etapa: ${REF(P(p, 'etapa'), 'etapas')}</span></div></div>
+        <div class="sub row">${REF(P(p, 'area'), 'areas', { tag: 1, empty: 'Sem área' })}<span class="tag">Módulo: ${REF(P(p, 'modulo'), 'modulos')}</span>${SEL(P(p, 'status'), 'stProcesso')}<span class="tag">Etapa: ${REF(P(p, 'etapa'), 'etapas')}</span></div>${trilha(p)}</div>
         ${RM('processos', p.id)}</div>
       <div class="raci">${PEOPLE_FIELDS.processos.map(([k, lb]) => `<div><div class="k"><i>${L[k]}</i>${lb}</div>${PPL(P(p, k), { single: k === 'resp' })}</div>`).join('')}</div>
       <div class="proc-bottom">
@@ -879,13 +894,9 @@ function vVisao() {
       <div class="layer l-${esc(c.id)}"><div><div class="ln">${T(P('nome'), { one: 1 })}</div>${T(P('sub'), { cls: 'ls', one: 1 })}</div>${T(P('desc'), { tag: 'p' })}</div>`; }).join('')}
     </div>
 
-    ${sec('principios', undefined, ADD('projeto.principios', 'Princípio'))}
-    <div class="fi-grid fi-grid--4">${pr.principios.map((p, i) => { const P = k => `projeto.principios.#${p.id}.${k}`; return `
-      <div class="fi-card card-pad pri"><h4><span class="num">${i + 1}</span><span style="flex:1">${T(P('t'), { one: 1 })}</span>${RM('projeto.principios', p.id)}</h4>${T(P('d'), { tag: 'p' })}</div>`; }).join('')}
-    </div>
 
     ${sec('fases', undefined, `${T('textos.sec.fasesNota', { cls: 'muted' })}${ADD('projeto.fases', 'Fase')}`)}
-    <div class="phases">${pr.fases.map(f => { const P = k => `projeto.fases.#${f.id}.${k}`; return `
+    <div class="phases seq">${pr.fases.map(f => { const P = k => `projeto.fases.#${f.id}.${k}`; return `
       <div class="fi-card phase"><div class="card-top"><div class="n grow">${T(P('n'), { one: 1 })}</div>${RM('projeto.fases', f.id)}</div>
         <h4>${T(P('nome'), { one: 1 })}</h4>${T(P('obj'), { tag: 'p' })}${T(P('ent'), { tag: 'p' })}<div>${PPL(P('lid'))}</div></div>`; }).join('')}
     </div>`;
@@ -988,7 +999,7 @@ function vAdm() {
       </tbody></table></div>
       <div class="fi-alert" style="margin-top:12px">O <b>grupo</b> define onde o participante aparece na guia Equipe: Direção, Técnica e Processos formam a equipe do projeto; Setores aparece nas referências por setor.</div>`;
   } else if (s === 'listas') {
-    const nomes = { prioridades: 'Prioridades', ondas: 'Ondas dos módulos', stModulo: 'Situação do módulo', stProcesso: 'Status do processo', stIdeia: 'Status da ideia', stSistema: 'Situação do sistema', catSistema: 'Categorias de sistema', niveis: 'Níveis de atuação', grupos: 'Grupos de função', stParticipante: 'Status do participante', simNao: 'Sim / Não' };
+    const nomes = { prioridades: 'Prioridades', stModulo: 'Situação do módulo', stProcesso: 'Status do processo', stIdeia: 'Status da ideia', stSistema: 'Situação do sistema', catSistema: 'Categorias de sistema', niveis: 'Níveis de atuação', grupos: 'Grupos de função', stParticipante: 'Status do participante', simNao: 'Sim / Não' };
     body.innerHTML = `${sec('admListas')}
       <div class="fi-alert" style="margin-bottom:12px">Uma opção por linha. As opções aparecem nas caixas de seleção de todas as guias. Renomear uma opção aqui não altera os itens que já usam o nome antigo.</div>
       <div class="lists">${Object.keys(S.listas).map(k => `<label class="fi-field"><span class="fi-label">${esc(nomes[k] || k)}</span><textarea data-lista="${k}" ${ui.edit ? '' : 'readonly'}>${esc(S.listas[k].join('\n'))}</textarea></label>`).join('')}</div>`;
@@ -1014,7 +1025,7 @@ function addItem(col) {
   const it = Object.assign({ id: uid(col.split('.').pop()) }, NEW[col]());
   commit(st => { arrOf(st, col).push(clone(it)); }, false);
   if (col === 'processos') { ui.procStatus = ''; ui.procQ = ''; ui.procMod = ''; }
-  if (col === 'modulos') { ui.modPrio = ''; ui.modOnda = ''; ui.modQ = ''; }
+  if (col === 'modulos') { ui.modPrio = ''; ui.modQ = ''; }
   if (col === 'ideias') ui.ideiaStatus = '';
   const k = it.nome !== undefined ? 'nome' : it.titulo !== undefined ? 'titulo' : 't';
   ui.focus = `[data-p="${col}.#${it.id}.${k}"]`;
