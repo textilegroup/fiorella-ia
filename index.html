@@ -3,420 +3,341 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Projeto Fiorella</title>
+<title>Projeto Plataforma Fiorella</title>
 <meta name="color-scheme" content="light dark">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<!-- Login Fiorella: supabase-js + guard da Central de Acesso (chave "projeto-fiorella"). Não editar. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="https://textilegroup.github.io/fiorella-login/guard.js" data-app="projeto-fiorella" data-tema="nao"></script>
+<!-- Fiorella UI — identidade visual centralizada -->
+<script src="https://textilegroup.github.io/fiorella-ui/fiorella-ui.js" defer></script>
 <style>
 /* =====================================================================
-   PROJETO FIORELLA — Plataforma Corporativa
+   PROJETO PLATAFORMA CORPORATIVA FIORELLA
    ---------------------------------------------------------------------
-   Padrão visual Fiorella UI: cabeçalho institucional, menu horizontal
-   de guias, fundo claro, cards brancos e detalhes em vermelho Fiorella.
-   Sem banco de dados: os dados iniciais ficam no objeto SEED (JS) e as
-   alterações são salvas no navegador (localStorage). Use ADM → Dados
-   para exportar/importar o JSON completo.
-   Todas as cores saem de tokens; o tema escuro só redefine os tokens.
+   Visual: Fiorella UI (tokens --fi-*). Login: Central de Acesso Fiorella.
+   Dados: documento único compartilhado no Supabase (proj_fiorella),
+   com versão (uma edição não sobrescreve a outra) e histórico.
+   Permissões (definidas na Central, ferramenta "projeto-fiorella"):
+     ver    -> somente leitura
+     editar -> edita todo o conteúdo do projeto
+     admin  -> edita o conteúdo e também a guia ADM (participantes,
+               áreas, tipos/funções, listas de opções e dados)
+   Menu separado em duas famílias:
+     ACOMPANHAMENTO (vermelho)  -> execução do projeto
+     SOBRE O PROJETO (azul)     -> material explicativo
    ===================================================================== */
-:root{
-  --red:#C8102E; --red-deep:#8E0B20; --red-soft:#E04A5F; --red-tint:#FCEEF0;
-  --bg:#F3F3F1; --card:#FFFFFF; --sunk:#F8F7F5;
-  --ink:#232228; --ink-2:#56545C; --ink-3:#8C8A92;
-  --line:#E4E2DF; --line-2:#EFEDEA;
-  --ok:#2E7D4F; --ok-bg:#E8F4EC;
-  --info:#2563A6; --info-bg:#E8F0FA;
-  --warn:#A8690F; --warn-bg:#FBF1E0;
-  --neutral:#5E5C64; --neutral-bg:#EFEEEC;
-  --mute:#9A98A0; --mute-bg:#F2F1EF;
-  --shadow:0 1px 2px rgba(35,34,40,.06),0 2px 10px rgba(35,34,40,.05);
-  --overlay:rgba(35,34,40,.5);
-  --radius:10px;
-}
-@media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]){
-    --red:#D2334B; --red-deep:#7A0A1C; --red-soft:#F07184; --red-tint:#3A1820;
-    --bg:#131215; --card:#1D1C20; --sunk:#252328;
-    --ink:#F0EEEB; --ink-2:#B5B1B8; --ink-3:#85818A;
-    --line:#333037; --line-2:#29272D;
-    --ok:#62B585; --ok-bg:#1C2E23; --info:#6FA3E6; --info-bg:#1B2636;
-    --warn:#D9A049; --warn-bg:#33291A; --neutral:#B5B1B8; --neutral-bg:#2A282E;
-    --mute:#7C7882; --mute-bg:#232126;
-    --shadow:0 1px 2px rgba(0,0,0,.45); --overlay:rgba(8,8,10,.65);
-  }
-}
-:root[data-theme="dark"]{
-  --red:#D2334B; --red-deep:#7A0A1C; --red-soft:#F07184; --red-tint:#3A1820;
-  --bg:#131215; --card:#1D1C20; --sunk:#252328;
-  --ink:#F0EEEB; --ink-2:#B5B1B8; --ink-3:#85818A;
-  --line:#333037; --line-2:#29272D;
-  --ok:#62B585; --ok-bg:#1C2E23; --info:#6FA3E6; --info-bg:#1B2636;
-  --warn:#D9A049; --warn-bg:#33291A; --neutral:#B5B1B8; --neutral-bg:#2A282E;
-  --mute:#7C7882; --mute-bg:#232126;
-  --shadow:0 1px 2px rgba(0,0,0,.45); --overlay:rgba(8,8,10,.65);
-}
-
+:root{--exec:var(--fi-brand,#b5121b);--doc:var(--fi-info,#1f5f8b)}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-html,body{margin:0;padding:0}
-body{background:var(--bg);color:var(--ink);font-family:"Inter","Helvetica Neue",Arial,sans-serif;font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased;min-height:100vh}
-button,input,select,textarea{font:inherit;color:inherit}
-:focus-visible{outline:2px solid var(--red-soft);outline-offset:2px}
-h1,h2,h3,h4{margin:0;line-height:1.2}
-a{color:var(--red)}
-.muted{color:var(--ink-3)}
-.wrap{max-width:1480px;margin:0 auto;padding:0 20px}
+body{margin:0;background:var(--fi-bg,#f4f6f8);color:var(--fi-text,#20242a);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;line-height:1.45}
+.muted{color:var(--fi-muted)}
+h1,h2,h3,h4,p{margin:0}
 
-/* ===== Cabeçalho institucional ===== */
-.top{background:linear-gradient(100deg,var(--red-deep) 0%,var(--red) 60%,var(--red-deep) 100%);color:#fff}
-.top .wrap{display:flex;align-items:center;gap:16px;min-height:64px;flex-wrap:wrap;padding-top:8px;padding-bottom:8px}
-.brand{display:flex;align-items:center;gap:12px;min-width:0}
-.brand-mark{width:40px;height:40px;border-radius:9px;background:#fff;color:var(--red-deep);display:grid;place-items:center;font-weight:800;font-size:20px;flex:none;letter-spacing:-.5px}
-.brand-txt{min-width:0}
-.brand-txt b{display:block;font-size:16px;letter-spacing:.14em;font-weight:800}
-.brand-txt span{display:block;font-size:12px;opacity:.85}
-.top-actions{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.saved{font-size:12px;opacity:.85;white-space:nowrap}
-.btn-top{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;border-radius:7px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer}
-.btn-top:hover{background:rgba(255,255,255,.24)}
+/* Cabeçalho: o topo rola; o menu de guias fica fixo */
+.fi-topbar{position:relative!important;flex-wrap:wrap;row-gap:8px;padding-top:8px;padding-bottom:8px}
+.proj-name{display:flex;flex-direction:column;border-left:1px solid var(--fi-line);padding-left:18px;min-width:0}
+.proj-name b{font-size:.95rem;font-weight:750;letter-spacing:-.01em}
+.proj-name small{color:var(--fi-muted);font-size:.72rem}
+.sync{font-size:.72rem;color:var(--fi-muted);white-space:nowrap;align-self:center}
+.sync.erro{color:var(--fi-danger);cursor:pointer;font-weight:700}
+.sync.salvando{color:var(--fi-warning)}
+.btn-edit.on{background:var(--exec);border-color:var(--exec);color:#fff}
+@media(max-width:700px){.proj-name{display:none}.fi-topbar__actions{margin-left:0!important;width:100%;flex-wrap:wrap;justify-content:flex-end}.sync{margin-right:auto}.fi-user__nivel{display:none}}
+.btn-edit{white-space:nowrap}
 
-/* ===== Menu superior de guias ===== */
-.tabs{background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:30;box-shadow:var(--shadow)}
-.tabs .wrap{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
-.tabs .wrap::-webkit-scrollbar{display:none}
-.tab{background:none;border:0;border-bottom:3px solid transparent;padding:14px 14px 11px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);cursor:pointer;white-space:nowrap}
-.tab:hover{color:var(--ink);background:var(--sunk)}
-.tab.on{color:var(--red);border-bottom-color:var(--red)}
-.tab.adm{margin-left:auto}
+/* ===== Menu por famílias ===== */
+.menu{position:sticky;top:0;z-index:45;background:var(--fi-surface);border-bottom:1px solid var(--fi-line);box-shadow:0 2px 10px rgba(28,37,46,.05)}
+.menu-in{max-width:1540px;margin:0 auto;padding:0 28px;display:flex;align-items:stretch;overflow-x:auto;scrollbar-width:none}
+.menu-in::-webkit-scrollbar{display:none}
+.fam{display:flex;align-items:stretch;gap:2px;padding-right:12px;margin-right:12px;border-right:1px solid var(--fi-line);flex:none}
+.fam-exec{--fam:var(--exec)} .fam-doc{--fam:var(--doc)} .fam-adm{--fam:var(--fi-muted);margin-left:auto;border-right:0;margin-right:0;padding-right:0}
+.fam-l{align-self:center;display:inline-flex;align-items:center;gap:6px;margin-right:6px;padding:4px 10px;border-radius:999px;background:color-mix(in srgb,var(--fam) 11%,transparent);color:var(--fam);font-size:.66rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;white-space:nowrap}
+.fam-l svg,.tab svg{width:14px;height:14px;flex:none}
+.tab{display:flex;align-items:center;gap:6px;padding:14px 12px 11px;border-bottom:3px solid transparent;color:var(--fi-muted);text-decoration:none;font-size:.84rem;font-weight:650;white-space:nowrap}
+.tab:hover{color:var(--fi-text)}
+.tab.on{color:var(--fam);border-bottom-color:var(--fam)}
+@media(max-width:700px){.menu-in{padding:0 12px}}
 
-/* ===== Conteúdo ===== */
-main{padding:22px 0 60px}
-.page-head{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:18px}
-.page-head h1{font-size:22px;font-weight:800}
-.page-head p{margin:4px 0 0;color:var(--ink-2);max-width:820px}
-.page-head .actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
-.section-title{display:flex;align-items:center;gap:10px;margin:26px 0 12px;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
-.section-title::before{content:"";width:4px;height:14px;border-radius:2px;background:var(--red)}
-.section-title .count{font-weight:600;color:var(--ink-3);letter-spacing:0;text-transform:none}
-.section-title .actions{margin-left:auto;text-transform:none;letter-spacing:0}
+.edit-bar{background:color-mix(in srgb,var(--exec) 9%,var(--fi-surface));border-bottom:1px solid color-mix(in srgb,var(--exec) 25%,transparent);font-size:.78rem;color:var(--fi-text)}
+.edit-bar .in{max-width:1540px;margin:0 auto;padding:7px 28px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 
-.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+/* ===== Página ===== */
+.fam-ink-exec{--fam:var(--exec)} .fam-ink-doc{--fam:var(--doc)} .fam-ink-adm{--fam:var(--fi-muted)}
+.fi-page-head .fi-eyebrow{color:var(--fam)}
+.head-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.sec{display:flex;align-items:center;gap:10px;margin:26px 0 12px;font-size:.72rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--fi-muted)}
+.sec::before{content:"";width:4px;height:14px;border-radius:2px;background:var(--fam,var(--exec));flex:none}
+.sec .count{font-weight:600;letter-spacing:0;text-transform:none}
+.sec .right{margin-left:auto;text-transform:none;letter-spacing:0;font-weight:500;display:flex;gap:8px;align-items:center}
+.gauto{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(330px,1fr))}
+@media(max-width:700px){.gauto{grid-template-columns:1fr}}
 .card-pad{padding:16px 18px}
-.grid{display:grid;gap:14px}
-.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
-.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
-.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
-.gauto{grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
-.gauto-s{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
-@media (max-width:980px){.g3,.g4{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (max-width:640px){.g2,.g3,.g4{grid-template-columns:1fr}.gauto,.gauto-s{grid-template-columns:1fr}.wrap{padding:0 16px}}
+button.fi-metric{text-align:left;font:inherit;color:inherit;cursor:pointer;width:100%}
+button.fi-metric:hover{border-color:var(--fi-line-strong)}
 
-/* KPIs */
-.kpi{padding:14px 16px;border-top:3px solid var(--red)}
-.kpi .v{font-size:28px;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums}
-.kpi .l{font-size:12px;color:var(--ink-2);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
-.kpi .s{font-size:12px;color:var(--ink-3);margin-top:6px}
-button.kpi{text-align:left;cursor:pointer;width:100%;font:inherit}
-button.kpi:hover{border-color:var(--red-soft)}
-
-/* Botões */
-.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--card);border-radius:7px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
-.btn:hover{border-color:var(--ink-3)}
-.btn.primary{background:var(--red);border-color:var(--red);color:#fff}
-.btn.primary:hover{background:var(--red-deep);border-color:var(--red-deep)}
-.btn.danger{color:var(--red);border-color:color-mix(in srgb,var(--red) 40%,var(--line))}
-.btn.sm{padding:4px 9px;font-size:12px}
-.icon-btn{border:1px solid transparent;background:none;border-radius:6px;padding:3px 7px;cursor:pointer;color:var(--ink-3);font-size:13px}
-.icon-btn:hover{border-color:var(--line);color:var(--ink);background:var(--sunk)}
-
-/* Pills e chips */
-.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap;letter-spacing:.02em}
-.t-ok{background:var(--ok-bg);color:var(--ok)}
-.t-info{background:var(--info-bg);color:var(--info)}
-.t-warn{background:var(--warn-bg);color:var(--warn)}
-.t-neutral{background:var(--neutral-bg);color:var(--neutral)}
-.t-mute{background:var(--mute-bg);color:var(--mute)}
-.t-hi{background:var(--red-tint);color:var(--red)}
-.t-mid{background:var(--warn-bg);color:var(--warn)}
-.t-low{background:var(--neutral-bg);color:var(--neutral)}
-.tag{display:inline-block;padding:2px 8px;border-radius:5px;font-size:11px;font-weight:600;background:var(--sunk);border:1px solid var(--line-2);color:var(--ink-2);white-space:nowrap}
-.pchip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:2px 10px 2px 2px;font-size:12px;font-weight:600;cursor:pointer;margin:0 4px 4px 0;max-width:100%}
-.pchip:hover{border-color:var(--red-soft)}
+/* ===== Edição estilo planilha ===== */
+.et{white-space:pre-wrap;overflow-wrap:anywhere}
+.et:empty::before{content:attr(data-ph);color:var(--fi-muted);font-style:italic;font-weight:400}
+body.editing .et[contenteditable]{outline:1px dashed color-mix(in srgb,var(--exec) 40%,transparent);outline-offset:1px;border-radius:3px;cursor:text;min-width:24px;display:inline-block;max-width:100%}
+body.editing div.et[contenteditable],body.editing p.et[contenteditable],body.editing h1.et[contenteditable],body.editing h3.et[contenteditable]{display:block}
+body.editing .et[contenteditable]:hover{background:color-mix(in srgb,var(--exec) 5%,transparent)}
+body.editing .et[contenteditable]:focus{outline:2px solid var(--exec);background:var(--fi-surface)}
+.es{font:inherit;font-size:.76rem;border:1px solid var(--fi-line);border-radius:6px;padding:3px 6px;background:var(--fi-surface);color:var(--fi-text);max-width:100%}
+.ppl{display:inline-flex;flex-wrap:wrap;align-items:center;gap:4px}
+.pw{display:inline-flex;align-items:center}
+.pchip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--fi-line);background:var(--fi-surface);border-radius:999px;padding:2px 10px 2px 2px;font:inherit;font-size:.76rem;font-weight:650;cursor:pointer;color:var(--fi-text)}
+.pchip:hover{border-color:var(--exec)}
 .pchip.off{opacity:.55;text-decoration:line-through}
-.av{width:22px;height:22px;border-radius:50%;background:var(--red-tint);color:var(--red);display:grid;place-items:center;font-size:10px;font-weight:800;flex:none}
-.av.lg{width:44px;height:44px;font-size:15px}
-.tchip{display:inline-block;border:1px dashed var(--line);border-radius:999px;padding:2px 10px;font-size:12px;color:var(--ink-2);margin:0 4px 4px 0}
+.av{width:22px;height:22px;border-radius:50%;background:color-mix(in srgb,var(--exec) 12%,transparent);color:var(--exec);display:grid;place-items:center;font-size:.62rem;font-weight:800;flex:none}
+.av.lg{width:42px;height:42px;font-size:.85rem}
+.tchip{display:inline-block;border:1px dashed var(--fi-line-strong);border-radius:999px;padding:2px 10px;font-size:.76rem;color:var(--fi-muted)}
+.x{border:0;background:none;color:var(--fi-muted);cursor:pointer;font-size:15px;line-height:1;padding:0 3px 0 2px}
+.x:hover{color:var(--fi-danger)}
+.padd{border:1px dashed var(--exec);background:none;color:var(--exec);border-radius:999px;width:24px;height:24px;cursor:pointer;font-weight:800;line-height:1}
+.rm{border:1px solid transparent;background:none;border-radius:6px;padding:3px 7px;cursor:pointer;color:var(--fi-muted);font-size:13px}
+.rm:hover{color:var(--fi-danger);border-color:var(--fi-line)}
+.add-row{margin-top:10px}
 
-/* Filtros */
-.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
-.input,.select{border:1px solid var(--line);background:var(--card);border-radius:7px;padding:7px 10px;font-size:13px;min-width:0}
-.input:focus,.select:focus{border-color:var(--red-soft);outline:none}
-.search{flex:1 1 220px;max-width:340px}
-.subnav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
-.subnav button{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;color:var(--ink-2)}
-.subnav button b{font-weight:700;color:var(--ink-3);margin-left:4px}
-.subnav button.on{background:var(--red);border-color:var(--red);color:#fff}
-.subnav button.on b{color:#fff;opacity:.8}
-.seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
-.seg button{border:0;background:var(--card);padding:6px 11px;font-size:12px;font-weight:600;cursor:pointer;color:var(--ink-2)}
-.seg button+button{border-left:1px solid var(--line)}
-.seg button.on{background:var(--ink);color:var(--card)}
-
-/* Tabelas */
-.table-wrap{overflow-x:auto}
-table.tbl{width:100%;border-collapse:collapse;font-size:13px}
-.tbl th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-3);font-weight:700;padding:10px 12px;border-bottom:1px solid var(--line);background:var(--sunk);white-space:nowrap}
-.tbl td{padding:10px 12px;border-bottom:1px solid var(--line-2);vertical-align:top}
-.tbl tr:last-child td{border-bottom:0}
-.tbl tr.click{cursor:pointer}
-.tbl tr.click:hover td{background:var(--sunk)}
-.tbl .w-act{width:1%;white-space:nowrap;text-align:right}
+/* Tabelas-planilha */
+.fi-table td{vertical-align:top}
+.sheet td,.sheet th{white-space:normal}
+.sheet td{min-width:110px}
+.sheet td.wide{min-width:220px}
+.sheet td.nw{white-space:nowrap;min-width:0}
 
 /* Visão geral */
-.hero{padding:22px 24px;border-left:5px solid var(--red)}
-.hero .eyebrow{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--red)}
-.hero h2{font-size:20px;font-weight:800;margin:6px 0 8px}
-.hero p{margin:0;color:var(--ink-2);font-size:15px;max-width:920px}
-.layers{display:grid;gap:10px}
-.layer{display:grid;grid-template-columns:180px 1fr;gap:16px;align-items:center;padding:14px 18px;border-radius:var(--radius);border:1px solid var(--line);background:var(--card)}
-.layer .ln{font-weight:800;font-size:15px}
-.layer .ln small{display:block;font-size:11px;font-weight:600;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
-.layer p{margin:0;color:var(--ink-2)}
-.layer.ia{border-style:dashed;background:var(--sunk)}
-.layer.plat{border-color:var(--red-soft);background:var(--red-tint)}
-.layer.plat .ln{color:var(--red)}
-.layer-arrow{text-align:center;color:var(--ink-3);font-size:12px;font-weight:600}
-@media (max-width:640px){.layer{grid-template-columns:1fr;gap:4px}}
-.principle h4{font-size:14px;margin-bottom:6px;display:flex;gap:8px;align-items:center}
-.principle h4 span{width:24px;height:24px;border-radius:6px;background:var(--red-tint);color:var(--red);display:grid;place-items:center;font-size:12px;font-weight:800}
-.principle p{margin:0;color:var(--ink-2);font-size:13px}
-.phases{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
-@media (max-width:1100px){.phases{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media (max-width:640px){.phases{grid-template-columns:1fr}}
-.phase{padding:14px;position:relative}
-.phase .n{font-size:26px;font-weight:800;color:var(--red);line-height:1}
-.phase h4{font-size:14px;margin:6px 0 4px}
-.phase p{margin:0 0 8px;font-size:12px;color:var(--ink-2)}
-.phase .ent{font-size:12px;color:var(--ink-3);margin-bottom:8px}
+.hero{padding:22px 24px;border-left:4px solid var(--doc)}
+.hero .lbl{font-size:.7rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--doc)}
+.hero h2{font-size:1.25rem;font-weight:800;margin:6px 0 8px}
+.hero p{color:var(--fi-muted);font-size:.95rem;max-width:960px}
+.layers{display:grid;gap:8px}
+.layer{display:grid;grid-template-columns:200px 1fr;gap:16px;align-items:center;padding:14px 18px;border-radius:var(--fi-radius);border:1px solid var(--fi-line);background:var(--fi-surface)}
+.layer .ln{font-weight:800}
+.layer .ls{display:block;font-size:.66rem;font-weight:700;color:var(--fi-muted);text-transform:uppercase;letter-spacing:.07em;margin-top:2px}
+.layer.l-ia{border-style:dashed;background:var(--fi-surface-alt)}
+.layer.l-plataforma{border-color:color-mix(in srgb,var(--exec) 40%,var(--fi-line));background:color-mix(in srgb,var(--exec) 5%,var(--fi-surface))}
+.layer.l-plataforma .ln{color:var(--exec)}
+.layer-arrow{text-align:center;color:var(--fi-muted);font-size:.72rem;font-weight:600}
+@media(max-width:700px){.layer{grid-template-columns:1fr;gap:4px}}
+.num{width:24px;height:24px;border-radius:6px;background:color-mix(in srgb,var(--fam) 12%,transparent);color:var(--fam);display:inline-grid;place-items:center;font-size:.72rem;font-weight:800;flex:none}
+.pri h4{display:flex;gap:8px;align-items:center;margin-bottom:6px;font-size:.9rem}
+.pri p{color:var(--fi-muted);font-size:.82rem}
+.phases{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.phase{padding:14px;display:flex;flex-direction:column;gap:6px}
+.phase .n{font-size:1.5rem;font-weight:800;color:var(--doc);line-height:1}
+.phase h4{font-size:.9rem}
+.phase p{font-size:.78rem;color:var(--fi-muted)}
+.card-top{display:flex;gap:8px;align-items:flex-start}
+.card-top .grow{flex:1;min-width:0}
 
 /* Pessoas */
 .person{padding:16px;display:flex;flex-direction:column;gap:10px}
 .person-head{display:flex;gap:12px;align-items:center}
-.person-head h3{font-size:15px}
-.person-head .cargo{font-size:12px;color:var(--ink-2);margin-top:2px}
-.person .resp{font-size:13px;color:var(--ink-2);margin:0}
-.person .meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-.person .foot{border-top:1px solid var(--line-2);padding-top:10px;display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--ink-3);gap:8px}
-.group-label{font-size:13px;font-weight:700;color:var(--ink-2);margin:18px 0 10px}
+.person-head h3{font-size:.95rem}
+.person .cargo{font-size:.78rem;color:var(--fi-muted);margin-top:2px}
+.person .resp{font-size:.82rem;color:var(--fi-muted)}
+.meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.foot{border-top:1px solid var(--fi-line);padding-top:10px;display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:.76rem;color:var(--fi-muted)}
+.group-label{font-size:.8rem;font-weight:700;color:var(--fi-muted);margin:18px 0 10px}
+.tag{display:inline-block;padding:2px 8px;border-radius:5px;font-size:.7rem;font-weight:600;background:var(--fi-surface-alt);border:1px solid var(--fi-line);color:var(--fi-muted);white-space:nowrap}
 
-/* Cards genéricos de item */
+/* Itens (módulos, sistemas, ideias) */
 .item{padding:16px 18px;display:flex;flex-direction:column;gap:10px}
-.item-head{display:flex;gap:10px;align-items:flex-start}
-.item-head h3{font-size:15px;font-weight:700;flex:1;min-width:0}
-.item-head .sub{font-size:12px;color:var(--ink-3);font-weight:500;margin-top:3px}
-.item p{margin:0;font-size:13px;color:var(--ink-2)}
+.item h3{font-size:.95rem;font-weight:700}
+.item .sub{font-size:.74rem;color:var(--fi-muted);margin-top:3px}
+.item p,.item .txt{font-size:.82rem;color:var(--fi-muted)}
 .kv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 16px}
 .kv>div{min-width:0}
-.kv .k{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);font-weight:700;margin-bottom:3px}
-.kv .v{font-size:13px}
+.k{font-size:.64rem;text-transform:uppercase;letter-spacing:.07em;color:var(--fi-muted);font-weight:700;margin-bottom:4px}
 .kv .full{grid-column:1/-1}
-.next{background:var(--sunk);border-left:3px solid var(--red);padding:8px 10px;border-radius:0 6px 6px 0;font-size:13px;color:var(--ink-2)}
-.next b{color:var(--ink);font-size:11px;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:2px}
-.item .foot{display:flex;gap:6px;flex-wrap:wrap;align-items:center;border-top:1px solid var(--line-2);padding-top:10px}
-.item .foot .grow{flex:1}
-.clickable{cursor:pointer;transition:border-color .12s}
-.clickable:hover{border-color:var(--red-soft)}
+.next{background:var(--fi-surface-alt);border-left:3px solid var(--exec);padding:8px 10px;border-radius:0 6px 6px 0;font-size:.82rem}
+.row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 
-/* Processos — cartão no formato do futuro sistema */
-.proc{padding:0;overflow:hidden}
-.proc-top{padding:14px 18px 12px;display:flex;gap:10px;align-items:flex-start;border-bottom:1px solid var(--line-2)}
-.proc-top h3{font-size:15px;font-weight:700}
-.proc-top .sub{margin-top:5px;display:flex;gap:6px;flex-wrap:wrap}
-.proc-top .grow{flex:1;min-width:0}
+/* Processos */
+.proc{overflow:hidden}
+.proc-top{padding:14px 18px 12px;display:flex;gap:10px;align-items:flex-start;border-bottom:1px solid var(--fi-line)}
+.proc-top h3{font-size:.95rem}
+.proc-top .sub{margin-top:6px}
 .raci{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
-.raci>div{padding:10px 18px;border-bottom:1px solid var(--line-2);min-width:0}
-.raci>div:not(:nth-child(3n)){border-right:1px solid var(--line-2)}
-.raci .k{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);font-weight:700;margin-bottom:5px;display:flex;align-items:center;gap:5px}
-.raci .k i{font-style:normal;width:16px;height:16px;border-radius:4px;background:var(--red-tint);color:var(--red);display:grid;place-items:center;font-size:9.5px;font-weight:800}
-@media (max-width:640px){.raci{grid-template-columns:repeat(2,minmax(0,1fr))}.raci>div{border-right:0!important}.raci>div:nth-child(odd){border-right:1px solid var(--line-2)!important}}
-.proc-bottom{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:12px 18px;background:var(--sunk);font-size:12px}
-.proc-bottom .k{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);font-weight:700}
-@media (max-width:640px){.proc-bottom{grid-template-columns:1fr}}
-.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink-2);margin-bottom:14px}
+.raci>div{padding:10px 18px;border-bottom:1px solid var(--fi-line);min-width:0}
+.raci>div:not(:nth-child(3n)){border-right:1px solid var(--fi-line)}
+.raci .k{display:flex;align-items:center;gap:5px}
+.raci .k i,.legend i{font-style:normal;width:16px;height:16px;border-radius:4px;background:color-mix(in srgb,var(--exec) 12%,transparent);color:var(--exec);display:grid;place-items:center;font-size:.6rem;font-weight:800}
+@media(max-width:700px){.raci{grid-template-columns:repeat(2,minmax(0,1fr))}.raci>div{border-right:0!important}.raci>div:nth-child(odd){border-right:1px solid var(--fi-line)!important}}
+.proc-bottom{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:12px 18px;background:var(--fi-surface-alt);font-size:.8rem}
+@media(max-width:700px){.proc-bottom{grid-template-columns:1fr}}
+.proc-obs{padding:10px 18px;font-size:.78rem;color:var(--fi-muted)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.76rem;color:var(--fi-muted);margin-bottom:14px}
 .legend span{display:inline-flex;gap:5px;align-items:center}
-.legend i{font-style:normal;width:16px;height:16px;border-radius:4px;background:var(--red-tint);color:var(--red);display:grid;place-items:center;font-size:9.5px;font-weight:800}
+.subnav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.subnav button{border:1px solid var(--fi-line);background:var(--fi-surface);border-radius:999px;padding:5px 12px;font:inherit;font-size:.76rem;font-weight:650;cursor:pointer;color:var(--fi-muted)}
+.subnav button b{margin-left:4px;opacity:.7}
+.subnav button.on{background:var(--exec);border-color:var(--exec);color:#fff}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.toolbar .fi-input,.toolbar .fi-select{width:auto;min-width:0}
+.toolbar .search{flex:1 1 220px;max-width:340px}
+.seg{display:inline-flex;border:1px solid var(--fi-line);border-radius:7px;overflow:hidden}
+.seg button{border:0;background:var(--fi-surface);padding:7px 12px;font:inherit;font-size:.76rem;font-weight:650;cursor:pointer;color:var(--fi-muted)}
+.seg button+button{border-left:1px solid var(--fi-line)}
+.seg button.on{background:var(--fi-text);color:var(--fi-surface)}
 
 /* Implantação */
-.flow{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:0;counter-reset:st}
-.step{position:relative;padding:16px 16px 16px 16px;background:var(--card);border:1px solid var(--line);margin-right:18px;border-radius:var(--radius)}
-.step:not(:last-child)::after{content:"";position:absolute;right:-15px;top:50%;width:12px;height:12px;border-top:2px solid var(--red);border-right:2px solid var(--red);transform:translateY(-50%) rotate(45deg)}
-.step:last-child{margin-right:0}
-.step .n{width:26px;height:26px;border-radius:50%;background:var(--red);color:#fff;display:grid;place-items:center;font-weight:800;font-size:13px;margin-bottom:8px}
-.step h4{font-size:14px;margin-bottom:6px}
-.step p{margin:0 0 8px;font-size:12px;color:var(--ink-2)}
-.step .ent{font-size:12px;color:var(--ink-3)}
-.step .ent b{color:var(--ink-2)}
-@media (max-width:1100px){.flow{grid-template-columns:repeat(3,minmax(0,1fr));row-gap:14px}.step:nth-child(3)::after{display:none}}
-@media (max-width:640px){.flow{grid-template-columns:1fr}.step{margin-right:0}.step::after{display:none}}
+.flow{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:18px}
+.step{position:relative;padding:16px;display:flex;flex-direction:column;gap:6px}
+.step:not(:last-child)::after{content:"";position:absolute;right:-14px;top:50%;width:10px;height:10px;border-top:2px solid var(--exec);border-right:2px solid var(--exec);transform:translateY(-50%) rotate(45deg)}
+.step .n{width:26px;height:26px;border-radius:50%;background:var(--exec);color:#fff;display:grid;place-items:center;font-weight:800;font-size:.8rem}
+.step h4{font-size:.9rem}
+.step .d{font-size:.78rem;color:var(--fi-muted)}
+.step .ent{font-size:.76rem;color:var(--fi-muted)}
+.step .ent b{color:var(--fi-text)}
+@media(max-width:1180px){.flow{grid-template-columns:repeat(3,minmax(0,1fr))}.step:nth-child(3)::after{display:none}}
+@media(max-width:700px){.flow{grid-template-columns:1fr}.step::after{display:none}}
 .board{display:grid;grid-template-columns:repeat(6,minmax(210px,1fr));gap:10px;overflow-x:auto;padding-bottom:6px}
-.col{background:var(--sunk);border:1px solid var(--line);border-radius:var(--radius);padding:10px;min-height:120px}
-.col-h{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-2);display:flex;justify-content:space-between;margin-bottom:8px}
-.col-h b{color:var(--red)}
-.bcard{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:9px 10px;margin-bottom:8px;font-size:13px}
-.bcard .t{font-weight:600;cursor:pointer}
-.bcard .t:hover{color:var(--red)}
+.col{background:var(--fi-surface-alt);border:1px solid var(--fi-line);border-radius:var(--fi-radius);padding:10px;min-height:120px}
+.col-h{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--fi-muted);display:flex;justify-content:space-between;margin-bottom:8px}
+.col-h b{color:var(--exec)}
+.bcard{background:var(--fi-surface);border:1px solid var(--fi-line);border-radius:8px;padding:9px 10px;margin-bottom:8px;font-size:.82rem}
+.bcard .t{font-weight:650}
 .bcard .r{display:flex;justify-content:space-between;align-items:center;margin-top:6px;gap:6px}
+.mv{border:1px solid var(--fi-line);background:var(--fi-surface);border-radius:5px;cursor:pointer;color:var(--fi-muted);padding:1px 7px}
+.mv:disabled{opacity:.35;cursor:default}
 
 /* ADM */
-.adm-layout{display:grid;grid-template-columns:230px 1fr;gap:18px;align-items:start}
-@media (max-width:820px){.adm-layout{grid-template-columns:1fr}}
+.adm-layout{display:grid;grid-template-columns:230px minmax(0,1fr);gap:18px;align-items:start}
+.adm-layout>*{min-width:0}
+@media(max-width:900px){.adm-layout{grid-template-columns:1fr}}
 .adm-nav{padding:8px}
-.adm-nav button{display:flex;width:100%;justify-content:space-between;border:0;background:none;padding:10px 12px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;color:var(--ink-2);text-align:left}
-.adm-nav button:hover{background:var(--sunk)}
-.adm-nav button.on{background:var(--red-tint);color:var(--red)}
-.adm-nav button b{font-weight:700;opacity:.7}
-.adm-nav hr{border:0;border-top:1px solid var(--line-2);margin:6px 4px}
-.note{font-size:12px;color:var(--ink-2);background:var(--sunk);border:1px solid var(--line-2);border-radius:8px;padding:10px 12px}
-
-/* Conceitos (tarefas) */
-.concept h4{font-size:14px;margin-bottom:6px}
-.concept p{margin:0;font-size:13px;color:var(--ink-2)}
-.lifecycle{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:12px}
-.lifecycle .arr{color:var(--ink-3)}
+.adm-nav button{display:flex;width:100%;justify-content:space-between;border:0;background:none;padding:10px 12px;border-radius:7px;font:inherit;font-size:.82rem;font-weight:650;cursor:pointer;color:var(--fi-muted);text-align:left}
+.adm-nav button:hover{background:var(--fi-surface-alt)}
+.adm-nav button.on{background:var(--fi-surface-alt);color:var(--fi-text);box-shadow:inset 3px 0 0 var(--fi-text)}
+.adm-nav hr{border:0;border-top:1px solid var(--fi-line);margin:6px 4px}
+.lists{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.lists textarea{width:100%;min-height:150px;font:inherit;font-size:.82rem;border:1px solid var(--fi-line);border-radius:7px;padding:8px 10px;background:var(--fi-surface);color:var(--fi-text);resize:vertical}
 
 /* Modal */
-dialog{border:0;padding:0;border-radius:12px;background:var(--card);color:var(--ink);width:min(720px,calc(100vw - 24px));max-height:calc(100vh - 32px);box-shadow:0 20px 60px rgba(0,0,0,.3)}
-dialog::backdrop{background:var(--overlay)}
-.m-head{display:flex;align-items:center;gap:10px;padding:16px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--card);z-index:1}
-.m-head h2{font-size:16px;font-weight:800;flex:1}
-.m-body{padding:16px 20px;overflow:auto}
-.m-foot{display:flex;gap:8px;padding:12px 20px;border-top:1px solid var(--line);position:sticky;bottom:0;background:var(--card)}
-.m-foot .grow{flex:1}
-.form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 14px}
-.form .full{grid-column:1/-1}
-@media (max-width:640px){.form{grid-template-columns:1fr}}
-.fld label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-2);margin-bottom:5px}
-.fld label em{color:var(--red);font-style:normal}
-.fld .input,.fld .select,.fld textarea{width:100%}
-.fld textarea{border:1px solid var(--line);background:var(--card);border-radius:7px;padding:8px 10px;font-size:13px;min-height:70px;resize:vertical}
-.fld textarea:focus{border-color:var(--red-soft);outline:none}
-.fld .hint{font-size:11px;color:var(--ink-3);margin-top:4px}
-.picker{border:1px solid var(--line);border-radius:7px;padding:6px;background:var(--card)}
-.picker .chips{min-height:26px;display:flex;flex-wrap:wrap;align-items:center}
-.picker .chips .empty{font-size:12px;color:var(--ink-3);padding:3px 4px}
-.picker .ctl{display:flex;gap:6px;margin-top:4px}
-.picker .ctl select{flex:1 1 50%}
-.picker .ctl input{flex:1 1 50%}
-.pk-chip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);border-radius:999px;padding:2px 4px 2px 3px;margin:0 4px 4px 0;font-size:12px;font-weight:600;background:var(--sunk)}
-.pk-chip.txt{border-style:dashed;padding-left:9px;font-weight:500}
-.pk-chip button{border:0;background:none;cursor:pointer;color:var(--ink-3);font-size:14px;line-height:1;padding:0 4px}
-.pk-chip button:hover{color:var(--red)}
-.usage h4{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-3);margin:14px 0 6px}
-.usage ul{margin:0;padding-left:18px;font-size:13px}
+dialog{border:0;padding:0;border-radius:10px;background:var(--fi-surface);color:var(--fi-text);width:min(560px,calc(100vw - 24px));max-height:calc(100vh - 32px);box-shadow:0 24px 64px rgba(0,0,0,.28)}
+dialog::backdrop{background:rgba(9,12,16,.55)}
+.m-head{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--fi-line)}
+.m-head h2{font-size:1rem;flex:1}
+.m-body{padding:16px 18px;overflow:auto;display:grid;gap:12px}
+.m-foot{display:flex;gap:8px;justify-content:flex-end;padding:12px 18px;border-top:1px solid var(--fi-line)}
+.usage h4{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--fi-muted);margin:6px 0}
+.usage ul{margin:0;padding-left:18px;font-size:.84rem}
 .usage li{margin-bottom:3px}
-
-.empty-state{padding:30px;text-align:center;color:var(--ink-3);border:1px dashed var(--line);border-radius:var(--radius);background:var(--card)}
-.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--card);padding:10px 16px;border-radius:8px;font-size:13px;font-weight:600;opacity:0;transition:.2s;pointer-events:none;z-index:100}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-footer{border-top:1px solid var(--line);padding:16px 0;font-size:12px;color:var(--ink-3)}
-footer .wrap{display:flex;gap:12px;flex-wrap:wrap;justify-content:space-between}
-@media print{.tabs,.top-actions,.actions,.toolbar,.subnav,.icon-btn,footer{display:none!important}body{background:#fff}.card{box-shadow:none}}
+.loading{display:grid;place-items:center;min-height:50vh;color:var(--fi-muted)}
+@media print{.menu,.fi-topbar__actions,.edit-bar,.head-actions,.toolbar,.subnav,.rm,.padd,.x,.add-row{display:none!important}}
 </style>
 </head>
 <body>
 
-<header class="top">
-  <div class="wrap">
-    <div class="brand">
-      <div class="brand-mark" aria-hidden="true">F</div>
-      <div class="brand-txt">
-        <b>FIORELLA</b>
-        <span>Plataforma Corporativa · Projeto de Implantação</span>
-      </div>
-    </div>
-    <div class="top-actions">
-      <span class="saved" id="savedAt"></span>
-      <button class="btn-top" data-act="theme" title="Alternar tema claro/escuro">Tema claro/escuro</button>
-      <button class="btn-top" data-act="export-json" title="Baixar backup completo dos dados">⭳ Exportar dados</button>
-    </div>
+<header class="fi-topbar">
+  <a class="fi-brand" href="#modulos"><img data-fi-logo></a>
+  <div class="proj-name"><b data-fi-page-title>Projeto Plataforma Corporativa</b><small>Protheus + Plataforma Fiorella + IA</small></div>
+  <div class="fi-topbar__actions">
+    <span class="sync" id="sync"></span>
+    <button class="fi-btn btn-edit" id="btnEdit" data-act="toggle-edit" hidden>✎ Editar</button>
+    <button class="fi-icon-btn" data-fi-theme-toggle data-fi-tooltip="Tema claro/escuro" aria-label="Alternar tema">◐</button>
   </div>
 </header>
 
-<nav class="tabs" aria-label="Guias do projeto">
-  <div class="wrap" id="tabs"></div>
-</nav>
+<nav class="menu" aria-label="Guias do projeto"><div class="menu-in" id="menu"></div></nav>
+<div class="edit-bar" id="editBar" hidden><div class="in">
+  <b>Modo edição</b><span>Clique em qualquer texto para alterar; listas e pessoas têm botões ＋ e ×. Tudo é salvo automaticamente e fica visível para toda a equipe.</span>
+  <button class="fi-btn" style="margin-left:auto;min-height:30px;padding:4px 10px" data-act="toggle-edit">Concluir edição</button>
+</div></div>
 
-<main>
-  <div class="wrap" id="view"></div>
-</main>
-
-<footer>
-  <div class="wrap">
-    <span>Projeto Plataforma Corporativa Fiorella · Protheus + Plataforma Fiorella + IA</span>
-    <span>Versão 1 · dados salvos neste navegador — use ADM → Dados para exportar/importar</span>
-  </div>
-</footer>
+<main class="fi-page" id="view"><div class="loading">Carregando projeto…</div></main>
 
 <dialog id="modal"></dialog>
 <input type="file" id="importFile" accept=".json,application/json" hidden>
-<div class="toast" id="toast"></div>
 
 <script>
 /* =====================================================================
-   1. LISTAS FIXAS
+   1. DADOS INICIAIS (base: planilha SISTEMA_FIORELLA.xlsx)
+   Usados só quando o banco ainda não tem o projeto, ou em
+   ADM → Dados → Restaurar. Referência a participante = "@id";
+   qualquer outro texto é texto livre (ex.: "Gestor da área").
    ===================================================================== */
-const LS_KEY = 'projetoFiorella.v1';
-const NIVEIS = ['Diretivo', 'Coordenação', 'Execução', 'Referência / Consulta'];
-const GRUPOS = ['Direção', 'Técnica', 'Processos', 'Setores'];
-const PRIORIDADES = ['Alta', 'Média', 'Baixa'];
-const ONDAS = ['Fundação', 'Núcleo', 'Prioritário', 'Integrações', 'Expansão', 'Evolução'];
-const ST_MOD = ['Planejamento', 'Em andamento', 'Em homologação', 'Em produção', 'Pausado'];
-const ST_PROC = ['A mapear', 'Em mapeamento', 'Em definição', 'Aprovado', 'Implantado', 'Em revisão'];
-const ST_TASK = ['Aberta', 'Em andamento', 'Aguardando', 'Concluída', 'Cancelada'];
-const ST_IDEIA = ['Nova', 'Em análise', 'Aprovada', 'Descartada'];
-const ST_SIS = ['Em uso', 'Em construção', 'A mapear', 'Futura integração'];
-const CAT_SIS = ['ERP', 'Plataforma', 'Sistema interno', 'Equipamento / Indústria', 'Externo', 'Camada futura'];
-const TIPO_TASK = ['Tarefa', 'Chamado'];
-const ORIGEM_TASK = ['Processo', 'Manual', 'Governança', 'Aprovação', 'Conversa', 'IA'];
-
-/* Fluxo simples de implantação: levantamento → definição → avaliação técnica
-   → aprovação → execução → acompanhamento */
-const ETAPAS = [
-  { id: 'levantamento', nome: 'Levantamento', desc: 'Documentar a rotina real (AS-IS): quem faz, como faz, documentos, sistemas usados e gargalos.', resp: ['@wesley'], part: 'Referência do setor / Key User', entrega: 'Mapa do processo atual e lista de gargalos' },
-  { id: 'definicao', nome: 'Definição', desc: 'Desenhar o processo futuro (TO-BE): responsável, executor, aprovador, prazo, escalonamento e integrações.', resp: ['@victor', '@flavio'], part: 'Dono da área + Wesley', entrega: 'Processo futuro definido' },
-  { id: 'avaliacao', nome: 'Avaliação técnica', desc: 'Verificar viabilidade, integração com o Protheus, arquitetura, segurança e esforço.', resp: ['@thiago'], part: 'Alexandre', entrega: 'Parecer técnico e solução proposta' },
-  { id: 'aprovacao', nome: 'Aprovação', desc: 'Validação dos sponsors antes de iniciar desenvolvimento ou configuração.', resp: ['@flavio', '@victor'], part: 'Dono da área', entrega: 'Escopo aprovado' },
-  { id: 'execucao', nome: 'Execução', desc: 'Desenvolvimento, configuração, testes, homologação pelo key user, treinamento e entrada em produção.', resp: ['@alexandre'], part: 'Thiago + Dailon + Key User', entrega: 'Solução em produção' },
-  { id: 'acompanhamento', nome: 'Acompanhamento', desc: 'Medir uso, SLA e conformidade. Processo implantado não basta estar documentado.', resp: ['@wesley'], part: 'Gestor da área', entrega: 'Indicadores de adoção' },
-];
-const ETAPA_NOMES = ETAPAS.map(e => e.nome);
-
-/* =====================================================================
-   2. DADOS INICIAIS (base: planilha SISTEMA_FIORELLA.xlsx)
-   Referência a participante = "@id"; qualquer outro texto é texto livre
-   (ex.: "Gestor da área", "Compras").
-   ===================================================================== */
+const SCHEMA = 2;
 const SEED = {
+  schema: SCHEMA,
+  textos: {
+    visao: { t: 'Visão Geral', d: 'Objetivo, conceito e princípios do projeto da Plataforma Corporativa Fiorella.' },
+    equipe: { t: 'Equipe e Governança', d: 'Papéis definidos para evitar sobreposição, dependência externa e gargalos de decisão.' },
+    sistemas: { t: 'Arquitetura e Sistemas', d: 'Protheus, Plataforma Fiorella, sistemas internos, equipamentos, serviços externos e futuras integrações.' },
+    modulos: { t: 'Módulos e Projetos', d: 'Situação, responsáveis e próximos passos de cada frente do projeto.' },
+    processos: { t: 'Processos', d: 'Cadastro de processos: área, responsável, executor, aprovador, consultado, informado, suplente, prazo, escalonamento, integração e status.' },
+    implantacao: { t: 'Implantação', d: 'Fluxo padrão repetido em cada processo ou módulo e em que etapa cada item está.' },
+    backlog: { t: 'Ideias / Backlog', d: 'Novas funcionalidades e melhorias ainda não aprovadas. Uma ideia aprovada pode virar módulo ou processo.' },
+    adm: { t: 'Administração', d: 'Cadastros-base que alimentam as demais guias. Um participante cadastrado uma única vez pode aparecer como sponsor, responsável, executor, aprovador, consultado, informado ou suplente em qualquer item.' },
+    sec: {
+      conceito: 'Conceito: Protheus + Plataforma Fiorella + IA',
+      principios: 'Princípios do projeto',
+      fases: 'Fases macro',
+      fasesNota: 'Sequência inicial sugerida; poderá ser reordenada após o mapeamento.',
+      refs: 'Referências de processo por setor',
+      refsFuncao: 'Fornecer informações sobre as rotinas atuais da área (AS-IS)',
+      blocos: 'Arquitetura funcional da plataforma',
+      fluxo: 'Fluxo de implantação',
+      quadro: 'Onde cada item está',
+      setaIA: '↕ atua sobre os dados estruturados da plataforma',
+      setaProtheus: '↕ integração: a plataforma fica “abaixo” do Protheus, sem substituí-lo',
+      admPart: 'Participantes do projeto',
+      admAreas: 'Áreas / Setores',
+      admTipos: 'Tipos / Funções no projeto',
+      admListas: 'Listas de opções',
+      admDados: 'Dados e acessos',
+    },
+  },
   projeto: {
     nome: 'Plataforma Corporativa Fiorella',
     objetivo: 'Criar uma plataforma corporativa abaixo do Protheus para integrar processos, setores, CRM, comunicação, aprovações, automações e IA.',
-    papelProtheus: 'Permanecer como ERP e sistema oficial para registros transacionais, fiscais, contábeis, financeiros, estoque e demais funções próprias.',
-    papelPlataforma: 'Ser o ambiente cotidiano de gestão e execução dos processos internos e relacionamento entre áreas.',
-    papelIA: 'Camada transversal sobre dados estruturados: pesquisa, resumos, análise de gargalos, documentos, alertas e agentes controlados.',
+    camadas: [
+      { id: 'ia', nome: 'IA', sub: 'Camada transversal', desc: 'Camada transversal sobre dados estruturados: pesquisa, resumos, análise de gargalos, documentos, alertas e agentes controlados.' },
+      { id: 'plataforma', nome: 'Plataforma Fiorella', sub: 'Gestão e execução', desc: 'Ser o ambiente cotidiano de gestão e execução dos processos internos e relacionamento entre áreas.' },
+      { id: 'protheus', nome: 'Protheus', sub: 'ERP · sistema oficial', desc: 'Permanecer como ERP e sistema oficial para registros transacionais, fiscais, contábeis, financeiros, estoque e demais funções próprias.' },
+    ],
     principios: [
-      { t: 'Processo', d: 'Todo processo relevante deve ter dono, executor, prazo, aprovador, evidência de execução e escalonamento.' },
-      { t: 'Comunicação', d: 'Mensagem não substitui tarefa, aprovação ou processo. Comunicações relevantes devem estar vinculadas ao contexto.' },
-      { t: 'Auditoria', d: 'Registrar quem fez, o que fez, quando fez, alterações, aprovações e histórico.' },
-      { t: 'Adoção', d: 'Processo implantado deve ser medido quanto a uso, SLA e conformidade; não basta estar documentado.' },
+      { id: 'pr1', t: 'Processo', d: 'Todo processo relevante deve ter dono, executor, prazo, aprovador, evidência de execução e escalonamento.' },
+      { id: 'pr2', t: 'Comunicação', d: 'Mensagem não substitui tarefa, aprovação ou processo. Comunicações relevantes devem estar vinculadas ao contexto.' },
+      { id: 'pr3', t: 'Auditoria', d: 'Registrar quem fez, o que fez, quando fez, alterações, aprovações e histórico.' },
+      { id: 'pr4', t: 'Adoção', d: 'Processo implantado deve ser medido quanto a uso, SLA e conformidade; não basta estar documentado.' },
     ],
     fases: [
-      { n: '0', nome: 'Mapeamento', obj: 'Entender processos atuais e necessidades', ent: 'AS-IS, gargalos, responsáveis, sistemas e prioridades', lid: ['@wesley', '@roseli', 'Áreas'] },
-      { n: '1', nome: 'Fundação', obj: 'Construir base segura e escalável', ent: 'Arquitetura, usuários, permissões, auditoria, integrações básicas', lid: ['@flavio', '@thiago', '@alexandre'] },
-      { n: '2', nome: 'Núcleo Corporativo', obj: 'Implantar gestão transversal', ent: 'BPM, tarefas, aprovações, SLA, documentos, comunicação', lid: ['@victor', '@thiago', '@alexandre'] },
-      { n: '3', nome: 'Módulos Prioritários', obj: 'Colocar processos críticos em operação', ent: '2 a 3 módulos com uso real', lid: ['Comitê Diretor', 'Áreas'] },
-      { n: '4', nome: 'Integrações', obj: 'Ampliar automações externas', ent: 'Protheus, bancos, portais, APIs', lid: ['@flavio', '@alexandre', '@thiago'] },
-      { n: '5', nome: 'IA', obj: 'Aplicar inteligência sobre dados estruturados', ent: 'Pesquisa, resumos, alertas, análises e agentes controlados', lid: ['@flavio', '@victor'] },
+      { id: 'f0', n: '0', nome: 'Mapeamento', obj: 'Entender processos atuais e necessidades', ent: 'AS-IS, gargalos, responsáveis, sistemas e prioridades', lid: ['@wesley', '@roseli', 'Áreas'] },
+      { id: 'f1', n: '1', nome: 'Fundação', obj: 'Construir base segura e escalável', ent: 'Arquitetura, usuários, permissões, auditoria, integrações básicas', lid: ['@flavio', '@thiago', '@alexandre'] },
+      { id: 'f2', n: '2', nome: 'Núcleo Corporativo', obj: 'Implantar gestão transversal', ent: 'BPM, tarefas, aprovações, SLA, documentos, comunicação', lid: ['@victor', '@thiago', '@alexandre'] },
+      { id: 'f3', n: '3', nome: 'Módulos Prioritários', obj: 'Colocar processos críticos em operação', ent: '2 a 3 módulos com uso real', lid: ['Comitê Diretor', 'Áreas'] },
+      { id: 'f4', n: '4', nome: 'Integrações', obj: 'Ampliar automações externas', ent: 'Protheus, bancos, portais, APIs', lid: ['@flavio', '@alexandre', '@thiago'] },
+      { id: 'f5', n: '5', nome: 'IA', obj: 'Aplicar inteligência sobre dados estruturados', ent: 'Pesquisa, resumos, alertas, análises e agentes controlados', lid: ['@flavio', '@victor'] },
     ],
+  },
+
+  /* Fluxo simples: levantamento → definição → avaliação técnica → aprovação → execução → acompanhamento */
+  etapas: [
+    { id: 'levantamento', nome: 'Levantamento', desc: 'Documentar a rotina real (AS-IS): quem faz, como faz, documentos, sistemas usados e gargalos.', resp: ['@wesley'], part: 'Referência do setor / Key User', entrega: 'Mapa do processo atual e lista de gargalos' },
+    { id: 'definicao', nome: 'Definição', desc: 'Desenhar o processo futuro (TO-BE): responsável, executor, aprovador, prazo, escalonamento e integrações.', resp: ['@victor', '@flavio'], part: 'Dono da área + Wesley', entrega: 'Processo futuro definido' },
+    { id: 'avaliacao', nome: 'Avaliação técnica', desc: 'Verificar viabilidade, integração com o Protheus, arquitetura, segurança e esforço.', resp: ['@thiago'], part: 'Alexandre', entrega: 'Parecer técnico e solução proposta' },
+    { id: 'aprovacao', nome: 'Aprovação', desc: 'Validação dos sponsors antes de iniciar desenvolvimento ou configuração.', resp: ['@flavio', '@victor'], part: 'Dono da área', entrega: 'Escopo aprovado' },
+    { id: 'execucao', nome: 'Execução', desc: 'Desenvolvimento, configuração, testes, homologação pelo key user, treinamento e entrada em produção.', resp: ['@alexandre'], part: 'Thiago + Dailon + Key User', entrega: 'Solução em produção' },
+    { id: 'acompanhamento', nome: 'Acompanhamento', desc: 'Medir uso, SLA e conformidade. Processo implantado não basta estar documentado.', resp: ['@wesley'], part: 'Gestor da área', entrega: 'Indicadores de adoção' },
+  ],
+
+  listas: {
+    prioridades: ['Alta', 'Média', 'Baixa'],
+    ondas: ['Fundação', 'Núcleo', 'Prioritário', 'Integrações', 'Expansão', 'Evolução'],
+    stModulo: ['Planejamento', 'Em andamento', 'Em homologação', 'Em produção', 'Pausado'],
+    stProcesso: ['A mapear', 'Em mapeamento', 'Em definição', 'Aprovado', 'Implantado', 'Em revisão'],
+    stIdeia: ['Nova', 'Em análise', 'Aprovada', 'Descartada'],
+    stSistema: ['Em uso', 'Em construção', 'A mapear', 'Futura integração'],
+    catSistema: ['ERP', 'Plataforma', 'Sistema interno', 'Equipamento / Indústria', 'Externo', 'Camada futura'],
+    niveis: ['Diretivo', 'Coordenação', 'Execução', 'Referência / Consulta'],
+    grupos: ['Direção', 'Técnica', 'Processos', 'Setores'],
+    stParticipante: ['Ativo', 'Inativo'],
+    simNao: ['Sim', 'Não'],
   },
 
   tipos: [
@@ -452,20 +373,20 @@ const SEED = {
   ],
 
   participantes: [
-    { id: 'flavio', nome: 'Flávio', cargo: 'Sponsor de Tecnologia e Sistemas', area: 'comite', tipo: 'sponsor', nivel: 'Diretivo', resp: 'Arquitetura corporativa, Protheus, segurança, infraestrutura e decisões tecnológicas.', foco: 'Como tecnologicamente', status: 'Ativo' },
-    { id: 'victor', nome: 'Victor', cargo: 'Sponsor de Processos, BPM e CRM', area: 'comite', tipo: 'sponsor', nivel: 'Diretivo', resp: 'Processos, workflows, CRM, integração entre setores, aprovações e experiência do usuário.', foco: 'Como a empresa deve trabalhar', status: 'Ativo' },
-    { id: 'thiago', nome: 'Thiago', cargo: 'Arquiteto / Engenheiro Líder Externo', area: 'externo', tipo: 'arquiteto', nivel: 'Coordenação', resp: 'Projetar a arquitetura tecnológica e desenvolver ou indicar as ferramentas necessárias.', foco: 'Engenharia da solução', status: 'Ativo' },
-    { id: 'alexandre', nome: 'Alexandre', cargo: 'Coordenador Técnico Interno', area: 'ti', tipo: 'coordtec', nivel: 'Coordenação', resp: 'Ponte técnica com Thiago; acompanhar desenvolvimento, integrações, testes e implantação.', foco: 'Domínio técnico interno', status: 'Ativo' },
-    { id: 'dailon', nome: 'Dailon', cargo: 'Assistente Técnico Interno', area: 'ti', tipo: 'assistec', nivel: 'Execução', resp: 'Configuração, testes, cadastros, documentação e suporte técnico sob Alexandre.', foco: 'Execução técnica', status: 'Ativo' },
-    { id: 'wesley', nome: 'Wesley', cargo: 'Analista de Processos', area: 'processos', tipo: 'analista', nivel: 'Execução', resp: 'Percorrer setores, mapear rotinas reais, responsáveis, documentos, gargalos e adoção.', foco: 'Processo praticado', status: 'Ativo' },
-    { id: 'roseli', nome: 'Roseli', cargo: 'Analista de Processos Comerciais e CRM', area: 'comercial', tipo: 'analista', nivel: 'Execução', resp: 'Detalhar, testar e homologar processos comerciais e CRM.', foco: 'Operação comercial', status: 'Ativo' },
-    { id: 'renata', nome: 'Renata', cargo: 'Referência de Processos — Financeiro', area: 'financeiro', tipo: 'referencia', nivel: 'Referência / Consulta', resp: 'Fornecer informações sobre as rotinas atuais da área (AS-IS).', foco: '', status: 'Ativo' },
-    { id: 'ricardo', nome: 'Ricardo', cargo: 'Referência de Processos — Fiscal', area: 'fiscal', tipo: 'referencia', nivel: 'Referência / Consulta', resp: 'Fornecer informações sobre as rotinas atuais da área (AS-IS).', foco: '', status: 'Ativo' },
-    { id: 'marcelo', nome: 'Marcelo', cargo: 'Referência de Processos — Compras', area: 'compras', tipo: 'referencia', nivel: 'Referência / Consulta', resp: 'Fornecer informações sobre as rotinas atuais da área (AS-IS).', foco: '', status: 'Ativo' },
-    { id: 'rayline', nome: 'Rayline', cargo: 'Referência de Processos — RH', area: 'rh', tipo: 'referencia', nivel: 'Referência / Consulta', resp: 'Fornecer informações sobre as rotinas atuais da área (AS-IS).', foco: '', status: 'Ativo' },
-    { id: 'agenor', nome: 'Agenor', cargo: 'Referência de Processos — Manutenção', area: 'manutencao', tipo: 'referencia', nivel: 'Referência / Consulta', resp: 'Fornecer informações sobre as rotinas atuais da área (AS-IS).', foco: '', status: 'Ativo' },
-    { id: 'angelo', nome: 'Ângelo', cargo: 'Referência de Processos — Qualidade', area: 'qualidade', tipo: 'referencia', nivel: 'Referência / Consulta', resp: 'Fornecer informações sobre as rotinas atuais da área (AS-IS).', foco: '', status: 'Ativo' },
-    { id: 'leandro', nome: 'Leandro', cargo: 'Referência de Processos — Gestão da Qualidade (ISO)', area: 'iso', tipo: 'referencia', nivel: 'Referência / Consulta', resp: 'Fornecer informações sobre as rotinas atuais da área (AS-IS).', foco: '', status: 'Ativo' },
+    { id: 'flavio', nome: 'Flávio', email: '', cargo: 'Sponsor de Tecnologia e Sistemas', area: 'comite', tipo: 'sponsor', nivel: 'Diretivo', resp: 'Arquitetura corporativa, Protheus, segurança, infraestrutura e decisões tecnológicas.', foco: 'Como tecnologicamente', status: 'Ativo' },
+    { id: 'victor', nome: 'Victor', email: '', cargo: 'Sponsor de Processos, BPM e CRM', area: 'comite', tipo: 'sponsor', nivel: 'Diretivo', resp: 'Processos, workflows, CRM, integração entre setores, aprovações e experiência do usuário.', foco: 'Como a empresa deve trabalhar', status: 'Ativo' },
+    { id: 'thiago', nome: 'Thiago', email: '', cargo: 'Arquiteto / Engenheiro Líder Externo', area: 'externo', tipo: 'arquiteto', nivel: 'Coordenação', resp: 'Projetar a arquitetura tecnológica e desenvolver ou indicar as ferramentas necessárias.', foco: 'Engenharia da solução', status: 'Ativo' },
+    { id: 'alexandre', nome: 'Alexandre', email: '', cargo: 'Coordenador Técnico Interno', area: 'ti', tipo: 'coordtec', nivel: 'Coordenação', resp: 'Ponte técnica com Thiago; acompanhar desenvolvimento, integrações, testes e implantação.', foco: 'Domínio técnico interno', status: 'Ativo' },
+    { id: 'dailon', nome: 'Dailon', email: '', cargo: 'Assistente Técnico Interno', area: 'ti', tipo: 'assistec', nivel: 'Execução', resp: 'Configuração, testes, cadastros, documentação e suporte técnico sob Alexandre.', foco: 'Execução técnica', status: 'Ativo' },
+    { id: 'wesley', nome: 'Wesley', email: '', cargo: 'Analista de Processos', area: 'processos', tipo: 'analista', nivel: 'Execução', resp: 'Percorrer setores, mapear rotinas reais, responsáveis, documentos, gargalos e adoção.', foco: 'Processo praticado', status: 'Ativo' },
+    { id: 'roseli', nome: 'Roseli', email: '', cargo: 'Analista de Processos Comerciais e CRM', area: 'comercial', tipo: 'analista', nivel: 'Execução', resp: 'Detalhar, testar e homologar processos comerciais e CRM.', foco: 'Operação comercial', status: 'Ativo' },
+    { id: 'renata', nome: 'Renata', email: '', cargo: 'Referência de Processos — Financeiro', area: 'financeiro', tipo: 'referencia', nivel: 'Referência / Consulta', resp: 'Fornecer informações sobre as rotinas atuais da área (AS-IS).', foco: '', status: 'Ativo' },
+    { id: 'ricardo', nome: 'Ricardo', email: '', cargo: 'Referência de Processos — Fiscal', area: 'fiscal', tipo: 'referencia', nivel: 'Referência / Consulta', resp: 'Fornecer informações sobre as rotinas atuais da área (AS-IS).', foco: '', status: 'Ativo' },
+    { id: 'marcelo', nome: 'Marcelo', email: '', cargo: 'Referência de Processos — Compras', area: 'compras', tipo: 'referencia', nivel: 'Referência / Consulta', resp: 'Fornecer informações sobre as rotinas atuais da área (AS-IS).', foco: '', status: 'Ativo' },
+    { id: 'rayline', nome: 'Rayline', email: '', cargo: 'Referência de Processos — RH', area: 'rh', tipo: 'referencia', nivel: 'Referência / Consulta', resp: 'Fornecer informações sobre as rotinas atuais da área (AS-IS).', foco: '', status: 'Ativo' },
+    { id: 'agenor', nome: 'Agenor', email: '', cargo: 'Referência de Processos — Manutenção', area: 'manutencao', tipo: 'referencia', nivel: 'Referência / Consulta', resp: 'Fornecer informações sobre as rotinas atuais da área (AS-IS).', foco: '', status: 'Ativo' },
+    { id: 'angelo', nome: 'Ângelo', email: '', cargo: 'Referência de Processos — Qualidade', area: 'qualidade', tipo: 'referencia', nivel: 'Referência / Consulta', resp: 'Fornecer informações sobre as rotinas atuais da área (AS-IS).', foco: '', status: 'Ativo' },
+    { id: 'leandro', nome: 'Leandro', email: '', cargo: 'Referência de Processos — Gestão da Qualidade (ISO)', area: 'iso', tipo: 'referencia', nivel: 'Referência / Consulta', resp: 'Fornecer informações sobre as rotinas atuais da área (AS-IS).', foco: '', status: 'Ativo' },
   ],
 
   sistemas: [
@@ -479,52 +400,43 @@ const SEED = {
     { id: 'ia', nome: 'Camada de IA', cat: 'Camada futura', desc: 'Pesquisa, resumos, análise de gargalos, documentos, alertas e agentes controlados.', integ: 'Toda a plataforma', resp: ['@flavio', '@victor'], status: 'Futura integração' },
   ],
 
-  /* Blocos da arquitetura funcional */
   blocos: [
-    { nome: 'Núcleo Corporativo', escopo: 'Usuários, estrutura organizacional, permissões, notificações, auditoria e pesquisa.', integ: 'Todos os módulos', obs: 'Base comum da plataforma' },
-    { nome: 'BPM / Workflow', escopo: 'Processos, etapas, responsáveis, SLA, escalonamentos e histórico.', integ: 'Todos os setores', obs: 'Motor transversal' },
-    { nome: 'Tarefas', escopo: 'Tarefas manuais ou originadas de processos, conversas, aprovações e IA.', integ: 'BPM / CRM', obs: 'Motor único corporativo' },
-    { nome: 'Aprovações', escopo: 'Alçadas por função, valor, área, natureza, orçamento e exceções.', integ: 'BPM / Protheus', obs: 'Evitar regras presas a pessoas' },
-    { nome: 'Comunicação', escopo: 'Chat individual, grupos, canais e conversas vinculadas a processos.', integ: 'CRM / BPM', obs: 'Mensagem ≠ tarefa' },
-    { nome: 'CRM', escopo: 'Clientes, contatos, oportunidades, visitas, pedidos, preços, comissões, crédito e histórico.', integ: 'Protheus / serviços externos', obs: 'Visão 360° do cliente' },
-    { nome: 'Compras', escopo: 'Solicitações, cotações, aprovações, pedidos e fornecedores.', integ: 'Protheus', obs: 'Workflow e alçadas' },
-    { nome: 'Produção', escopo: 'Digitalização de controles, apontamentos, indicadores e integrações industriais.', integ: 'Protheus / chão de fábrica', obs: 'Substituir controles em papel' },
-    { nome: 'Qualidade', escopo: 'RNC, reclamações, inspeções, testes, laudos e rastreabilidade.', integ: 'Produção / CRM', obs: 'Processos intersetoriais' },
-    { nome: 'Desenvolvimento', escopo: 'Novos produtos, testes, amostras, custos e aprovações.', integ: 'Comercial / Produção / Qualidade', obs: 'Fluxo multidisciplinar' },
-    { nome: 'Manutenção', escopo: 'Chamados, preventiva, corretiva, equipamentos, peças e histórico.', integ: 'Compras / Produção', obs: 'SLA e indicadores' },
-    { nome: 'Financeiro / Cobrança', escopo: 'Cobranças, cartões, bancos, DDA, boletos e análises.', integ: 'Protheus / bancos', obs: 'Integrações externas' },
-    { nome: 'Fiscal / RH / Jurídico', escopo: 'Obrigações, documentos, admissões, contratos, vencimentos e portais externos.', integ: 'Protheus / portais', obs: 'Detalhamento posterior' },
-    { nome: 'IA', escopo: 'Pesquisa, resumos, análise de gargalos, documentos, alertas e agentes controlados.', integ: 'Toda a plataforma', obs: 'Camada transversal' },
+    { id: 'b1', nome: 'Núcleo Corporativo', escopo: 'Usuários, estrutura organizacional, permissões, notificações, auditoria e pesquisa.', integ: 'Todos os módulos', obs: 'Base comum da plataforma' },
+    { id: 'b2', nome: 'BPM / Workflow', escopo: 'Processos, etapas, responsáveis, SLA, escalonamentos e histórico.', integ: 'Todos os setores', obs: 'Motor transversal' },
+    { id: 'b3', nome: 'Tarefas', escopo: 'Tarefas manuais ou originadas de processos, conversas, aprovações e IA.', integ: 'BPM / CRM', obs: 'Motor único corporativo' },
+    { id: 'b4', nome: 'Aprovações', escopo: 'Alçadas por função, valor, área, natureza, orçamento e exceções.', integ: 'BPM / Protheus', obs: 'Evitar regras presas a pessoas' },
+    { id: 'b5', nome: 'Comunicação', escopo: 'Chat individual, grupos, canais e conversas vinculadas a processos.', integ: 'CRM / BPM', obs: 'Mensagem ≠ tarefa' },
+    { id: 'b6', nome: 'CRM', escopo: 'Clientes, contatos, oportunidades, visitas, pedidos, preços, comissões, crédito e histórico.', integ: 'Protheus / serviços externos', obs: 'Visão 360° do cliente' },
+    { id: 'b7', nome: 'Compras', escopo: 'Solicitações, cotações, aprovações, pedidos e fornecedores.', integ: 'Protheus', obs: 'Workflow e alçadas' },
+    { id: 'b8', nome: 'Produção', escopo: 'Digitalização de controles, apontamentos, indicadores e integrações industriais.', integ: 'Protheus / chão de fábrica', obs: 'Substituir controles em papel' },
+    { id: 'b9', nome: 'Qualidade', escopo: 'RNC, reclamações, inspeções, testes, laudos e rastreabilidade.', integ: 'Produção / CRM', obs: 'Processos intersetoriais' },
+    { id: 'b10', nome: 'Desenvolvimento', escopo: 'Novos produtos, testes, amostras, custos e aprovações.', integ: 'Comercial / Produção / Qualidade', obs: 'Fluxo multidisciplinar' },
+    { id: 'b11', nome: 'Manutenção', escopo: 'Chamados, preventiva, corretiva, equipamentos, peças e histórico.', integ: 'Compras / Produção', obs: 'SLA e indicadores' },
+    { id: 'b12', nome: 'Financeiro / Cobrança', escopo: 'Cobranças, cartões, bancos, DDA, boletos e análises.', integ: 'Protheus / bancos', obs: 'Integrações externas' },
+    { id: 'b13', nome: 'Fiscal / RH / Jurídico', escopo: 'Obrigações, documentos, admissões, contratos, vencimentos e portais externos.', integ: 'Protheus / portais', obs: 'Detalhamento posterior' },
+    { id: 'b14', nome: 'IA', escopo: 'Pesquisa, resumos, análise de gargalos, documentos, alertas e agentes controlados.', integ: 'Toda a plataforma', obs: 'Camada transversal' },
   ],
 
   modulos: [
-    { id: 'nucleo', nome: 'Núcleo Corporativo', sponsor: ['@flavio', '@victor'], dono: [], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Alta', dep: 'Arquitetura base', onda: 'Fundação', status: 'Planejamento', etapa: 'Levantamento', escopo: 'Usuários, estrutura organizacional, permissões, notificações, auditoria e pesquisa.', proximos: 'Definir arquitetura base e dono funcional.' },
-    { id: 'bpm', nome: 'BPM / Workflow', sponsor: ['@victor'], dono: ['@victor'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Alta', dep: 'Núcleo Corporativo', onda: 'Núcleo', status: 'Planejamento', etapa: 'Levantamento', escopo: 'Processos, etapas, responsáveis, SLA, escalonamentos e histórico.', proximos: 'Consolidar o modelo de cadastro de processos (guia Processos).' },
-    { id: 'crm', nome: 'CRM Comercial', sponsor: ['@victor'], dono: ['Comercial'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: ['@roseli'], prioridade: 'Alta', dep: 'Protheus / BPM', onda: 'Prioritário', status: 'Planejamento', etapa: 'Levantamento', escopo: 'Clientes, contatos, oportunidades, visitas, pedidos, preços, comissões, crédito e histórico.', proximos: 'Levantamento AS-IS do Comercial com Roseli.' },
-    { id: 'comunicacao', nome: 'Portal de Comunicação entre Setores', sponsor: ['@victor'], dono: [], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Alta', dep: 'BPM / usuários', onda: 'Núcleo', status: 'Planejamento', etapa: 'Levantamento', escopo: 'Chat individual, grupos, canais e conversas vinculadas a processos.', proximos: 'Definir dono funcional e regras “mensagem ≠ tarefa”.' },
-    { id: 'compras', nome: 'Compras / Ordens de Serviço', sponsor: ['@flavio', '@victor'], dono: ['Compras'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Alta', dep: 'Protheus / aprovações', onda: 'Prioritário', status: 'Planejamento', etapa: 'Levantamento', escopo: 'Solicitações, cotações, aprovações, pedidos e fornecedores.', proximos: 'Mapear solicitação de compra e alçadas com Marcelo.' },
-    { id: 'nfe', nome: 'Gestão de NF-e Recebidas', sponsor: ['@flavio'], dono: ['Fiscal / Compras'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Média', dep: 'API Portal NF-e', onda: 'Integrações', status: 'Planejamento', etapa: 'Levantamento', escopo: 'Captura, conferência e gestão das NF-e recebidas.', proximos: 'Avaliar API do portal NF-e.' },
-    { id: 'producao', nome: 'Produção Digital', sponsor: ['@flavio'], dono: ['Produção'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Alta', dep: 'Protheus / chão de fábrica', onda: 'Prioritário', status: 'Planejamento', etapa: 'Levantamento', escopo: 'Digitalização de controles, apontamentos, indicadores e integrações industriais.', proximos: 'Inventariar controles em papel da Produção.' },
-    { id: 'qualidade', nome: 'Qualidade / RNC', sponsor: ['@victor'], dono: ['Qualidade'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: ['@roseli'], prioridade: 'Alta', dep: 'CRM / Produção', onda: 'Prioritário', status: 'Planejamento', etapa: 'Levantamento', escopo: 'RNC, reclamações, inspeções, testes, laudos e rastreabilidade. Roseli como interface comercial.', proximos: 'Mapear fluxo de RNC de cliente com Ângelo.' },
-    { id: 'manutencao', nome: 'Manutenção', sponsor: ['@flavio'], dono: ['Manutenção'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Média', dep: 'Compras / Produção', onda: 'Expansão', status: 'Planejamento', etapa: 'Levantamento', escopo: 'Chamados, preventiva, corretiva, equipamentos, peças e histórico.', proximos: '' },
-    { id: 'financeiro', nome: 'Financeiro / Cobrança', sponsor: ['@flavio'], dono: ['Financeiro'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Média', dep: 'Protheus / bancos', onda: 'Expansão', status: 'Planejamento', etapa: 'Levantamento', escopo: 'Cobranças, cartões, bancos, DDA, boletos e análises.', proximos: '' },
-    { id: 'rh', nome: 'RH / Obrigações', sponsor: ['@flavio'], dono: ['RH'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Média', dep: 'Portais externos', onda: 'Expansão', status: 'Planejamento', etapa: 'Levantamento', escopo: 'Obrigações, documentos, admissões e vencimentos.', proximos: '' },
-    { id: 'contratos', nome: 'Contratos / Jurídico', sponsor: ['@victor'], dono: [], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Média', dep: 'Documentos / alertas', onda: 'Expansão', status: 'Planejamento', etapa: 'Levantamento', escopo: 'Contratos, documentos, processos e alertas de vencimento.', proximos: '' },
-    { id: 'ia', nome: 'Camada de IA', sponsor: ['@flavio', '@victor'], dono: ['Comitê Diretor'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: ['Por módulo'], prioridade: 'Média', dep: 'Dados estruturados', onda: 'Evolução', status: 'Planejamento', etapa: 'Levantamento', escopo: 'Pesquisa, resumos, análise de gargalos, documentos, alertas e agentes controlados.', proximos: '' },
+    { id: 'nucleo', nome: 'Núcleo Corporativo', sponsor: ['@flavio', '@victor'], dono: [], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Alta', dep: 'Arquitetura base', onda: 'Fundação', status: 'Planejamento', etapa: 'levantamento', escopo: 'Usuários, estrutura organizacional, permissões, notificações, auditoria e pesquisa.', proximos: 'Definir arquitetura base e dono funcional.' },
+    { id: 'bpm', nome: 'BPM / Workflow', sponsor: ['@victor'], dono: ['@victor'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Alta', dep: 'Núcleo Corporativo', onda: 'Núcleo', status: 'Planejamento', etapa: 'levantamento', escopo: 'Processos, etapas, responsáveis, SLA, escalonamentos e histórico.', proximos: 'Consolidar o modelo de cadastro de processos (guia Processos).' },
+    { id: 'crm', nome: 'CRM Comercial', sponsor: ['@victor'], dono: ['Comercial'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: ['@roseli'], prioridade: 'Alta', dep: 'Protheus / BPM', onda: 'Prioritário', status: 'Planejamento', etapa: 'levantamento', escopo: 'Clientes, contatos, oportunidades, visitas, pedidos, preços, comissões, crédito e histórico.', proximos: 'Levantamento AS-IS do Comercial com Roseli.' },
+    { id: 'comunicacao', nome: 'Portal de Comunicação entre Setores', sponsor: ['@victor'], dono: [], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Alta', dep: 'BPM / usuários', onda: 'Núcleo', status: 'Planejamento', etapa: 'levantamento', escopo: 'Chat individual, grupos, canais e conversas vinculadas a processos.', proximos: 'Definir dono funcional e regras “mensagem ≠ tarefa”.' },
+    { id: 'compras', nome: 'Compras / Ordens de Serviço', sponsor: ['@flavio', '@victor'], dono: ['Compras'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Alta', dep: 'Protheus / aprovações', onda: 'Prioritário', status: 'Planejamento', etapa: 'levantamento', escopo: 'Solicitações, cotações, aprovações, pedidos e fornecedores.', proximos: 'Mapear solicitação de compra e alçadas com Marcelo.' },
+    { id: 'nfe', nome: 'Gestão de NF-e Recebidas', sponsor: ['@flavio'], dono: ['Fiscal / Compras'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Média', dep: 'API Portal NF-e', onda: 'Integrações', status: 'Planejamento', etapa: 'levantamento', escopo: 'Captura, conferência e gestão das NF-e recebidas.', proximos: 'Avaliar API do portal NF-e.' },
+    { id: 'producao', nome: 'Produção Digital', sponsor: ['@flavio'], dono: ['Produção'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Alta', dep: 'Protheus / chão de fábrica', onda: 'Prioritário', status: 'Planejamento', etapa: 'levantamento', escopo: 'Digitalização de controles, apontamentos, indicadores e integrações industriais.', proximos: 'Inventariar controles em papel da Produção.' },
+    { id: 'qualidade', nome: 'Qualidade / RNC', sponsor: ['@victor'], dono: ['Qualidade'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: ['@roseli'], prioridade: 'Alta', dep: 'CRM / Produção', onda: 'Prioritário', status: 'Planejamento', etapa: 'levantamento', escopo: 'RNC, reclamações, inspeções, testes, laudos e rastreabilidade. Roseli como interface comercial.', proximos: 'Mapear fluxo de RNC de cliente com Ângelo.' },
+    { id: 'manutencao', nome: 'Manutenção', sponsor: ['@flavio'], dono: ['Manutenção'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Média', dep: 'Compras / Produção', onda: 'Expansão', status: 'Planejamento', etapa: 'levantamento', escopo: 'Chamados, preventiva, corretiva, equipamentos, peças e histórico.', proximos: '' },
+    { id: 'financeiro', nome: 'Financeiro / Cobrança', sponsor: ['@flavio'], dono: ['Financeiro'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Média', dep: 'Protheus / bancos', onda: 'Expansão', status: 'Planejamento', etapa: 'levantamento', escopo: 'Cobranças, cartões, bancos, DDA, boletos e análises.', proximos: '' },
+    { id: 'rh', nome: 'RH / Obrigações', sponsor: ['@flavio'], dono: ['RH'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Média', dep: 'Portais externos', onda: 'Expansão', status: 'Planejamento', etapa: 'levantamento', escopo: 'Obrigações, documentos, admissões e vencimentos.', proximos: '' },
+    { id: 'contratos', nome: 'Contratos / Jurídico', sponsor: ['@victor'], dono: [], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Média', dep: 'Documentos / alertas', onda: 'Expansão', status: 'Planejamento', etapa: 'levantamento', escopo: 'Contratos, documentos, processos e alertas de vencimento.', proximos: '' },
+    { id: 'ia', nome: 'Camada de IA', sponsor: ['@flavio', '@victor'], dono: ['Comitê Diretor'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: ['Por módulo'], prioridade: 'Média', dep: 'Dados estruturados', onda: 'Evolução', status: 'Planejamento', etapa: 'levantamento', escopo: 'Pesquisa, resumos, análise de gargalos, documentos, alertas e agentes controlados.', proximos: '' },
   ],
 
   processos: [
-    { id: 'p_compra', nome: 'Solicitação de compra', area: 'compras', modulo: 'compras', resp: ['Gestor da área'], exec: ['Compras'], aprov: ['Conforme alçada'], cons: ['Financeiro'], inf: ['Solicitante'], sup: [], prazo: '2 dias úteis', escal: 'Superior após SLA', integ: 'Plataforma / Protheus', status: 'A mapear', etapa: 'Levantamento', obs: 'Exemplo do modelo de mapeamento.' },
-    { id: 'p_rnc', nome: 'RNC de cliente', area: 'qualidade', modulo: 'qualidade', resp: ['Qualidade'], exec: ['Responsável da etapa'], aprov: ['Conforme fluxo'], cons: ['Produção', 'Comercial'], inf: ['Solicitante'], sup: [], prazo: '', escal: 'Gestor da área', integ: 'CRM / Qualidade', status: 'A mapear', etapa: 'Levantamento', obs: 'Exemplo do modelo de mapeamento.' },
-    { id: 'p_dev', nome: 'Desenvolvimento de produto', area: 'desenvolvimento', modulo: '', resp: [], exec: ['Responsável da etapa'], aprov: [], cons: ['Comercial', 'Produção', 'Qualidade'], inf: ['Partes envolvidas'], sup: [], prazo: '', escal: '', integ: 'CRM / Produção', status: 'A mapear', etapa: 'Levantamento', obs: 'Exemplo do modelo de mapeamento.' },
-  ],
-
-  tarefas: [
-    { id: 't1', titulo: 'Definir referência de processos — PCP', tipo: 'Tarefa', origem: 'Governança', processo: '', modulo: '', resp: [], solic: ['@victor'], prazo: '', prioridade: 'Alta', status: 'Aberta', desc: 'Setor sem referência definida na planilha de governança.' },
-    { id: 't2', titulo: 'Definir referência de processos — Portaria e Acesso', tipo: 'Tarefa', origem: 'Governança', processo: '', modulo: '', resp: [], solic: ['@victor'], prazo: '', prioridade: 'Média', status: 'Aberta', desc: 'Setor sem referência definida na planilha de governança.' },
-    { id: 't3', titulo: 'Definir referência de processos — Drive', tipo: 'Tarefa', origem: 'Governança', processo: '', modulo: '', resp: [], solic: ['@victor'], prazo: '', prioridade: 'Média', status: 'Aberta', desc: 'Setor sem referência definida na planilha de governança. Confirmar também o escopo do setor.' },
-    { id: 't4', titulo: 'Definir Key Users dos módulos prioritários', tipo: 'Tarefa', origem: 'Governança', processo: '', modulo: '', resp: [], solic: ['@flavio', '@victor'], prazo: '', prioridade: 'Alta', status: 'Aberta', desc: 'Núcleo, BPM, Comunicação, Compras e Produção Digital estão sem key user.' },
-    { id: 't5', titulo: 'Iniciar levantamento AS-IS dos setores', tipo: 'Tarefa', origem: 'Governança', processo: '', modulo: '', resp: ['@wesley'], solic: ['@victor'], prazo: '', prioridade: 'Alta', status: 'Aberta', desc: 'Fase 0 — Mapeamento: rotinas reais, responsáveis, documentos, sistemas e gargalos.' },
+    { id: 'p_compra', nome: 'Solicitação de compra', area: 'compras', modulo: 'compras', resp: ['Gestor da área'], exec: ['Compras'], aprov: ['Conforme alçada'], cons: ['Financeiro'], inf: ['Solicitante'], sup: [], prazo: '2 dias úteis', escal: 'Superior após SLA', integ: 'Plataforma / Protheus', status: 'A mapear', etapa: 'levantamento', obs: 'Exemplo do modelo de mapeamento.' },
+    { id: 'p_rnc', nome: 'RNC de cliente', area: 'qualidade', modulo: 'qualidade', resp: ['Qualidade'], exec: ['Responsável da etapa'], aprov: ['Conforme fluxo'], cons: ['Produção', 'Comercial'], inf: ['Solicitante'], sup: [], prazo: '', escal: 'Gestor da área', integ: 'CRM / Qualidade', status: 'A mapear', etapa: 'levantamento', obs: 'Exemplo do modelo de mapeamento.' },
+    { id: 'p_dev', nome: 'Desenvolvimento de produto', area: 'desenvolvimento', modulo: '', resp: [], exec: ['Responsável da etapa'], aprov: [], cons: ['Comercial', 'Produção', 'Qualidade'], inf: ['Partes envolvidas'], sup: [], prazo: '', escal: '', integ: 'CRM / Produção', status: 'A mapear', etapa: 'levantamento', obs: 'Exemplo do modelo de mapeamento.' },
   ],
 
   ideias: [
@@ -535,353 +447,338 @@ const SEED = {
   ],
 };
 
-/* =====================================================================
-   3. ESQUEMAS — definem formulários, exclusões e vínculos de pessoas
-   t: text | textarea | select | ref | people | person | date
-   ===================================================================== */
-const SCHEMAS = {
-  participantes: { label: 'Participante', fields: [
-    { k: 'nome', l: 'Nome', t: 'text', req: 1 },
-    { k: 'cargo', l: 'Cargo / Função no projeto', t: 'text' },
-    { k: 'area', l: 'Área', t: 'ref', ref: 'areas' },
-    { k: 'tipo', l: 'Papel no projeto', t: 'ref', ref: 'tipos' },
-    { k: 'nivel', l: 'Nível de atuação', t: 'select', opts: NIVEIS },
-    { k: 'status', l: 'Status', t: 'select', opts: ['Ativo', 'Inativo'], def: 'Ativo' },
-    { k: 'resp', l: 'Responsabilidades', t: 'textarea', full: 1 },
-    { k: 'foco', l: 'Foco de decisão', t: 'text', full: 1 },
-  ]},
-  areas: { label: 'Área / Setor', fields: [
-    { k: 'nome', l: 'Nome', t: 'text', req: 1 },
-    { k: 'mapear', l: 'Participa do mapeamento de processos', t: 'select', opts: ['Sim', 'Não'], def: 'Sim' },
-    { k: 'referencia', l: 'Referência de processos do setor', t: 'people', full: 1 },
-  ]},
-  tipos: { label: 'Tipo / Função', fields: [
-    { k: 'nome', l: 'Nome', t: 'text', req: 1 },
-    { k: 'grupo', l: 'Grupo', t: 'select', opts: GRUPOS },
-    { k: 'desc', l: 'Descrição', t: 'textarea', full: 1 },
-  ]},
-  sistemas: { label: 'Sistema', fields: [
-    { k: 'nome', l: 'Nome', t: 'text', req: 1 },
-    { k: 'cat', l: 'Categoria', t: 'select', opts: CAT_SIS },
-    { k: 'status', l: 'Situação', t: 'select', opts: ST_SIS },
-    { k: 'resp', l: 'Responsáveis', t: 'people' },
-    { k: 'desc', l: 'Descrição / papel', t: 'textarea', full: 1 },
-    { k: 'integ', l: 'Integrações', t: 'text', full: 1 },
-  ]},
-  modulos: { label: 'Módulo / Projeto', fields: [
-    { k: 'nome', l: 'Nome', t: 'text', req: 1 },
-    { k: 'prioridade', l: 'Prioridade', t: 'select', opts: PRIORIDADES },
-    { k: 'onda', l: 'Onda', t: 'select', opts: ONDAS },
-    { k: 'status', l: 'Situação', t: 'select', opts: ST_MOD, def: 'Planejamento' },
-    { k: 'etapa', l: 'Etapa de implantação', t: 'select', opts: ETAPA_NOMES, def: 'Levantamento' },
-    { k: 'dep', l: 'Dependências', t: 'text' },
-    { k: 'sponsor', l: 'Sponsor', t: 'people' },
-    { k: 'dono', l: 'Dono funcional', t: 'people' },
-    { k: 'coord', l: 'Coord. técnico', t: 'people' },
-    { k: 'dev', l: 'Desenvolvimento', t: 'people' },
-    { k: 'proc', l: 'Processos', t: 'people' },
-    { k: 'keyuser', l: 'Key User', t: 'people' },
-    { k: 'escopo', l: 'Escopo', t: 'textarea', full: 1 },
-    { k: 'proximos', l: 'Próximos passos', t: 'textarea', full: 1 },
-  ]},
-  processos: { label: 'Processo', fields: [
-    { k: 'nome', l: 'Processo', t: 'text', req: 1, full: 1 },
-    { k: 'area', l: 'Área', t: 'ref', ref: 'areas' },
-    { k: 'modulo', l: 'Módulo', t: 'ref', ref: 'modulos' },
-    { k: 'resp', l: 'Responsável (dono)', t: 'person' },
-    { k: 'exec', l: 'Executor', t: 'people' },
-    { k: 'aprov', l: 'Aprovador', t: 'people' },
-    { k: 'sup', l: 'Suplente', t: 'people' },
-    { k: 'cons', l: 'Consultado', t: 'people' },
-    { k: 'inf', l: 'Informado', t: 'people' },
-    { k: 'prazo', l: 'Prazo / SLA', t: 'text', ph: 'ex.: 2 dias úteis' },
-    { k: 'escal', l: 'Escalonamento', t: 'text', ph: 'ex.: Superior após SLA' },
-    { k: 'integ', l: 'Sistema / Integração', t: 'text', ph: 'ex.: Plataforma / Protheus' },
-    { k: 'status', l: 'Status', t: 'select', opts: ST_PROC, def: 'A mapear' },
-    { k: 'etapa', l: 'Etapa de implantação', t: 'select', opts: ETAPA_NOMES, def: 'Levantamento' },
-    { k: 'obs', l: 'Observações', t: 'textarea', full: 1 },
-  ]},
-  tarefas: { label: 'Tarefa / Chamado', fields: [
-    { k: 'titulo', l: 'Título', t: 'text', req: 1, full: 1 },
-    { k: 'tipo', l: 'Tipo', t: 'select', opts: TIPO_TASK, def: 'Tarefa' },
-    { k: 'origem', l: 'Origem', t: 'select', opts: ORIGEM_TASK, def: 'Manual' },
-    { k: 'processo', l: 'Processo de origem', t: 'ref', ref: 'processos' },
-    { k: 'modulo', l: 'Módulo', t: 'ref', ref: 'modulos' },
-    { k: 'resp', l: 'Responsável', t: 'person' },
-    { k: 'solic', l: 'Solicitante', t: 'people' },
-    { k: 'prazo', l: 'Prazo', t: 'date' },
-    { k: 'prioridade', l: 'Prioridade', t: 'select', opts: PRIORIDADES, def: 'Média' },
-    { k: 'status', l: 'Status', t: 'select', opts: ST_TASK, def: 'Aberta' },
-    { k: 'desc', l: 'Descrição', t: 'textarea', full: 1 },
-  ]},
-  ideias: { label: 'Ideia', fields: [
-    { k: 'titulo', l: 'Título', t: 'text', req: 1, full: 1 },
-    { k: 'area', l: 'Área', t: 'ref', ref: 'areas' },
-    { k: 'autor', l: 'Proposta por', t: 'people' },
-    { k: 'prioridade', l: 'Prioridade', t: 'select', opts: PRIORIDADES, def: 'Média' },
-    { k: 'status', l: 'Status', t: 'select', opts: ST_IDEIA, def: 'Nova' },
-    { k: 'desc', l: 'Descrição', t: 'textarea', full: 1 },
-    { k: 'beneficio', l: 'Benefício esperado', t: 'textarea', full: 1 },
-  ]},
+/* Campos de pessoas (para vínculos e exclusão de participante) */
+const PEOPLE_FIELDS = {
+  modulos: [['sponsor', 'Sponsor'], ['dono', 'Dono funcional'], ['coord', 'Coord. técnico'], ['dev', 'Desenvolvimento'], ['proc', 'Processos'], ['keyuser', 'Key User']],
+  processos: [['resp', 'Responsável'], ['exec', 'Executor'], ['aprov', 'Aprovador'], ['cons', 'Consultado'], ['inf', 'Informado'], ['sup', 'Suplente']],
+  sistemas: [['resp', 'Responsável']],
+  areas: [['referencia', 'Referência do setor']],
+  ideias: [['autor', 'Proposta por']],
+  etapas: [['resp', 'Responsável pela etapa']],
 };
-const COL_LABEL_PLURAL = { participantes: 'Participantes', areas: 'Áreas', tipos: 'Tipos/Funções', sistemas: 'Sistemas', modulos: 'Módulos', processos: 'Processos', tarefas: 'Tarefas', ideias: 'Backlog' };
+const COL_LABEL = { modulos: 'Módulos', processos: 'Processos', sistemas: 'Sistemas', areas: 'Áreas', ideias: 'Backlog', etapas: 'Etapas de implantação', fases: 'Fases do projeto' };
+/* Coleções editáveis somente por admin (guia ADM) */
+const ADM_ROOTS = ['participantes', 'areas', 'tipos', 'listas'];
+
+/* Novos itens */
+const NEW = {
+  modulos: () => ({ nome: 'Novo módulo', sponsor: [], dono: [], coord: [], dev: [], proc: [], keyuser: [], prioridade: 'Média', dep: '', onda: '', status: 'Planejamento', etapa: 'levantamento', escopo: '', proximos: '' }),
+  processos: () => ({ nome: 'Novo processo', area: ui.procArea && ui.procArea !== '*' ? ui.procArea : '', modulo: '', resp: [], exec: [], aprov: [], cons: [], inf: [], sup: [], prazo: '', escal: '', integ: '', status: 'A mapear', etapa: 'levantamento', obs: '' }),
+  sistemas: () => ({ nome: 'Novo sistema', cat: '', desc: '', integ: '', resp: [], status: 'A mapear' }),
+  ideias: () => ({ titulo: 'Nova ideia', area: '', autor: USER_TOK ? [USER_TOK] : [], desc: '', beneficio: '', prioridade: 'Média', status: 'Nova' }),
+  participantes: () => ({ nome: 'Novo participante', email: '', cargo: '', area: '', tipo: '', nivel: '', resp: '', foco: '', status: 'Ativo' }),
+  areas: () => ({ nome: 'Nova área', mapear: 'Sim', referencia: [] }),
+  tipos: () => ({ nome: 'Novo tipo', grupo: '', desc: '' }),
+  blocos: () => ({ nome: 'Novo bloco', escopo: '', integ: '', obs: '' }),
+  'projeto.principios': () => ({ t: 'Novo princípio', d: '' }),
+  'projeto.fases': () => ({ n: String(S.projeto.fases.length), nome: 'Nova fase', obj: '', ent: '', lid: [] }),
+};
 
 /* =====================================================================
-   4. ESTADO E PERSISTÊNCIA
+   2. ESTADO
    ===================================================================== */
 const clone = o => JSON.parse(JSON.stringify(o));
-let S = load();
-const ui = { tab: 'visao', procArea: '*', procStatus: '', procQ: '', procView: 'cards', modPrio: '', modOnda: '', modQ: '', taskFilter: 'abertas', taskQ: '', implKind: 'modulos', ideiaStatus: '', admSec: 'participantes' };
+let S = clone(SEED);
+let sb = null, canEdit = false, isAdm = false, USER_TOK = '';
+let VER = 0, META = { em: null, por: null };
+const ui = { tab: 'modulos', edit: false, procArea: '*', procStatus: '', procQ: '', procMod: '', procView: 'cards', modPrio: '', modOnda: '', modQ: '', modView: 'cards', implKind: 'modulos', ideiaStatus: '', admSec: 'participantes', focus: '' };
 
-function load() {
-  try {
-    const raw = localStorage.getItem(LS_KEY);
-    if (raw) { const d = JSON.parse(raw); if (d && d.participantes) return fillMissing(d); }
-  } catch (e) {}
-  return clone(SEED);
+/* Garante o formato atual (dados antigos / importados) */
+function migrate(d) {
+  d = d && typeof d === 'object' ? d : {};
+  for (const k in SEED) if (d[k] === undefined) d[k] = clone(SEED[k]);
+  d.textos = Object.assign(clone(SEED.textos), d.textos || {});
+  d.textos.sec = Object.assign(clone(SEED.textos.sec), d.textos.sec || {});
+  d.listas = Object.assign(clone(SEED.listas), d.listas || {});
+  d.projeto = Object.assign(clone(SEED.projeto), d.projeto || {});
+  if (d.projeto.papelProtheus && !d.projeto.camadasMigradas) { /* versão 1 */
+    d.projeto.camadas = clone(SEED.projeto.camadas);
+    d.projeto.camadas[0].desc = d.projeto.papelIA || d.projeto.camadas[0].desc;
+    d.projeto.camadas[1].desc = d.projeto.papelPlataforma || d.projeto.camadas[1].desc;
+    d.projeto.camadas[2].desc = d.projeto.papelProtheus || d.projeto.camadas[2].desc;
+    delete d.projeto.papelIA; delete d.projeto.papelPlataforma; delete d.projeto.papelProtheus;
+  }
+  let n = 0;
+  const ids = arr => (arr || []).forEach(x => { if (!x.id) x.id = 'x' + Date.now().toString(36) + (n++); });
+  ids(d.projeto.principios); ids(d.projeto.fases); ids(d.blocos);
+  const etIds = d.etapas.map(e => e.id), porNome = Object.fromEntries(d.etapas.map(e => [e.nome, e.id]));
+  ['modulos', 'processos'].forEach(c => (d[c] || []).forEach(x => { if (!etIds.includes(x.etapa)) x.etapa = porNome[x.etapa] || etIds[0]; }));
+  delete d.tarefas; delete d._savedAt;
+  d.schema = SCHEMA;
+  return d;
 }
-function fillMissing(d) { for (const k in SEED) if (d[k] === undefined) d[k] = clone(SEED[k]); return d; }
-function persist(msg) {
-  S._savedAt = new Date().toISOString();
-  try { localStorage.setItem(LS_KEY, JSON.stringify(S)); } catch (e) {}
-  stamp(); if (msg) toast(msg);
+
+/* Caminhos: "modulos.#crm.escopo", "projeto.principios.#pr1.d", "textos.visao.t" */
+function walk(o, segs) {
+  for (const s of segs) { if (o == null) return undefined; o = s[0] === '#' ? (Array.isArray(o) ? o.find(x => x.id === s.slice(1)) : undefined) : o[s]; }
+  return o;
 }
-function stamp() {
-  const el = document.getElementById('savedAt');
-  if (!S._savedAt) { el.textContent = 'Dados iniciais da planilha'; return; }
-  const d = new Date(S._savedAt);
-  el.textContent = 'Salvo ' + d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-}
+const getP = (st, p) => walk(st, p.split('.'));
+function setP(st, p, v) { const segs = p.split('.'), last = segs.pop(), o = walk(st, segs); if (o && typeof o === 'object') o[last] = v; }
 
 /* =====================================================================
-   5. UTILITÁRIOS
+   3. SALVAMENTO COMPARTILHADO (com versão)
+   Cada alteração é uma função aplicada ao estado. Se outra pessoa
+   salvou antes, o projeto é recarregado e as alterações pendentes são
+   reaplicadas por cima — ninguém perde o que editou.
+   ===================================================================== */
+let ops = [], saving = false, timer = null, syncState = '';
+function commit(fn, rerender) {
+  if (!canEdit) return;
+  fn(S); ops.push(fn);
+  if (rerender) render();
+  clearTimeout(timer); timer = setTimeout(flush, 450); setSync('pendente');
+}
+async function fetchRemote() {
+  const { data, error } = await sb.rpc('proj_fiorella_obter');
+  if (error) throw error;
+  return data && data[0] ? data[0] : null;
+}
+async function flush() {
+  if (saving) { clearTimeout(timer); timer = setTimeout(flush, 400); return; }
+  if (!ops.length) return;
+  saving = true; setSync('salvando');
+  try {
+    let ok = false;
+    for (let t = 0; t < 5 && !ok; t++) {
+      const n = ops.length;
+      const { data, error } = await sb.rpc('proj_fiorella_salvar', { p_dados: S, p_versao: VER });
+      if (!error) {
+        const r = data[0]; VER = r.versao; META = { em: r.atualizado_em, por: r.atualizado_por };
+        ops.splice(0, n); ok = true; break;
+      }
+      if (!/conflito/.test(error.message || '')) throw error;
+      const rem = await fetchRemote();
+      S = migrate(rem ? rem.dados : clone(SEED)); VER = rem ? rem.versao : 0;
+      ops.forEach(f => f(S));
+      if (!typing()) render();
+    }
+    if (!ok) throw new Error('muitas edições simultâneas');
+    setSync('ok');
+  } catch (e) {
+    console.error('[projeto] salvar', e);
+    setSync('erro', /sem_permissao/.test(e.message || '') ? 'Sem permissão para editar' : 'Erro ao salvar — clique para tentar de novo');
+  } finally {
+    saving = false;
+    if (ops.length && syncState !== 'erro') { clearTimeout(timer); timer = setTimeout(flush, 300); }
+  }
+}
+function setSync(st, msg) {
+  syncState = st;
+  const el = $('#sync'); el.className = 'sync' + (st === 'erro' ? ' erro' : st === 'salvando' || st === 'pendente' ? ' salvando' : '');
+  if (st === 'erro') { el.textContent = msg; el.dataset.act = 'retry'; return; }
+  delete el.dataset.act;
+  if (st === 'salvando' || st === 'pendente') { el.textContent = 'Salvando…'; return; }
+  if (!canEdit) { el.textContent = 'Somente leitura'; return; }
+  if (!META.em) { el.textContent = VER ? '' : 'Projeto ainda não salvo'; return; }
+  const d = new Date(META.em);
+  el.textContent = `Salvo ${d.toLocaleDateString('pt-BR')} ${d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}${META.por ? ' · ' + META.por : ''}`;
+}
+function typing() { const a = document.activeElement; return a && a !== document.body && (a.isContentEditable || /INPUT|TEXTAREA|SELECT/.test(a.tagName)); }
+/* Atualiza com o que os outros salvaram (ao voltar para a aba e a cada minuto) */
+async function refresh() {
+  if (!sb || ops.length || saving || typing() || document.hidden || $('#modal').open) return;
+  try {
+    const rem = await fetchRemote();
+    if (rem && rem.versao > VER) { S = migrate(rem.dados); VER = rem.versao; META = { em: rem.atualizado_em, por: rem.atualizado_por }; setSync('ok'); const y = scrollY; render(); scrollTo(0, y); }
+  } catch (e) {}
+}
+window.addEventListener('focus', refresh);
+setInterval(refresh, 60000);
+window.addEventListener('beforeunload', e => { if (ops.length || saving) { e.preventDefault(); e.returnValue = ''; } });
+
+/* =====================================================================
+   4. UTILITÁRIOS E COMPONENTES EDITÁVEIS
    ===================================================================== */
 const $ = s => document.querySelector(s);
 function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
-function slug(s) { return String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 24) || 'item'; }
-function newId(col, base) { let id = slug(base), n = 2; while (S[col].some(x => x.id === id)) id = slug(base) + '_' + n++; return id; }
+function slug(s) { return String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 20) || 'item'; }
+const uid = base => slug(base) + '_' + Math.random().toString(36).slice(2, 6);
 const byId = (col, id) => (S[col] || []).find(x => x.id === id);
-const nome = (col, id) => { const x = byId(col, id); return x ? x.nome : ''; };
+const nome = (col, id) => { const x = byId(col, id); return x ? (x.nome || x.titulo) : ''; };
+const norm = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 function initials(n) { return String(n).split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase(); }
 function tokName(t) { if (!t) return ''; if (t[0] === '@') { const p = byId('participantes', t.slice(1)); return p ? p.nome : ''; } return t; }
-function chips(toks, empty = 'A definir') {
-  const out = (toks || []).filter(Boolean).map(t => {
-    if (t[0] === '@') {
-      const p = byId('participantes', t.slice(1)); if (!p) return '';
-      return `<button class="pchip${p.status === 'Inativo' ? ' off' : ''}" data-act="person" data-id="${esc(p.id)}" title="${esc(p.cargo)}"><span class="av">${esc(initials(p.nome))}</span>${esc(p.nome)}</button>`;
-    }
-    return `<span class="tchip">${esc(t)}</span>`;
-  }).join('');
-  return out || `<span class="muted">${esc(empty)}</span>`;
-}
-const TONE = { 'Ativo': 'ok', 'Em uso': 'ok', 'Implantado': 'ok', 'Concluída': 'ok', 'Em produção': 'ok', 'Aprovado': 'ok', 'Aprovada': 'ok', 'Sim': 'ok',
-  'Em andamento': 'info', 'Em mapeamento': 'info', 'Em definição': 'info', 'Em construção': 'info', 'Em homologação': 'info', 'Em análise': 'info',
-  'Definida': 'ok', 'Aguardando': 'warn', 'Pausado': 'warn', 'Em revisão': 'warn', 'Pendente': 'warn',
-  'Inativo': 'mute', 'Cancelada': 'mute', 'Descartada': 'mute', 'Não': 'mute',
-  'Alta': 'hi', 'Média': 'mid', 'Baixa': 'low' };
-function pill(s) { return s ? `<span class="pill t-${TONE[s] || 'neutral'}">${esc(s)}</span>` : ''; }
-function prio(s) { return s ? `<span class="pill t-${TONE[s] || 'neutral'}" title="Prioridade">▲ ${esc(s)}</span>` : ''; }
-function fmtDate(d) { if (!d) return ''; const [y, m, dd] = d.split('-'); return `${dd}/${m}/${y}`; }
-function norm(s) { return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
-function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 2200); }
-const optList = (arr, sel, blank) => (blank !== undefined ? `<option value="">${esc(blank)}</option>` : '') + arr.map(o => `<option${o === sel ? ' selected' : ''}>${esc(o)}</option>`).join('');
-const isOpen = t => t.status !== 'Concluída' && t.status !== 'Cancelada';
-const overdue = t => isOpen(t) && t.prazo && t.prazo < new Date().toISOString().slice(0, 10);
+function notify(msg, type) { if (window.FiorellaUI) FiorellaUI.notify(msg, { type }); else console.log(msg); }
+async function ask(message, danger) { return window.FiorellaUI ? FiorellaUI.confirm({ title: danger ? 'Excluir' : 'Confirmar', message, confirmText: danger ? 'Excluir' : 'Confirmar', danger }) : confirm(message); }
 
-/* Onde um participante aparece (alimentação automática das guias) */
+function canEditPath(p) { if (!ui.edit || !canEdit) return false; return ADM_ROOTS.includes(p.split('.')[0]) ? isAdm : true; }
+const edCol = col => ui.edit && canEdit && (!ADM_ROOTS.includes(col) || isAdm);
+
+/* Texto editável (contenteditable) */
+function T(p, o = {}) {
+  const tag = o.tag || 'span', v = getP(S, p), ed = canEditPath(p);
+  const ph = ed ? (o.phEdit || 'Clique para escrever') : (o.ph || '');
+  return `<${tag} class="et${o.one ? ' one' : ''}${o.cls ? ' ' + o.cls : ''}" data-p="${esc(p)}" data-ph="${esc(ph)}"${ed ? ' contenteditable="plaintext-only" spellcheck="true"' : ''}>${esc(v ?? '')}</${tag}>`;
+}
+/* Selo de status / prioridade */
+const TONE = { 'Ativo': 'success', 'Em uso': 'success', 'Implantado': 'success', 'Em produção': 'success', 'Aprovado': 'success', 'Aprovada': 'success', 'Sim': 'success', 'Definida': 'success',
+  'Em andamento': 'info', 'Em mapeamento': 'info', 'Em definição': 'info', 'Em construção': 'info', 'Em homologação': 'info', 'Em análise': 'info',
+  'Pausado': 'warning', 'Em revisão': 'warning', 'Pendente': 'warning', 'Alta': 'danger', 'Média': 'warning' };
+const pill = s => s ? `<span class="fi-badge${TONE[s] ? ' fi-badge--' + TONE[s] : ''}">${esc(s)}</span>` : '';
+/* Seleção a partir de uma lista de opções (ADM → Listas) */
+function SEL(p, lista, o = {}) {
+  const v = getP(S, p) || '';
+  if (!canEditPath(p)) return v ? pill(v) : (o.empty ? `<span class="muted">${esc(o.empty)}</span>` : '');
+  const opts = S.listas[lista] || [], all = v && !opts.includes(v) ? [v, ...opts] : opts;
+  return `<select class="es" data-p="${esc(p)}" title="${esc(o.title || '')}"><option value="">—</option>${all.map(x => `<option${x === v ? ' selected' : ''}>${esc(x)}</option>`).join('')}</select>`;
+}
+/* Referência a outro cadastro (área, módulo, tipo, etapa) */
+function REF(p, col, o = {}) {
+  const v = getP(S, p) || '';
+  if (!canEditPath(p)) return v && byId(col, v) ? (o.tag ? `<span class="tag">${esc(nome(col, v))}</span>` : esc(nome(col, v))) : `<span class="muted">${esc(o.empty ?? '—')}</span>`;
+  return `<select class="es" data-p="${esc(p)}"><option value="">—</option>${S[col].map(x => `<option value="${esc(x.id)}"${x.id === v ? ' selected' : ''}>${esc(x.nome || x.titulo)}</option>`).join('')}</select>`;
+}
+/* Pessoas: participantes cadastrados ou texto livre */
+function chip(t) {
+  if (t[0] === '@') {
+    const p = byId('participantes', t.slice(1));
+    if (!p) return `<span class="tchip">(removido)</span>`;
+    return `<button class="pchip${p.status === 'Inativo' ? ' off' : ''}" data-act="person" data-id="${esc(p.id)}" title="${esc(p.cargo)}"><span class="av">${esc(initials(p.nome))}</span>${esc(p.nome)}</button>`;
+  }
+  return `<span class="tchip">${esc(t)}</span>`;
+}
+function PPL(p, o = {}) {
+  const toks = (getP(S, p) || []).filter(Boolean), ed = canEditPath(p);
+  let h = toks.map((t, i) => `<span class="pw">${chip(t)}${ed ? `<button class="x" data-act="ppl-rm" data-p="${esc(p)}" data-i="${i}" title="Remover">×</button>` : ''}</span>`).join('');
+  if (!h) h = `<span class="muted">${esc(o.empty ?? 'A definir')}</span>`;
+  if (ed) h += `<button class="padd" data-act="ppl-add" data-p="${esc(p)}"${o.single ? ' data-single="1"' : ''} title="Adicionar pessoa">＋</button>`;
+  return `<span class="ppl">${h}</span>`;
+}
+const RM = (col, id) => edCol(col.split('.')[0]) ? `<button class="rm" data-act="rm" data-col="${esc(col)}" data-id="${esc(id)}" title="Excluir">✕</button>` : '';
+const ADD = (col, label) => edCol(col.split('.')[0]) ? `<button class="fi-btn fi-btn--primary" data-act="add" data-col="${esc(col)}">＋ ${esc(label)}</button>` : '';
+
+/* Vínculos de um participante em todo o projeto */
 function usage(pid) {
   const tok = '@' + pid, out = [];
-  for (const col in SCHEMAS) {
-    const pf = SCHEMAS[col].fields.filter(f => f.t === 'people' || f.t === 'person');
-    for (const it of S[col]) for (const f of pf) if ((it[f.k] || []).includes(tok)) out.push({ col, id: it.id, nome: it.nome || it.titulo, papel: f.l });
-  }
-  S.projeto.fases.forEach(f => { if (f.lid.includes(tok)) out.push({ col: 'fases', nome: `Fase ${f.n} — ${f.nome}`, papel: 'Liderança' }); });
+  for (const col in PEOPLE_FIELDS) for (const it of S[col] || []) for (const [k, l] of PEOPLE_FIELDS[col]) if ((it[k] || []).includes(tok)) out.push({ col, nome: it.nome || it.titulo, papel: l });
+  S.projeto.fases.forEach(f => { if ((f.lid || []).includes(tok)) out.push({ col: 'fases', nome: `Fase ${f.n} — ${f.nome}`, papel: 'Liderança' }); });
   return out;
 }
 
 /* =====================================================================
-   6. GUIAS
+   5. MENU — duas famílias: Acompanhamento (execução) e Sobre o projeto
    ===================================================================== */
-const TABS = [
-  ['visao', 'Visão Geral'], ['equipe', 'Equipe'], ['sistemas', 'Sistemas'], ['modulos', 'Módulos'],
-  ['processos', 'Processos'], ['tarefas', 'Tarefas e Chamados'], ['implantacao', 'Implantação'], ['backlog', 'Backlog'], ['adm', '⚙ ADM'],
+const ICON = {
+  exec: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
+  doc: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/></svg>',
+  adm: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
+};
+const MENU = [
+  { fam: 'exec', label: 'Acompanhamento', tabs: [['modulos', 'Módulos'], ['processos', 'Processos'], ['implantacao', 'Implantação'], ['backlog', 'Backlog']] },
+  { fam: 'doc', label: 'Sobre o projeto', tabs: [['visao', 'Visão Geral'], ['equipe', 'Equipe'], ['sistemas', 'Sistemas']] },
+  { fam: 'adm', label: '', tabs: [['adm', 'ADM']], admin: true },
 ];
-function renderTabs() {
-  $('#tabs').innerHTML = TABS.map(([id, l]) => `<button class="tab${id === 'adm' ? ' adm' : ''}${ui.tab === id ? ' on' : ''}" data-act="tab" data-id="${id}">${l}</button>`).join('');
+const FAM_OF = Object.fromEntries(MENU.flatMap(g => g.tabs.map(([id]) => [id, g])));
+function renderMenu() {
+  $('#menu').innerHTML = MENU.filter(g => !g.admin || isAdm).map(g => `<div class="fam fam-${g.fam}">
+    ${g.label ? `<span class="fam-l">${ICON[g.fam]}${g.label}</span>` : ''}
+    ${g.tabs.map(([id, l]) => `<a href="#${id}" class="tab${ui.tab === id ? ' on' : ''}" data-act="tab" data-id="${id}">${g.label ? '' : ICON[g.fam]}${l}</a>`).join('')}
+  </div>`).join('');
 }
 function go(tab) {
-  if (!VIEWS[tab]) tab = 'visao';
+  if (!VIEWS[tab] || (tab === 'adm' && !isAdm)) tab = 'modulos';
   ui.tab = tab;
   if (location.hash !== '#' + tab) history.replaceState(null, '', '#' + tab);
-  renderTabs(); render();
+  try { localStorage.setItem('projetoFiorella.tab', tab); } catch (e) {}
+  renderMenu(); render();
   const on = document.querySelector('.tab.on'); if (on) on.scrollIntoView({ block: 'nearest', inline: 'nearest' });
 }
-function render() { VIEWS[ui.tab](); }
-
-function head(title, desc, actions = '') {
-  return `<div class="page-head"><div><h1>${esc(title)}</h1>${desc ? `<p>${desc}</p>` : ''}</div>${actions ? `<div class="actions">${actions}</div>` : ''}</div>`;
-}
-const secT = (t, count, actions) => `<div class="section-title">${esc(t)}${count !== undefined ? ` <span class="count">${count}</span>` : ''}${actions ? `<span class="actions">${actions}</span>` : ''}</div>`;
-const btnNew = (col, label) => `<button class="btn primary" data-act="new" data-col="${col}">＋ ${esc(label)}</button>`;
-
-/* ---------- 6.1 Visão Geral ---------- */
-function vVisao() {
-  const P = S.projeto;
-  const ativos = S.participantes.filter(p => p.status === 'Ativo').length;
-  const alta = S.modulos.filter(m => m.prioridade === 'Alta').length;
-  const tAb = S.tarefas.filter(isOpen).length;
-  const semRef = S.areas.filter(a => a.mapear === 'Sim' && !(a.referencia || []).length).length;
-  const ideias = S.ideias.filter(i => i.status === 'Nova' || i.status === 'Em análise').length;
-  $('#view').innerHTML = `
-    ${head('Visão Geral', 'Objetivo, conceito e princípios do projeto da Plataforma Corporativa Fiorella.')}
-    <div class="card hero">
-      <div class="eyebrow">Objetivo do projeto</div>
-      <h2>${esc(P.nome)}</h2>
-      <p>${esc(P.objetivo)}</p>
-    </div>
-
-    <div class="grid g4" style="margin-top:14px">
-      <button class="card kpi" data-act="tab" data-id="equipe"><div class="v">${ativos}</div><div class="l">Participantes ativos</div><div class="s">${semRef ? `${semRef} setor(es) sem referência` : 'Todos os setores com referência'}</div></button>
-      <button class="card kpi" data-act="tab" data-id="modulos"><div class="v">${S.modulos.length}</div><div class="l">Módulos / projetos</div><div class="s">${alta} com prioridade alta</div></button>
-      <button class="card kpi" data-act="tab" data-id="processos"><div class="v">${S.processos.length}</div><div class="l">Processos cadastrados</div><div class="s">${S.processos.filter(p => p.status === 'Implantado').length} implantados</div></button>
-      <button class="card kpi" data-act="tab" data-id="tarefas"><div class="v">${tAb}</div><div class="l">Tarefas abertas</div><div class="s">${ideias} ideia(s) no backlog</div></button>
-    </div>
-
-    ${secT('Conceito: Protheus + Plataforma Fiorella + IA')}
-    <div class="layers">
-      <div class="layer ia"><div class="ln">IA<small>Camada transversal</small></div><p>${esc(P.papelIA)}</p></div>
-      <div class="layer-arrow">↕ atua sobre os dados estruturados da plataforma</div>
-      <div class="layer plat"><div class="ln">Plataforma Fiorella<small>Gestão e execução</small></div><p>${esc(P.papelPlataforma)}</p></div>
-      <div class="layer-arrow">↕ integração (a plataforma fica “abaixo” do Protheus, sem substituí-lo)</div>
-      <div class="layer"><div class="ln">Protheus<small>ERP · sistema oficial</small></div><p>${esc(P.papelProtheus)}</p></div>
-    </div>
-
-    ${secT('Princípios do projeto')}
-    <div class="grid g4">
-      ${P.principios.map((p, i) => `<div class="card card-pad principle"><h4><span>${i + 1}</span>${esc(p.t)}</h4><p>${esc(p.d)}</p></div>`).join('')}
-    </div>
-
-    ${secT('Fases macro', undefined, '<span class="muted" style="font-size:12px">Sequência inicial sugerida; poderá ser reordenada após o mapeamento.</span>')}
-    <div class="phases">
-      ${P.fases.map(f => `<div class="card phase"><div class="n">${esc(f.n)}</div><h4>${esc(f.nome)}</h4><p>${esc(f.obj)}</p><div class="ent">${esc(f.ent)}</div><div>${chips(f.lid)}</div></div>`).join('')}
-    </div>`;
+function render() {
+  document.body.classList.toggle('editing', ui.edit);
+  $('#editBar').hidden = !ui.edit;
+  const b = $('#btnEdit'); b.hidden = !canEdit; b.classList.toggle('on', ui.edit); b.textContent = ui.edit ? '✓ Editando' : '✎ Editar';
+  VIEWS[ui.tab]();
+  if (ui.focus) { const el = document.querySelector(ui.focus); ui.focus = ''; if (el) { el.scrollIntoView({ block: 'center' }); el.focus(); if (el.isContentEditable) document.getSelection().selectAllChildren(el); } }
 }
 
-/* ---------- 6.2 Equipe e Governança ---------- */
-function personCard(p) {
-  const tipo = byId('tipos', p.tipo), area = byId('areas', p.area), u = usage(p.id);
-  return `<div class="card person">
-    <div class="person-head"><span class="av lg">${esc(initials(p.nome))}</span>
-      <div style="min-width:0;flex:1"><h3>${esc(p.nome)}</h3><div class="cargo">${esc(p.cargo)}</div></div>
-      <button class="icon-btn" data-act="edit" data-col="participantes" data-id="${esc(p.id)}" title="Editar">✎</button></div>
-    <div class="meta">${tipo ? `<span class="tag">${esc(tipo.nome)}</span>` : ''}${area ? `<span class="tag">${esc(area.nome)}</span>` : ''}${p.status !== 'Ativo' ? pill(p.status) : ''}</div>
-    ${p.resp ? `<p class="resp">${esc(p.resp)}</p>` : ''}
-    <div class="foot"><span>${p.foco ? 'Foco: <b style="color:var(--ink-2)">' + esc(p.foco) + '</b>' : esc(p.nivel || '')}</span>
-      <button class="btn sm" data-act="person" data-id="${esc(p.id)}">${u.length} vínculo(s)</button></div>
-  </div>`;
+/* Cabeçalho de página: eyebrow com a família + título e descrição editáveis */
+function head(tab, actions = '') {
+  const g = FAM_OF[tab];
+  return `<div class="fi-page-head fam-ink-${g.fam}"><div style="min-width:0;flex:1">
+    <div class="fi-eyebrow">${g.label || 'Administração'}</div>
+    ${T(`textos.${tab}.t`, { tag: 'h1', cls: 'fi-title', one: 1 })}
+    ${T(`textos.${tab}.d`, { tag: 'p', cls: 'fi-subtitle' })}
+  </div>${actions ? `<div class="head-actions">${actions}</div>` : ''}</div>`;
 }
-function vEquipe() {
-  const core = S.participantes.filter(p => { const t = byId('tipos', p.tipo); return !t || t.grupo !== 'Setores'; });
-  const groups = GRUPOS.filter(g => g !== 'Setores').map(g => [g, core.filter(p => (byId('tipos', p.tipo) || {}).grupo === g)]);
-  const semGrupo = core.filter(p => !byId('tipos', p.tipo));
-  if (semGrupo.length) groups.push(['Sem papel definido', semGrupo]);
-  const setores = S.areas.filter(a => a.mapear === 'Sim');
-  const pend = setores.filter(a => !(a.referencia || []).length);
-  $('#view').innerHTML = `
-    ${head('Equipe e Governança', 'Papéis definidos para evitar sobreposição, dependência externa e gargalos de decisão. Os dados vêm do cadastro de participantes (ADM).', btnNew('participantes', 'Participante'))}
-    ${groups.filter(([, l]) => l.length).map(([g, l]) => `<div class="group-label">${esc(g)} · ${l.length}</div><div class="grid gauto">${l.map(personCard).join('')}</div>`).join('')}
+const sec = (key, count, right) => `<div class="sec">${T('textos.sec.' + key, { one: 1 })}${count !== undefined ? ` <span class="count">${count}</span>` : ''}${right ? `<span class="right">${right}</span>` : ''}</div>`;
+const optList = (arr, sel, blank) => `<option value="">${esc(blank)}</option>` + arr.map(o => `<option${o === sel ? ' selected' : ''}>${esc(o)}</option>`).join('');
 
-    ${secT('Referências de processo por setor', `${setores.length - pend.length}/${setores.length} definidas`, `<button class="btn sm" data-act="adm-go" data-id="areas">Editar áreas</button>`)}
-    <div class="card table-wrap"><table class="tbl">
-      <thead><tr><th>Setor</th><th>Referência</th><th>Função</th><th>Situação</th><th></th></tr></thead>
-      <tbody>${setores.map(a => `<tr>
-        <td><b>${esc(a.nome)}</b></td>
-        <td>${chips(a.referencia, '—')}</td>
-        <td class="muted">Fornecer informações sobre rotinas atuais da área (AS-IS)</td>
-        <td>${(a.referencia || []).length ? pill('Definida') : pill('Pendente')}</td>
-        <td class="w-act"><button class="icon-btn" data-act="edit" data-col="areas" data-id="${esc(a.id)}" title="Editar">✎</button></td></tr>`).join('')}
-      </tbody></table></div>`;
-}
-
-/* ---------- 6.3 Arquitetura / Sistemas ---------- */
-function vSistemas() {
-  const byCat = CAT_SIS.map(c => [c, S.sistemas.filter(s => s.cat === c)]).filter(([, l]) => l.length);
-  const outros = S.sistemas.filter(s => !CAT_SIS.includes(s.cat));
-  if (outros.length) byCat.push(['Outros', outros]);
-  $('#view').innerHTML = `
-    ${head('Arquitetura e Sistemas', 'Protheus, Plataforma Fiorella, sistemas internos, equipamentos, serviços externos e futuras integrações.', btnNew('sistemas', 'Sistema'))}
-    ${byCat.map(([c, l]) => `<div class="group-label">${esc(c)} · ${l.length}</div><div class="grid gauto">${l.map(s => `
-      <div class="card item clickable" data-act="edit" data-col="sistemas" data-id="${esc(s.id)}">
-        <div class="item-head"><h3>${esc(s.nome)}</h3>${pill(s.status)}</div>
-        <p>${esc(s.desc)}</p>
-        <div class="kv"><div class="full"><div class="k">Integrações</div><div class="v">${esc(s.integ) || '<span class="muted">A definir</span>'}</div></div>
-        <div class="full"><div class="k">Responsáveis</div><div class="v">${chips(s.resp)}</div></div></div>
-      </div>`).join('')}</div>`).join('')}
-
-    ${secT('Arquitetura funcional da plataforma', S.blocos.length + ' blocos')}
-    <div class="card table-wrap"><table class="tbl">
-      <thead><tr><th>Bloco</th><th>Escopo resumido</th><th>Integração principal</th><th>Observação</th></tr></thead>
-      <tbody>${S.blocos.map(b => `<tr><td><b>${esc(b.nome)}</b></td><td>${esc(b.escopo)}</td><td>${esc(b.integ)}</td><td class="muted">${esc(b.obs)}</td></tr>`).join('')}</tbody>
-    </table></div>`;
-}
-
-/* ---------- 6.4 Módulos e Projetos ---------- */
+/* =====================================================================
+   6. GUIAS — ACOMPANHAMENTO
+   ===================================================================== */
+/* ---------- Módulos ---------- */
 function vModulos() {
+  const setores = S.areas.filter(a => a.mapear === 'Sim'), comRef = setores.filter(a => (a.referencia || []).length).length;
+  $('#view').className = 'fi-page fam-ink-exec';
   $('#view').innerHTML = `
-    ${head('Módulos e Projetos', 'Base para priorização e definição de responsáveis, com situação e próximos passos.', btnNew('modulos', 'Módulo'))}
+    ${head('modulos', ADD('modulos', 'Módulo'))}
+    <div class="fi-grid fi-grid--4" style="margin-bottom:16px">
+      <div class="fi-card fi-metric fi-metric--brand"><div class="fi-metric__top"><span>Módulos / projetos</span></div><div class="fi-metric__value">${S.modulos.length}</div><div class="fi-metric__foot">${S.modulos.filter(m => m.prioridade === 'Alta').length} com prioridade alta</div></div>
+      <button class="fi-card fi-metric" data-act="tab" data-id="processos"><div class="fi-metric__top"><span>Processos cadastrados</span></div><div class="fi-metric__value">${S.processos.length}</div><div class="fi-metric__foot">${S.processos.filter(p => p.status === 'Implantado').length} implantados</div></button>
+      <button class="fi-card fi-metric" data-act="tab" data-id="equipe"><div class="fi-metric__top"><span>Referências por setor</span></div><div class="fi-metric__value">${comRef}/${setores.length}</div><div class="fi-metric__foot">${setores.length - comRef} setor(es) pendente(s)</div></button>
+      <button class="fi-card fi-metric" data-act="tab" data-id="backlog"><div class="fi-metric__top"><span>Ideias no backlog</span></div><div class="fi-metric__value">${S.ideias.filter(i => i.status === 'Nova' || i.status === 'Em análise').length}</div><div class="fi-metric__foot">novas ou em análise</div></button>
+    </div>
     <div class="toolbar">
-      <input class="input search" placeholder="Buscar módulo, pessoa, dependência…" data-ui="modQ" value="${esc(ui.modQ)}">
-      <select class="select" data-ui="modPrio">${optList(PRIORIDADES, ui.modPrio, 'Todas as prioridades')}</select>
-      <select class="select" data-ui="modOnda">${optList(ONDAS, ui.modOnda, 'Todas as ondas')}</select>
+      <input class="fi-input search" placeholder="Buscar módulo, pessoa, dependência…" data-ui="modQ" value="${esc(ui.modQ)}">
+      <select class="fi-select" data-ui="modPrio">${optList(S.listas.prioridades, ui.modPrio, 'Todas as prioridades')}</select>
+      <select class="fi-select" data-ui="modOnda">${optList(S.listas.ondas, ui.modOnda, 'Todas as ondas')}</select>
+      <span style="flex:1"></span>
+      <div class="seg"><button class="${ui.modView === 'cards' ? 'on' : ''}" data-act="view" data-k="modView" data-id="cards">Cartões</button><button class="${ui.modView === 'planilha' ? 'on' : ''}" data-act="view" data-k="modView" data-id="planilha">Planilha</button></div>
     </div>
     <div id="list"></div>`;
   fillModulos();
 }
 function fillModulos() {
-  const q = norm(ui.modQ);
+  const q = norm(ui.modQ), ord = { 'Alta': 0, 'Média': 1, 'Baixa': 2 };
   const l = S.modulos.filter(m => (!ui.modPrio || m.prioridade === ui.modPrio) && (!ui.modOnda || m.onda === ui.modOnda) &&
-    (!q || norm([m.nome, m.dep, m.escopo, m.proximos, ...['sponsor', 'dono', 'coord', 'dev', 'proc', 'keyuser'].flatMap(k => (m[k] || []).map(tokName))].join(' ')).includes(q)));
-  const order = { 'Alta': 0, 'Média': 1, 'Baixa': 2 };
-  l.sort((a, b) => (order[a.prioridade] ?? 3) - (order[b.prioridade] ?? 3));
-  $('#list').innerHTML = !l.length ? `<div class="empty-state">Nenhum módulo encontrado.</div>` : `<div class="grid gauto">${l.map(m => {
+    (!q || norm([m.nome, m.dep, m.escopo, m.proximos, ...PEOPLE_FIELDS.modulos.flatMap(([k]) => (m[k] || []).map(tokName))].join(' ')).includes(q)));
+  if (!ui.edit) l.sort((a, b) => (ord[a.prioridade] ?? 3) - (ord[b.prioridade] ?? 3));
+  if (!l.length) { $('#list').innerHTML = `<div class="fi-card fi-empty">Nenhum módulo encontrado.</div>`; return; }
+  const P = (m, k) => `modulos.#${m.id}.${k}`;
+  if (ui.modView === 'planilha') {
+    $('#list').innerHTML = `<div class="fi-table-wrap"><table class="fi-table sheet"><thead><tr>
+      <th>Módulo</th><th>Prioridade</th><th>Onda</th><th>Situação</th><th>Etapa</th><th>Sponsor</th><th>Dono funcional</th><th>Coord. técnico</th><th>Desenvolvimento</th><th>Processos</th><th>Key User</th><th>Dependências</th><th>Próximos passos</th><th></th></tr></thead>
+      <tbody>${l.map(m => `<tr>
+        <td class="wide"><b>${T(P(m, 'nome'), { one: 1 })}</b></td><td class="nw">${SEL(P(m, 'prioridade'), 'prioridades')}</td><td class="nw">${SEL(P(m, 'onda'), 'ondas')}</td>
+        <td class="nw">${SEL(P(m, 'status'), 'stModulo')}</td><td class="nw">${REF(P(m, 'etapa'), 'etapas')}</td>
+        ${PEOPLE_FIELDS.modulos.map(([k]) => `<td>${PPL(P(m, k))}</td>`).join('')}
+        <td>${T(P(m, 'dep'))}</td><td class="wide">${T(P(m, 'proximos'))}</td><td class="nw">${RM('modulos', m.id)}</td></tr>`).join('')}
+      </tbody></table></div>`;
+    return;
+  }
+  $('#list').innerHTML = `<div class="gauto">${l.map(m => {
     const np = S.processos.filter(p => p.modulo === m.id).length;
-    return `<div class="card item">
-      <div class="item-head"><div style="flex:1;min-width:0"><h3>${esc(m.nome)}</h3><div class="sub">Onda: ${esc(m.onda || '—')} · Dependências: ${esc(m.dep || '—')}</div></div>
-        <button class="icon-btn" data-act="edit" data-col="modulos" data-id="${esc(m.id)}" title="Editar">✎</button></div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">${prio(m.prioridade)}${pill(m.status)}<span class="tag">Etapa: ${esc(m.etapa || '—')}</span></div>
-      ${m.escopo ? `<p>${esc(m.escopo)}</p>` : ''}
-      <div class="kv">
-        <div><div class="k">Sponsor</div><div class="v">${chips(m.sponsor)}</div></div>
-        <div><div class="k">Dono funcional</div><div class="v">${chips(m.dono)}</div></div>
-        <div><div class="k">Coord. técnico</div><div class="v">${chips(m.coord)}</div></div>
-        <div><div class="k">Desenvolvimento</div><div class="v">${chips(m.dev)}</div></div>
-        <div><div class="k">Processos</div><div class="v">${chips(m.proc)}</div></div>
-        <div><div class="k">Key User</div><div class="v">${chips(m.keyuser)}</div></div>
-      </div>
-      <div class="next"><b>Próximos passos</b>${m.proximos ? esc(m.proximos) : '<span class="muted">A definir</span>'}</div>
-      <div class="foot"><span class="muted grow" style="font-size:12px">${np} processo(s) vinculado(s)</span>
-        ${np ? `<button class="btn sm" data-act="proc-mod" data-id="${esc(m.id)}">Ver processos</button>` : ''}</div>
+    return `<div class="fi-card item">
+      <div class="card-top"><div class="grow"><h3>${T(P(m, 'nome'), { one: 1 })}</h3>
+        <div class="sub">Onda: ${SEL(P(m, 'onda'), 'ondas', { empty: '—' })} · Dependências: ${T(P(m, 'dep'), { ph: '—' })}</div></div>${RM('modulos', m.id)}</div>
+      <div class="row">${SEL(P(m, 'prioridade'), 'prioridades', { title: 'Prioridade' })}${SEL(P(m, 'status'), 'stModulo', { title: 'Situação' })}<span class="tag">Etapa: ${REF(P(m, 'etapa'), 'etapas')}</span></div>
+      ${T(P(m, 'escopo'), { tag: 'div', cls: 'txt' })}
+      <div class="kv">${PEOPLE_FIELDS.modulos.map(([k, lb]) => `<div><div class="k">${lb}</div>${PPL(P(m, k))}</div>`).join('')}</div>
+      <div class="next"><div class="k">Próximos passos</div>${T(P(m, 'proximos'), { tag: 'div', ph: 'A definir' })}</div>
+      <div class="foot"><span>${np} processo(s) vinculado(s)</span>${np ? `<button class="fi-btn" style="min-height:28px;padding:3px 10px" data-act="proc-mod" data-id="${esc(m.id)}">Ver processos</button>` : ''}</div>
     </div>`; }).join('')}</div>`;
 }
 
-/* ---------- 6.5 Processos ---------- */
+/* ---------- Processos ---------- */
 function vProcessos() {
-  const areasUsadas = S.areas.filter(a => a.mapear === 'Sim' || S.processos.some(p => p.area === a.id));
+  const areas = S.areas.filter(a => a.mapear === 'Sim' || S.processos.some(p => p.area === a.id));
   const cnt = id => S.processos.filter(p => p.area === id).length;
   const semArea = S.processos.filter(p => !byId('areas', p.area)).length;
+  $('#view').className = 'fi-page fam-ink-exec';
   $('#view').innerHTML = `
-    ${head('Processos', 'Cadastro de processos: área, responsável, executor, aprovador, consultado, informado, suplente, prazo, escalonamento, integração e status. As pessoas vêm do cadastro de participantes.', `<button class="btn" data-act="export-csv">⭳ CSV (Excel)</button>` + btnNew('processos', 'Processo'))}
+    ${head('processos', `<button class="fi-btn" data-act="export-csv">⭳ CSV (Excel)</button>${ADD('processos', 'Processo')}`)}
     <div class="subnav">
       <button class="${ui.procArea === '*' ? 'on' : ''}" data-act="proc-area" data-id="*">Todas<b>${S.processos.length}</b></button>
-      ${areasUsadas.map(a => `<button class="${ui.procArea === a.id ? 'on' : ''}" data-act="proc-area" data-id="${esc(a.id)}">${esc(a.nome)}<b>${cnt(a.id)}</b></button>`).join('')}
+      ${areas.map(a => `<button class="${ui.procArea === a.id ? 'on' : ''}" data-act="proc-area" data-id="${esc(a.id)}">${esc(a.nome)}<b>${cnt(a.id)}</b></button>`).join('')}
       ${semArea ? `<button class="${ui.procArea === '' ? 'on' : ''}" data-act="proc-area" data-id="">Sem área<b>${semArea}</b></button>` : ''}
     </div>
     <div class="toolbar">
-      <input class="input search" placeholder="Buscar processo ou pessoa…" data-ui="procQ" value="${esc(ui.procQ)}">
-      <select class="select" data-ui="procStatus">${optList(ST_PROC, ui.procStatus, 'Todos os status')}</select>
-      ${ui.procMod ? `<span class="tag">Módulo: ${esc(nome('modulos', ui.procMod))} <button class="icon-btn" data-act="proc-mod" data-id="">✕</button></span>` : ''}
+      <input class="fi-input search" placeholder="Buscar processo ou pessoa…" data-ui="procQ" value="${esc(ui.procQ)}">
+      <select class="fi-select" data-ui="procStatus">${optList(S.listas.stProcesso, ui.procStatus, 'Todos os status')}</select>
+      ${ui.procMod ? `<span class="tag">Módulo: ${esc(nome('modulos', ui.procMod))} <button class="x" data-act="proc-mod" data-id="">×</button></span>` : ''}
       <span style="flex:1"></span>
-      <div class="seg"><button class="${ui.procView === 'cards' ? 'on' : ''}" data-act="proc-view" data-id="cards">Cartões</button><button class="${ui.procView === 'tabela' ? 'on' : ''}" data-act="proc-view" data-id="tabela">Tabela</button></div>
+      <div class="seg"><button class="${ui.procView === 'cards' ? 'on' : ''}" data-act="view" data-k="procView" data-id="cards">Cartões</button><button class="${ui.procView === 'planilha' ? 'on' : ''}" data-act="view" data-k="procView" data-id="planilha">Planilha</button></div>
     </div>
     <div class="legend"><span><i>R</i>Responsável</span><span><i>E</i>Executor</span><span><i>A</i>Aprovador</span><span><i>C</i>Consultado</span><span><i>I</i>Informado</span><span><i>S</i>Suplente</span></div>
     <div id="list"></div>`;
@@ -891,375 +788,408 @@ function fillProcessos() {
   const q = norm(ui.procQ);
   const l = S.processos.filter(p => (ui.procArea === '*' || (ui.procArea === '' ? !byId('areas', p.area) : p.area === ui.procArea)) &&
     (!ui.procStatus || p.status === ui.procStatus) && (!ui.procMod || p.modulo === ui.procMod) &&
-    (!q || norm([p.nome, p.obs, p.integ, ...['resp', 'exec', 'aprov', 'cons', 'inf', 'sup'].flatMap(k => (p[k] || []).map(tokName))].join(' ')).includes(q)));
-  if (!l.length) { $('#list').innerHTML = `<div class="empty-state">Nenhum processo nesta seleção. <br><br>${btnNew('processos', 'Cadastrar processo')}</div>`; return; }
-  if (ui.procView === 'tabela') {
-    $('#list').innerHTML = `<div class="card table-wrap"><table class="tbl"><thead><tr>
-      <th>Processo</th><th>Área</th><th>Responsável</th><th>Executor</th><th>Aprovador</th><th>Consultado</th><th>Informado</th><th>Suplente</th><th>Prazo</th><th>Escalonamento</th><th>Integração</th><th>Status</th></tr></thead>
-      <tbody>${l.map(p => `<tr class="click" data-act="edit" data-col="processos" data-id="${esc(p.id)}">
-        <td><b>${esc(p.nome)}</b></td><td>${esc(nome('areas', p.area)) || '—'}</td><td>${chips(p.resp, '—')}</td><td>${chips(p.exec, '—')}</td><td>${chips(p.aprov, '—')}</td>
-        <td>${chips(p.cons, '—')}</td><td>${chips(p.inf, '—')}</td><td>${chips(p.sup, '—')}</td><td>${esc(p.prazo) || '—'}</td><td>${esc(p.escal) || '—'}</td><td>${esc(p.integ) || '—'}</td><td>${pill(p.status)}</td></tr>`).join('')}
+    (!q || norm([p.nome, p.obs, p.integ, ...PEOPLE_FIELDS.processos.flatMap(([k]) => (p[k] || []).map(tokName))].join(' ')).includes(q)));
+  if (!l.length) { $('#list').innerHTML = `<div class="fi-card fi-empty"><div>Nenhum processo nesta seleção.${canEdit && !ui.edit ? '<br><br>Clique em <b>✎ Editar</b> no topo para cadastrar.' : ''}</div></div>`; return; }
+  const P = (p, k) => `processos.#${p.id}.${k}`;
+  if (ui.procView === 'planilha') {
+    $('#list').innerHTML = `<div class="fi-table-wrap"><table class="fi-table sheet"><thead><tr>
+      <th>Processo</th><th>Área</th><th>Módulo</th><th>Responsável</th><th>Executor</th><th>Aprovador</th><th>Consultado</th><th>Informado</th><th>Suplente</th><th>Prazo / SLA</th><th>Escalonamento</th><th>Integração</th><th>Status</th><th>Etapa</th><th>Observações</th><th></th></tr></thead>
+      <tbody>${l.map(p => `<tr>
+        <td class="wide"><b>${T(P(p, 'nome'), { one: 1 })}</b></td><td>${REF(P(p, 'area'), 'areas')}</td><td>${REF(P(p, 'modulo'), 'modulos')}</td>
+        ${PEOPLE_FIELDS.processos.map(([k]) => `<td>${PPL(P(p, k), { single: k === 'resp', empty: '—' })}</td>`).join('')}
+        <td>${T(P(p, 'prazo'))}</td><td>${T(P(p, 'escal'))}</td><td>${T(P(p, 'integ'))}</td><td class="nw">${SEL(P(p, 'status'), 'stProcesso')}</td><td class="nw">${REF(P(p, 'etapa'), 'etapas')}</td>
+        <td class="wide">${T(P(p, 'obs'))}</td><td class="nw">${RM('processos', p.id)}</td></tr>`).join('')}
       </tbody></table></div>`;
     return;
   }
-  const cell = (k, l, v) => `<div><div class="k"><i>${k}</i>${l}</div>${chips(v)}</div>`;
-  $('#list').innerHTML = `<div class="grid g2">${l.map(p => {
-    const mod = byId('modulos', p.modulo), nt = S.tarefas.filter(t => t.processo === p.id && isOpen(t)).length;
-    return `<div class="card proc">
-      <div class="proc-top"><div class="grow"><h3>${esc(p.nome)}</h3>
-        <div class="sub"><span class="tag">${esc(nome('areas', p.area) || 'Sem área')}</span>${mod ? `<span class="tag">Módulo: ${esc(mod.nome)}</span>` : ''}${pill(p.status)}<span class="tag">Etapa: ${esc(p.etapa || '—')}</span></div></div>
-        <button class="icon-btn" data-act="edit" data-col="processos" data-id="${esc(p.id)}" title="Editar">✎</button></div>
-      <div class="raci">${cell('R', 'Responsável', p.resp)}${cell('E', 'Executor', p.exec)}${cell('A', 'Aprovador', p.aprov)}${cell('C', 'Consultado', p.cons)}${cell('I', 'Informado', p.inf)}${cell('S', 'Suplente', p.sup)}</div>
+  const L = { resp: 'R', exec: 'E', aprov: 'A', cons: 'C', inf: 'I', sup: 'S' };
+  $('#list').innerHTML = `<div class="fi-grid fi-grid--2">${l.map(p => `<div class="fi-card proc">
+      <div class="proc-top"><div class="grow" style="flex:1;min-width:0"><h3>${T(P(p, 'nome'), { one: 1 })}</h3>
+        <div class="sub row">${REF(P(p, 'area'), 'areas', { tag: 1, empty: 'Sem área' })}<span class="tag">Módulo: ${REF(P(p, 'modulo'), 'modulos')}</span>${SEL(P(p, 'status'), 'stProcesso')}<span class="tag">Etapa: ${REF(P(p, 'etapa'), 'etapas')}</span></div></div>
+        ${RM('processos', p.id)}</div>
+      <div class="raci">${PEOPLE_FIELDS.processos.map(([k, lb]) => `<div><div class="k"><i>${L[k]}</i>${lb}</div>${PPL(P(p, k), { single: k === 'resp' })}</div>`).join('')}</div>
       <div class="proc-bottom">
-        <div><div class="k">Prazo / SLA</div>${esc(p.prazo) || '<span class="muted">A definir</span>'}</div>
-        <div><div class="k">Escalonamento</div>${esc(p.escal) || '<span class="muted">A definir</span>'}</div>
-        <div><div class="k">Sistema / Integração</div>${esc(p.integ) || '<span class="muted">A definir</span>'}</div>
+        <div><div class="k">Prazo / SLA</div>${T(P(p, 'prazo'), { ph: 'A definir' })}</div>
+        <div><div class="k">Escalonamento</div>${T(P(p, 'escal'), { ph: 'A definir' })}</div>
+        <div><div class="k">Sistema / Integração</div>${T(P(p, 'integ'), { ph: 'A definir' })}</div>
       </div>
-      ${p.obs || nt ? `<div style="padding:10px 18px;font-size:12px;color:var(--ink-2);display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span style="flex:1">${esc(p.obs)}</span>${nt ? `<button class="btn sm" data-act="task-proc" data-id="${esc(p.id)}">${nt} tarefa(s) aberta(s)</button>` : ''}</div>` : ''}
-    </div>`; }).join('')}</div>`;
+      <div class="proc-obs">${T(P(p, 'obs'), { tag: 'div', phEdit: 'Observações' })}</div>
+    </div>`).join('')}</div>`;
 }
 
-/* ---------- 6.6 Tarefas e Chamados ---------- */
-function vTarefas() {
-  const ab = S.tarefas.filter(isOpen), atr = S.tarefas.filter(overdue);
-  $('#view').innerHTML = `
-    ${head('Tarefas e Chamados', 'Conceitos do motor único de tarefas e acompanhamento das tarefas originadas pelos processos e pela governança do projeto.', btnNew('tarefas', 'Tarefa / Chamado'))}
-    <div class="grid g4">
-      <div class="card kpi"><div class="v">${ab.length}</div><div class="l">Abertas</div></div>
-      <div class="card kpi"><div class="v">${S.tarefas.filter(t => t.status === 'Em andamento').length}</div><div class="l">Em andamento</div></div>
-      <div class="card kpi"><div class="v">${atr.length}</div><div class="l">Atrasadas</div></div>
-      <div class="card kpi"><div class="v">${S.tarefas.filter(t => t.status === 'Concluída').length}</div><div class="l">Concluídas</div></div>
-    </div>
-
-    ${secT('Acompanhamento')}
-    <div class="toolbar">
-      <input class="input search" placeholder="Buscar tarefa ou pessoa…" data-ui="taskQ" value="${esc(ui.taskQ)}">
-      <div class="seg">${[['abertas', 'Abertas'], ['atrasadas', 'Atrasadas'], ['concluidas', 'Encerradas'], ['todas', 'Todas']].map(([k, l]) => `<button class="${ui.taskFilter === k ? 'on' : ''}" data-act="task-filter" data-id="${k}">${l}</button>`).join('')}</div>
-      ${ui.taskProc ? `<span class="tag">Processo: ${esc(nome('processos', ui.taskProc))} <button class="icon-btn" data-act="task-proc" data-id="">✕</button></span>` : ''}
-    </div>
-    <div id="list"></div>
-
-    ${secT('Conceitos')}
-    <div class="grid g4">
-      <div class="card card-pad concept"><h4>Tarefa</h4><p>Ação com responsável, prazo e evidência de conclusão. Pode ser manual ou originada de processo, conversa, aprovação ou IA.</p></div>
-      <div class="card card-pad concept"><h4>Chamado</h4><p>Solicitação feita a uma área de serviço (TI, Manutenção, Compras…). Tem fila, SLA e escalonamento.</p></div>
-      <div class="card card-pad concept"><h4>Aprovação</h4><p>Decisão formal registrada conforme alçada (função, valor, área). Não é uma mensagem nem uma tarefa comum.</p></div>
-      <div class="card card-pad concept"><h4>Mensagem</h4><p>Comunicação vinculada ao contexto. <b>Mensagem não substitui tarefa</b>: se exige ação, vira tarefa.</p></div>
-    </div>
-    <div class="card card-pad" style="margin-top:14px">
-      <div class="k" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-3);margin-bottom:8px">Ciclo de vida</div>
-      <div class="lifecycle">${pill('Aberta')}<span class="arr">→</span>${pill('Em andamento')}<span class="arr">⇄</span>${pill('Aguardando')}<span class="arr">→</span>${pill('Concluída')}<span class="muted" style="margin-left:10px">ou</span>${pill('Cancelada')}
-      <span class="muted" style="margin-left:14px">Prazo vencido → escalonamento conforme o processo de origem.</span></div>
-    </div>`;
-  fillTarefas();
-}
-function fillTarefas() {
-  const q = norm(ui.taskQ), f = ui.taskFilter;
-  const l = S.tarefas.filter(t => (f === 'todas' || (f === 'abertas' && isOpen(t)) || (f === 'atrasadas' && overdue(t)) || (f === 'concluidas' && !isOpen(t))) &&
-    (!ui.taskProc || t.processo === ui.taskProc) &&
-    (!q || norm([t.titulo, t.desc, ...(t.resp || []).map(tokName), ...(t.solic || []).map(tokName)].join(' ')).includes(q)));
-  const order = { 'Alta': 0, 'Média': 1, 'Baixa': 2 };
-  l.sort((a, b) => (a.prazo || '9999').localeCompare(b.prazo || '9999') || (order[a.prioridade] ?? 3) - (order[b.prioridade] ?? 3));
-  $('#list').innerHTML = !l.length ? `<div class="empty-state">Nenhuma tarefa nesta seleção.</div>` : `<div class="card table-wrap"><table class="tbl">
-    <thead><tr><th>Tarefa</th><th>Tipo</th><th>Origem</th><th>Responsável</th><th>Solicitante</th><th>Prazo</th><th>Prioridade</th><th>Status</th></tr></thead>
-    <tbody>${l.map(t => { const pr = byId('processos', t.processo), md = byId('modulos', t.modulo); return `<tr class="click" data-act="edit" data-col="tarefas" data-id="${esc(t.id)}">
-      <td><b>${esc(t.titulo)}</b>${pr || md ? `<div class="muted" style="font-size:12px">${pr ? 'Processo: ' + esc(pr.nome) : ''}${pr && md ? ' · ' : ''}${md ? 'Módulo: ' + esc(md.nome) : ''}</div>` : ''}</td>
-      <td>${esc(t.tipo)}</td><td class="muted">${esc(t.origem)}</td><td>${chips(t.resp)}</td><td>${chips(t.solic, '—')}</td>
-      <td style="white-space:nowrap${overdue(t) ? ';color:var(--red);font-weight:700' : ''}">${fmtDate(t.prazo) || '—'}</td><td>${prio(t.prioridade)}</td><td>${pill(t.status)}</td></tr>`; }).join('')}
-    </tbody></table></div>`;
-}
-
-/* ---------- 6.7 Implantação ---------- */
+/* ---------- Implantação ---------- */
 function vImplantacao() {
-  const col = ui.implKind;
+  const col = ui.implKind, ed = canEdit;
+  $('#view').className = 'fi-page fam-ink-exec';
   $('#view').innerHTML = `
-    ${head('Implantação', 'Fluxo padrão repetido em cada processo ou módulo.')}
-    <div class="flow">${ETAPAS.map((e, i) => `<div class="step"><div class="n">${i + 1}</div><h4>${esc(e.nome)}</h4><p>${esc(e.desc)}</p>
-      <div style="margin-bottom:6px">${chips(e.resp)}</div>
-      <div class="ent"><b>Participam:</b> ${esc(e.part)}</div><div class="ent"><b>Entrega:</b> ${esc(e.entrega)}</div></div>`).join('')}</div>
+    ${head('implantacao')}
+    ${sec('fluxo')}
+    <div class="flow">${S.etapas.map((e, i) => { const P = k => `etapas.#${e.id}.${k}`; return `<div class="fi-card step"><div class="n">${i + 1}</div>
+      <h4>${T(P('nome'), { one: 1 })}</h4>${T(P('desc'), { tag: 'div', cls: 'd' })}
+      <div>${PPL(P('resp'))}</div>
+      <div class="ent"><b>Participam:</b> ${T(P('part'))}</div><div class="ent"><b>Entrega:</b> ${T(P('entrega'))}</div></div>`; }).join('')}</div>
 
-    ${secT('Onde cada item está', undefined, `<div class="seg"><button class="${col === 'modulos' ? 'on' : ''}" data-act="impl-kind" data-id="modulos">Módulos</button><button class="${col === 'processos' ? 'on' : ''}" data-act="impl-kind" data-id="processos">Processos</button></div>`)}
-    <div class="board">${ETAPAS.map((e, i) => { const l = S[col].filter(x => (x.etapa || 'Levantamento') === e.nome); return `<div class="col">
+    ${sec('quadro', undefined, `<div class="seg"><button class="${col === 'modulos' ? 'on' : ''}" data-act="view" data-k="implKind" data-id="modulos">Módulos</button><button class="${col === 'processos' ? 'on' : ''}" data-act="view" data-k="implKind" data-id="processos">Processos</button></div>`)}
+    <div class="board">${S.etapas.map((e, i) => { const l = S[col].filter(x => x.etapa === e.id); return `<div class="col">
       <div class="col-h"><span>${i + 1}. ${esc(e.nome)}</span><b>${l.length}</b></div>
-      ${l.map(x => `<div class="bcard"><div class="t" data-act="edit" data-col="${col}" data-id="${esc(x.id)}">${esc(x.nome)}</div>
-        <div class="r"><span>${col === 'modulos' ? prio(x.prioridade) : `<span class="tag">${esc(nome('areas', x.area) || '—')}</span>`}</span>
-        <span><button class="icon-btn" data-act="move" data-col="${col}" data-id="${esc(x.id)}" data-dir="-1" ${i === 0 ? 'disabled' : ''} title="Etapa anterior">◀</button><button class="icon-btn" data-act="move" data-col="${col}" data-id="${esc(x.id)}" data-dir="1" ${i === ETAPAS.length - 1 ? 'disabled' : ''} title="Próxima etapa">▶</button></span></div></div>`).join('') || '<div class="muted" style="font-size:12px;padding:4px">—</div>'}
+      ${l.map(x => `<div class="bcard"><div class="t">${esc(x.nome)}</div>
+        <div class="r"><span>${col === 'modulos' ? pill(x.prioridade) : `<span class="tag">${esc(nome('areas', x.area) || '—')}</span>`}</span>
+        ${ed ? `<span><button class="mv" data-act="move" data-col="${col}" data-id="${esc(x.id)}" data-dir="-1" ${i === 0 ? 'disabled' : ''} title="Etapa anterior">◀</button> <button class="mv" data-act="move" data-col="${col}" data-id="${esc(x.id)}" data-dir="1" ${i === S.etapas.length - 1 ? 'disabled' : ''} title="Próxima etapa">▶</button></span>` : ''}</div></div>`).join('') || '<div class="muted" style="font-size:.76rem;padding:4px">—</div>'}
     </div>`; }).join('')}</div>`;
 }
 
-/* ---------- 6.8 Ideias / Backlog ---------- */
+/* ---------- Backlog ---------- */
 function vBacklog() {
   const l = S.ideias.filter(i => !ui.ideiaStatus || i.status === ui.ideiaStatus);
+  const P = (i, k) => `ideias.#${i.id}.${k}`;
+  $('#view').className = 'fi-page fam-ink-exec';
   $('#view').innerHTML = `
-    ${head('Ideias / Backlog', 'Novas funcionalidades e melhorias ainda não aprovadas. Uma ideia aprovada pode virar módulo, processo ou tarefa.', btnNew('ideias', 'Ideia'))}
+    ${head('backlog', ADD('ideias', 'Ideia'))}
     <div class="subnav">
       <button class="${!ui.ideiaStatus ? 'on' : ''}" data-act="ideia-st" data-id="">Todas<b>${S.ideias.length}</b></button>
-      ${ST_IDEIA.map(s => `<button class="${ui.ideiaStatus === s ? 'on' : ''}" data-act="ideia-st" data-id="${esc(s)}">${esc(s)}<b>${S.ideias.filter(i => i.status === s).length}</b></button>`).join('')}
+      ${S.listas.stIdeia.map(s => `<button class="${ui.ideiaStatus === s ? 'on' : ''}" data-act="ideia-st" data-id="${esc(s)}">${esc(s)}<b>${S.ideias.filter(i => i.status === s).length}</b></button>`).join('')}
     </div>
-    ${!l.length ? `<div class="empty-state">Nenhuma ideia nesta seleção.</div>` : `<div class="grid gauto">${l.map(i => `
-      <div class="card item clickable" data-act="edit" data-col="ideias" data-id="${esc(i.id)}">
-        <div class="item-head"><h3>${esc(i.titulo)}</h3>${pill(i.status)}</div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap">${prio(i.prioridade)}${byId('areas', i.area) ? `<span class="tag">${esc(nome('areas', i.area))}</span>` : ''}</div>
-        ${i.desc ? `<p>${esc(i.desc)}</p>` : ''}
-        ${i.beneficio ? `<div class="next"><b>Benefício</b>${esc(i.beneficio)}</div>` : ''}
-        <div class="foot"><span class="muted" style="font-size:12px">Proposta por:</span>${chips(i.autor, 'Não informado')}</div>
+    ${!l.length ? `<div class="fi-card fi-empty">Nenhuma ideia nesta seleção.</div>` : `<div class="gauto">${l.map(i => `
+      <div class="fi-card item">
+        <div class="card-top"><h3 class="grow">${T(P(i, 'titulo'), { one: 1 })}</h3>${SEL(P(i, 'status'), 'stIdeia')}${RM('ideias', i.id)}</div>
+        <div class="row">${SEL(P(i, 'prioridade'), 'prioridades')}${REF(P(i, 'area'), 'areas', { tag: 1, empty: '' })}</div>
+        ${T(P(i, 'desc'), { tag: 'div', cls: 'txt', phEdit: 'Descrição' })}
+        <div class="next"><div class="k">Benefício esperado</div>${T(P(i, 'beneficio'), { tag: 'div', ph: '—' })}</div>
+        <div class="foot"><span>Proposta por</span>${PPL(P(i, 'autor'), { empty: 'Não informado' })}</div>
       </div>`).join('')}</div>`}`;
 }
 
-/* ---------- 6.9 ADM ---------- */
-function vAdm() {
-  const sec = ui.admSec;
-  const nav = [['participantes', 'Participantes', S.participantes.length], ['areas', 'Áreas / Setores', S.areas.length], ['tipos', 'Tipos / Funções', S.tipos.length]];
+/* =====================================================================
+   7. GUIAS — SOBRE O PROJETO
+   ===================================================================== */
+function vVisao() {
+  const pr = S.projeto;
+  $('#view').className = 'fi-page fam-ink-doc';
   $('#view').innerHTML = `
-    ${head('Administração', 'Cadastros-base que alimentam as demais guias. Um participante cadastrado uma única vez pode ser Responsável, Executor, Aprovador, Consultado, Informado ou Suplente em qualquer processo.')}
+    ${head('visao')}
+    <div class="fi-card hero">
+      <div class="lbl">Objetivo do projeto</div>
+      ${T('projeto.nome', { tag: 'h2', one: 1 })}
+      ${T('projeto.objetivo', { tag: 'p' })}
+    </div>
+
+    ${sec('conceito')}
+    <div class="layers">${pr.camadas.map((c, i) => { const P = k => `projeto.camadas.#${c.id}.${k}`; return `
+      ${i ? T('textos.sec.' + (i === 1 ? 'setaIA' : 'setaProtheus'), { tag: 'div', cls: 'layer-arrow' }) : ''}
+      <div class="layer l-${esc(c.id)}"><div><div class="ln">${T(P('nome'), { one: 1 })}</div>${T(P('sub'), { cls: 'ls', one: 1 })}</div>${T(P('desc'), { tag: 'p' })}</div>`; }).join('')}
+    </div>
+
+    ${sec('principios', undefined, ADD('projeto.principios', 'Princípio'))}
+    <div class="fi-grid fi-grid--4">${pr.principios.map((p, i) => { const P = k => `projeto.principios.#${p.id}.${k}`; return `
+      <div class="fi-card card-pad pri"><h4><span class="num">${i + 1}</span><span style="flex:1">${T(P('t'), { one: 1 })}</span>${RM('projeto.principios', p.id)}</h4>${T(P('d'), { tag: 'p' })}</div>`; }).join('')}
+    </div>
+
+    ${sec('fases', undefined, `${T('textos.sec.fasesNota', { cls: 'muted' })}${ADD('projeto.fases', 'Fase')}`)}
+    <div class="phases">${pr.fases.map(f => { const P = k => `projeto.fases.#${f.id}.${k}`; return `
+      <div class="fi-card phase"><div class="card-top"><div class="n grow">${T(P('n'), { one: 1 })}</div>${RM('projeto.fases', f.id)}</div>
+        <h4>${T(P('nome'), { one: 1 })}</h4>${T(P('obj'), { tag: 'p' })}${T(P('ent'), { tag: 'p' })}<div>${PPL(P('lid'))}</div></div>`; }).join('')}
+    </div>`;
+}
+
+function personCard(p) {
+  const P = k => `participantes.#${p.id}.${k}`, u = usage(p.id);
+  return `<div class="fi-card person">
+    <div class="person-head"><span class="av lg">${esc(initials(p.nome))}</span>
+      <div style="min-width:0;flex:1"><h3>${T(P('nome'), { one: 1 })}</h3><div class="cargo">${T(P('cargo'), { one: 1 })}</div></div>${RM('participantes', p.id)}</div>
+    <div class="meta">${REF(P('tipo'), 'tipos', { tag: 1, empty: '' })}${REF(P('area'), 'areas', { tag: 1, empty: '' })}${p.status !== 'Ativo' || canEditPath(P('status')) ? SEL(P('status'), 'stParticipante') : ''}</div>
+    ${T(P('resp'), { tag: 'p', cls: 'resp' })}
+    <div class="foot"><span>Foco: ${T(P('foco'), { ph: '—' })}</span>
+      <button class="fi-btn" style="min-height:28px;padding:3px 10px" data-act="person" data-id="${esc(p.id)}">${u.length} vínculo(s)</button></div>
+  </div>`;
+}
+function vEquipe() {
+  const grupo = p => (byId('tipos', p.tipo) || {}).grupo;
+  const core = S.participantes.filter(p => grupo(p) !== 'Setores');
+  const groups = S.listas.grupos.filter(g => g !== 'Setores').map(g => [g, core.filter(p => grupo(p) === g)]);
+  const sem = core.filter(p => !S.listas.grupos.includes(grupo(p)));
+  if (sem.length) groups.push(['Sem papel definido', sem]);
+  const setores = S.areas.filter(a => a.mapear === 'Sim'), pend = setores.filter(a => !(a.referencia || []).length);
+  $('#view').className = 'fi-page fam-ink-doc';
+  $('#view').innerHTML = `
+    ${head('equipe', ADD('participantes', 'Participante'))}
+    ${groups.filter(([, l]) => l.length).map(([g, l]) => `<div class="group-label">${esc(g)} · ${l.length}</div><div class="gauto">${l.map(personCard).join('')}</div>`).join('')}
+    ${sec('refs', `${setores.length - pend.length}/${setores.length} definidas`, isAdm ? `<button class="fi-btn" data-act="adm-go" data-id="areas">Editar áreas</button>` : '')}
+    <div class="fi-table-wrap"><table class="fi-table sheet">
+      <thead><tr><th>Setor</th><th>Referência</th><th>Função</th><th>Situação</th></tr></thead>
+      <tbody>${setores.map(a => `<tr><td><b>${T(`areas.#${a.id}.nome`, { one: 1 })}</b></td><td>${PPL(`areas.#${a.id}.referencia`, { empty: '—' })}</td>
+        <td class="muted">${T('textos.sec.refsFuncao')}</td><td>${pill((a.referencia || []).length ? 'Definida' : 'Pendente')}</td></tr>`).join('')}
+      </tbody></table></div>`;
+}
+
+function vSistemas() {
+  const cats = [...S.listas.catSistema, ...new Set(S.sistemas.map(s => s.cat).filter(c => !S.listas.catSistema.includes(c)))];
+  const P = (s, k) => `sistemas.#${s.id}.${k}`;
+  const card = s => `<div class="fi-card item">
+      <div class="card-top"><h3 class="grow">${T(P(s, 'nome'), { one: 1 })}</h3>${SEL(P(s, 'status'), 'stSistema')}${RM('sistemas', s.id)}</div>
+      ${ui.edit ? `<div class="row"><span class="k" style="margin:0">Categoria</span>${SEL(P(s, 'cat'), 'catSistema')}</div>` : ''}
+      ${T(P(s, 'desc'), { tag: 'div', cls: 'txt' })}
+      <div class="kv"><div class="full"><div class="k">Integrações</div>${T(P(s, 'integ'), { tag: 'div', ph: 'A definir' })}</div>
+      <div class="full"><div class="k">Responsáveis</div>${PPL(P(s, 'resp'))}</div></div></div>`;
+  const grupos = cats.map(c => [c || 'Sem categoria', S.sistemas.filter(s => (s.cat || '') === c)]).filter(([, l]) => l.length);
+  const semCat = S.sistemas.filter(s => !s.cat);
+  if (semCat.length && !cats.includes('')) grupos.push(['Sem categoria', semCat]);
+  $('#view').className = 'fi-page fam-ink-doc';
+  $('#view').innerHTML = `
+    ${head('sistemas', ADD('sistemas', 'Sistema'))}
+    ${grupos.map(([c, l]) => `<div class="group-label">${esc(c)} · ${l.length}</div><div class="gauto">${l.map(card).join('')}</div>`).join('')}
+    ${sec('blocos', S.blocos.length + ' blocos', ADD('blocos', 'Bloco'))}
+    <div class="fi-table-wrap"><table class="fi-table sheet">
+      <thead><tr><th>Bloco</th><th>Escopo resumido</th><th>Integração principal</th><th>Observação</th><th></th></tr></thead>
+      <tbody>${S.blocos.map(b => { const Q = k => `blocos.#${b.id}.${k}`; return `<tr><td><b>${T(Q('nome'), { one: 1 })}</b></td><td class="wide">${T(Q('escopo'))}</td><td>${T(Q('integ'))}</td><td class="muted">${T(Q('obs'))}</td><td class="nw">${RM('blocos', b.id)}</td></tr>`; }).join('')}</tbody>
+    </table></div>`;
+}
+
+/* =====================================================================
+   8. ADM (somente admin)
+   ===================================================================== */
+function vAdm() {
+  const s = ui.admSec;
+  const nav = [['participantes', 'Participantes', S.participantes.length], ['areas', 'Áreas / Setores', S.areas.length], ['tipos', 'Tipos / Funções', S.tipos.length], ['listas', 'Listas de opções', Object.keys(S.listas).length]];
+  $('#view').className = 'fi-page fam-ink-adm';
+  $('#view').innerHTML = `
+    ${head('adm')}
     <div class="adm-layout">
-      <div class="card adm-nav">
-        ${nav.map(([k, l, n]) => `<button class="${sec === k ? 'on' : ''}" data-act="adm-go" data-id="${k}">${l}<b>${n}</b></button>`).join('')}
-        <hr><button class="${sec === 'dados' ? 'on' : ''}" data-act="adm-go" data-id="dados">Dados (backup)<b>⭳</b></button>
+      <div class="fi-card adm-nav">
+        ${nav.map(([k, l, n]) => `<button class="${s === k ? 'on' : ''}" data-act="adm-go" data-id="${k}">${l}<b>${n}</b></button>`).join('')}
+        <hr><button class="${s === 'dados' ? 'on' : ''}" data-act="adm-go" data-id="dados">Dados e acessos</button>
       </div>
       <div id="admBody"></div>
     </div>`;
   const body = $('#admBody');
-  if (sec === 'participantes') {
-    body.innerHTML = `${secT('Participantes do projeto', S.participantes.length, btnNew('participantes', 'Participante'))}
-      <div class="card table-wrap"><table class="tbl"><thead><tr><th>Nome</th><th>Cargo / Função</th><th>Área</th><th>Papel no projeto</th><th>Nível</th><th>Vínculos</th><th>Status</th><th></th></tr></thead>
-      <tbody>${S.participantes.map(p => `<tr class="click" data-act="edit" data-col="participantes" data-id="${esc(p.id)}">
-        <td><span style="display:inline-flex;gap:8px;align-items:center"><span class="av">${esc(initials(p.nome))}</span><b>${esc(p.nome)}</b></span></td>
-        <td>${esc(p.cargo)}</td><td>${esc(nome('areas', p.area)) || '—'}</td><td>${esc(nome('tipos', p.tipo)) || '—'}</td><td>${esc(p.nivel) || '—'}</td>
-        <td>${usage(p.id).length}</td><td>${pill(p.status)}</td><td class="w-act"><button class="icon-btn" data-act="person" data-id="${esc(p.id)}" title="Ver vínculos">👁</button></td></tr>`).join('')}
+  const aviso = ui.edit ? '' : `<div class="fi-alert" style="margin-bottom:12px">Clique em <b>✎ Editar</b> no topo para alterar os cadastros diretamente na tabela.</div>`;
+  if (s === 'participantes') {
+    const P = (p, k) => `participantes.#${p.id}.${k}`;
+    body.innerHTML = `${aviso}${sec('admPart', S.participantes.length, ADD('participantes', 'Participante'))}
+      <div class="fi-table-wrap"><table class="fi-table sheet"><thead><tr><th>Nome</th><th>E-mail (login)</th><th>Cargo / Função</th><th>Área</th><th>Papel no projeto</th><th>Nível</th><th>Status</th><th>Responsabilidades</th><th>Foco de decisão</th><th>Vínculos</th><th></th></tr></thead>
+      <tbody>${S.participantes.map(p => `<tr>
+        <td class="nw"><span class="row" style="flex-wrap:nowrap"><span class="av">${esc(initials(p.nome))}</span><b>${T(P(p, 'nome'), { one: 1 })}</b></span></td>
+        <td>${T(P(p, 'email'), { one: 1, ph: '—' })}</td><td>${T(P(p, 'cargo'))}</td><td>${REF(P(p, 'area'), 'areas')}</td><td>${REF(P(p, 'tipo'), 'tipos')}</td>
+        <td class="nw">${SEL(P(p, 'nivel'), 'niveis')}</td><td class="nw">${SEL(P(p, 'status'), 'stParticipante')}</td><td class="wide">${T(P(p, 'resp'))}</td><td>${T(P(p, 'foco'))}</td>
+        <td class="nw"><button class="fi-btn" style="min-height:28px;padding:3px 10px" data-act="person" data-id="${esc(p.id)}">${usage(p.id).length}</button></td><td class="nw">${RM('participantes', p.id)}</td></tr>`).join('')}
       </tbody></table></div>
-      <p class="note" style="margin-top:12px">“Agente” fica reservado para futuros agentes de IA. Para desligar alguém sem perder o histórico, prefira marcar como <b>Inativo</b> em vez de excluir.</p>`;
-  } else if (sec === 'areas') {
-    body.innerHTML = `${secT('Áreas / Setores', S.areas.length, btnNew('areas', 'Área'))}
-      <div class="card table-wrap"><table class="tbl"><thead><tr><th>Área</th><th>Mapeamento</th><th>Referência</th><th>Participantes</th><th>Processos</th></tr></thead>
-      <tbody>${S.areas.map(a => `<tr class="click" data-act="edit" data-col="areas" data-id="${esc(a.id)}">
-        <td><b>${esc(a.nome)}</b></td><td>${pill(a.mapear)}</td><td>${chips(a.referencia, '—')}</td>
-        <td>${S.participantes.filter(p => p.area === a.id).length}</td><td>${S.processos.filter(p => p.area === a.id).length}</td></tr>`).join('')}
+      <div class="fi-alert" style="margin-top:12px">“Agente” fica reservado para futuros agentes de IA. Para tirar alguém do projeto sem perder o histórico, prefira o status <b>Inativo</b>. Trocar sponsors, responsáveis e demais papéis: use os botões ＋ e × nas guias Módulos, Processos, Implantação e Sistemas.</div>`;
+  } else if (s === 'areas') {
+    const P = (a, k) => `areas.#${a.id}.${k}`;
+    body.innerHTML = `${aviso}${sec('admAreas', S.areas.length, ADD('areas', 'Área'))}
+      <div class="fi-table-wrap"><table class="fi-table sheet"><thead><tr><th>Área</th><th>Participa do mapeamento</th><th>Referência de processos</th><th>Participantes</th><th>Processos</th><th></th></tr></thead>
+      <tbody>${S.areas.map(a => `<tr><td><b>${T(P(a, 'nome'), { one: 1 })}</b></td><td class="nw">${SEL(P(a, 'mapear'), 'simNao')}</td><td>${PPL(P(a, 'referencia'), { empty: '—' })}</td>
+        <td>${S.participantes.filter(p => p.area === a.id).length}</td><td>${S.processos.filter(p => p.area === a.id).length}</td><td class="nw">${RM('areas', a.id)}</td></tr>`).join('')}
       </tbody></table></div>`;
-  } else if (sec === 'tipos') {
-    body.innerHTML = `${secT('Tipos / Funções no projeto', S.tipos.length, btnNew('tipos', 'Tipo'))}
-      <div class="card table-wrap"><table class="tbl"><thead><tr><th>Tipo / Função</th><th>Grupo</th><th>Descrição</th><th>Participantes</th></tr></thead>
-      <tbody>${S.tipos.map(t => `<tr class="click" data-act="edit" data-col="tipos" data-id="${esc(t.id)}">
-        <td><b>${esc(t.nome)}</b></td><td><span class="tag">${esc(t.grupo || '—')}</span></td><td class="muted">${esc(t.desc)}</td><td>${S.participantes.filter(p => p.tipo === t.id).length}</td></tr>`).join('')}
+  } else if (s === 'tipos') {
+    const P = (t, k) => `tipos.#${t.id}.${k}`;
+    body.innerHTML = `${aviso}${sec('admTipos', S.tipos.length, ADD('tipos', 'Tipo'))}
+      <div class="fi-table-wrap"><table class="fi-table sheet"><thead><tr><th>Tipo / Função</th><th>Grupo</th><th>Descrição</th><th>Participantes</th><th></th></tr></thead>
+      <tbody>${S.tipos.map(t => `<tr><td><b>${T(P(t, 'nome'), { one: 1 })}</b></td><td class="nw">${SEL(P(t, 'grupo'), 'grupos')}</td><td class="wide">${T(P(t, 'desc'))}</td><td>${S.participantes.filter(p => p.tipo === t.id).length}</td><td class="nw">${RM('tipos', t.id)}</td></tr>`).join('')}
       </tbody></table></div>
-      <p class="note" style="margin-top:12px">O <b>grupo</b> define onde o participante aparece na guia Equipe: Direção, Técnica e Processos formam a equipe do projeto; Setores aparece nas referências por setor.</p>`;
+      <div class="fi-alert" style="margin-top:12px">O <b>grupo</b> define onde o participante aparece na guia Equipe: Direção, Técnica e Processos formam a equipe do projeto; Setores aparece nas referências por setor.</div>`;
+  } else if (s === 'listas') {
+    const nomes = { prioridades: 'Prioridades', ondas: 'Ondas dos módulos', stModulo: 'Situação do módulo', stProcesso: 'Status do processo', stIdeia: 'Status da ideia', stSistema: 'Situação do sistema', catSistema: 'Categorias de sistema', niveis: 'Níveis de atuação', grupos: 'Grupos de função', stParticipante: 'Status do participante', simNao: 'Sim / Não' };
+    body.innerHTML = `${sec('admListas')}
+      <div class="fi-alert" style="margin-bottom:12px">Uma opção por linha. As opções aparecem nas caixas de seleção de todas as guias. Renomear uma opção aqui não altera os itens que já usam o nome antigo.</div>
+      <div class="lists">${Object.keys(S.listas).map(k => `<label class="fi-field"><span class="fi-label">${esc(nomes[k] || k)}</span><textarea data-lista="${k}" ${ui.edit ? '' : 'readonly'}>${esc(S.listas[k].join('\n'))}</textarea></label>`).join('')}</div>`;
   } else {
-    body.innerHTML = `${secT('Dados do projeto')}
-      <div class="grid g2">
-        <div class="card card-pad"><h3 style="font-size:15px;margin-bottom:6px">Exportar backup (JSON)</h3><p class="muted" style="margin:0 0 12px">Arquivo completo com todos os cadastros. Serve para compartilhar com a equipe e como carga futura do banco de dados.</p><button class="btn primary" data-act="export-json">⭳ Exportar JSON</button></div>
-        <div class="card card-pad"><h3 style="font-size:15px;margin-bottom:6px">Importar backup (JSON)</h3><p class="muted" style="margin:0 0 12px">Substitui os dados deste navegador pelo conteúdo do arquivo.</p><button class="btn" data-act="import-json">⭱ Importar JSON</button></div>
-        <div class="card card-pad"><h3 style="font-size:15px;margin-bottom:6px">Processos para Excel (CSV)</h3><p class="muted" style="margin:0 0 12px">Exporta o cadastro de processos para conferência e levantamento em massa na planilha.</p><button class="btn" data-act="export-csv">⭳ Exportar CSV</button></div>
-        <div class="card card-pad"><h3 style="font-size:15px;margin-bottom:6px">Restaurar dados iniciais</h3><p class="muted" style="margin:0 0 12px">Volta ao conteúdo original da planilha. As alterações feitas neste navegador serão perdidas.</p><button class="btn danger" data-act="reset">↺ Restaurar</button></div>
-      </div>
-      <p class="note" style="margin-top:12px">Esta versão funciona sem banco de dados: as alterações ficam salvas <b>apenas neste navegador</b>. Para que outra pessoa veja suas alterações, exporte o JSON e envie o arquivo. Cada coleção (participantes, áreas, processos…) já está no formato de tabela para virar módulo conectado ao banco.</p>`;
+    body.innerHTML = `${sec('admDados')}
+      <div class="fi-grid fi-grid--2">
+        <div class="fi-card card-pad"><h3 style="font-size:.95rem;margin-bottom:6px">Quem acessa e quem edita</h3><p class="muted" style="margin-bottom:12px;font-size:.84rem">Controlado pela Central de Acesso Fiorella, ferramenta <b>projeto-fiorella</b>. <b>Ver</b>: somente leitura · <b>Editar</b>: edita todo o conteúdo · <b>Admin</b>: também esta guia ADM.</p><a class="fi-btn" href="${esc((window.APP && APP.hub) || '#')}">Abrir a Central de Acesso</a></div>
+        <div class="fi-card card-pad"><h3 style="font-size:.95rem;margin-bottom:6px">Exportar backup (JSON)</h3><p class="muted" style="margin-bottom:12px;font-size:.84rem">Cópia completa do projeto. O banco também guarda automaticamente as últimas 500 versões.</p><button class="fi-btn fi-btn--primary" data-act="export-json">⭳ Exportar JSON</button></div>
+        <div class="fi-card card-pad"><h3 style="font-size:.95rem;margin-bottom:6px">Importar backup (JSON)</h3><p class="muted" style="margin-bottom:12px;font-size:.84rem">Substitui o projeto de todos os usuários pelo conteúdo do arquivo.</p><button class="fi-btn" data-act="import-json">⭱ Importar JSON</button></div>
+        <div class="fi-card card-pad"><h3 style="font-size:.95rem;margin-bottom:6px">Restaurar planilha inicial</h3><p class="muted" style="margin-bottom:12px;font-size:.84rem">Volta ao conteúdo original da planilha SISTEMA_FIORELLA. Todas as alterações serão substituídas.</p><button class="fi-btn fi-btn--danger" data-act="reset">↺ Restaurar</button></div>
+      </div>`;
   }
 }
 
-const VIEWS = { visao: vVisao, equipe: vEquipe, sistemas: vSistemas, modulos: vModulos, processos: vProcessos, tarefas: vTarefas, implantacao: vImplantacao, backlog: vBacklog, adm: vAdm };
-const FILLS = { modulos: fillModulos, processos: fillProcessos, tarefas: fillTarefas };
+const VIEWS = { modulos: vModulos, processos: vProcessos, implantacao: vImplantacao, backlog: vBacklog, visao: vVisao, equipe: vEquipe, sistemas: vSistemas, adm: vAdm };
+const FILLS = { modulos: fillModulos, processos: fillProcessos };
 
 /* =====================================================================
-   7. FORMULÁRIO GENÉRICO (modal)
+   9. AÇÕES
    ===================================================================== */
-const modal = $('#modal');
-let form = null; // { col, id, draft }
-
-function openForm(col, id, preset) {
-  const sch = SCHEMAS[col];
-  const src = id ? byId(col, id) : null;
-  const draft = src ? clone(src) : {};
-  if (!src) sch.fields.forEach(f => { draft[f.k] = (f.t === 'people' || f.t === 'person') ? [] : (f.def || ''); });
-  if (preset) Object.assign(draft, preset);
-  form = { col, id, draft };
-  modal.innerHTML = `
-    <div class="m-head"><h2>${src ? 'Editar' : 'Novo(a)'} ${esc(sch.label.toLowerCase())}</h2><button class="icon-btn" data-act="close" title="Fechar">✕</button></div>
-    <div class="m-body"><div class="form">${sch.fields.map(f => fieldHtml(f, draft[f.k])).join('')}</div></div>
-    <div class="m-foot">${src ? `<button class="btn danger" data-act="del">Excluir</button>` : ''}<span class="grow"></span><button class="btn" data-act="close">Cancelar</button><button class="btn primary" data-act="save">Salvar</button></div>`;
-  sch.fields.filter(f => f.t === 'people' || f.t === 'person').forEach(f => drawPicker(f.k));
-  if (!modal.open) modal.showModal();
-  const first = modal.querySelector('.m-body input, .m-body select, .m-body textarea'); if (first && !src) first.focus();
+function arrOf(st, col) { return col.includes('.') ? getP(st, col) : st[col]; }
+function addItem(col) {
+  const it = Object.assign({ id: uid(col.split('.').pop()) }, NEW[col]());
+  commit(st => { arrOf(st, col).push(clone(it)); }, false);
+  if (col === 'processos') { ui.procStatus = ''; ui.procQ = ''; ui.procMod = ''; }
+  if (col === 'modulos') { ui.modPrio = ''; ui.modOnda = ''; ui.modQ = ''; }
+  if (col === 'ideias') ui.ideiaStatus = '';
+  const k = it.nome !== undefined ? 'nome' : it.titulo !== undefined ? 'titulo' : 't';
+  ui.focus = `[data-p="${col}.#${it.id}.${k}"]`;
+  render();
 }
-function fieldHtml(f, v) {
-  const lab = `<label for="f_${f.k}">${esc(f.l)}${f.req ? ' <em>*</em>' : ''}</label>`;
-  const cls = `fld${f.full || f.t === 'textarea' ? ' full' : ''}`;
-  switch (f.t) {
-    case 'textarea': return `<div class="${cls}">${lab}<textarea id="f_${f.k}" data-f="${f.k}">${esc(v)}</textarea></div>`;
-    case 'select': return `<div class="${cls}">${lab}<select class="select" id="f_${f.k}" data-f="${f.k}">${optList(f.opts, v, '—')}</select></div>`;
-    case 'ref': return `<div class="${cls}">${lab}<select class="select" id="f_${f.k}" data-f="${f.k}"><option value="">—</option>${S[f.ref].map(x => `<option value="${esc(x.id)}"${x.id === v ? ' selected' : ''}>${esc(x.nome)}</option>`).join('')}</select></div>`;
-    case 'date': return `<div class="${cls}">${lab}<input type="date" class="input" id="f_${f.k}" data-f="${f.k}" value="${esc(v)}"></div>`;
-    case 'people': case 'person': return `<div class="${cls}">${lab}<div class="picker" data-pk="${f.k}" data-single="${f.t === 'person' ? 1 : ''}"><div class="chips"></div>
-      <div class="ctl"><select class="select" data-pk-sel="${f.k}"><option value="">＋ Participante…</option></select>
-      <input class="input" data-pk-txt="${f.k}" placeholder="ou texto (Enter)"></div></div>
-      <div class="hint">${f.t === 'person' ? 'Uma pessoa ou texto (ex.: Gestor da área).' : 'Participantes cadastrados ou texto livre (ex.: Financeiro, Solicitante).'}</div></div>`;
-    default: return `<div class="${cls}">${lab}<input class="input" id="f_${f.k}" data-f="${f.k}" value="${esc(v)}"${f.ph ? ` placeholder="${esc(f.ph)}"` : ''}></div>`;
-  }
-}
-function drawPicker(k) {
-  const box = modal.querySelector(`[data-pk="${k}"]`); if (!box) return;
-  const toks = form.draft[k] || [];
-  box.querySelector('.chips').innerHTML = toks.length ? toks.map((t, i) => {
-    if (t[0] === '@') { const p = byId('participantes', t.slice(1)); return `<span class="pk-chip"><span class="av">${esc(initials(p ? p.nome : '?'))}</span>${esc(p ? p.nome : '(removido)')}<button type="button" data-act="pk-rm" data-k="${k}" data-i="${i}" title="Remover">×</button></span>`; }
-    return `<span class="pk-chip txt">${esc(t)}<button type="button" data-act="pk-rm" data-k="${k}" data-i="${i}" title="Remover">×</button></span>`;
-  }).join('') : '<span class="empty">A definir</span>';
-  const sel = box.querySelector('select');
-  const ativos = S.participantes.filter(p => p.status === 'Ativo' && !toks.includes('@' + p.id)).sort((a, b) => a.nome.localeCompare(b.nome));
-  sel.innerHTML = `<option value="">＋ Participante…</option>` + ativos.map(p => `<option value="@${esc(p.id)}">${esc(p.nome)} — ${esc(p.cargo)}</option>`).join('');
-}
-function pkAdd(k, tok) {
-  tok = tok.trim(); if (!tok) return;
-  const single = modal.querySelector(`[data-pk="${k}"]`).dataset.single;
-  /* texto igual ao nome de um participante vira vínculo com o cadastro */
-  if (tok[0] !== '@') { const p = S.participantes.find(x => norm(x.nome) === norm(tok)); if (p) tok = '@' + p.id; }
-  let arr = form.draft[k] || [];
-  if (arr.includes(tok)) return;
-  arr = single ? [tok] : [...arr, tok];
-  form.draft[k] = arr; drawPicker(k);
-}
-function saveForm() {
-  const { col, id, draft } = form, sch = SCHEMAS[col];
-  modal.querySelectorAll('[data-f]').forEach(el => { draft[el.dataset.f] = el.value.trim(); });
-  modal.querySelectorAll('[data-pk-txt]').forEach(el => { if (el.value.trim()) pkAdd(el.dataset.pkTxt, el.value); });
-  for (const f of sch.fields) if (f.req && !draft[f.k]) { toast(`Preencha: ${f.l}`); modal.querySelector(`#f_${f.k}`)?.focus(); return; }
-  if (col === 'participantes' && S.participantes.some(p => p.id !== id && norm(p.nome) === norm(draft.nome))) { toast('Já existe um participante com esse nome.'); return; }
-  if (id) { const i = S[col].findIndex(x => x.id === id); S[col][i] = draft; }
-  else { draft.id = newId(col, draft.nome || draft.titulo); S[col].push(draft); }
-  modal.close(); persist('Salvo'); render();
-}
-function deleteItem() {
-  const { col, id } = form, it = byId(col, id), label = it.nome || it.titulo;
+async function removeItem(col, id) {
+  const it = (arrOf(S, col) || []).find(x => x.id === id); if (!it) return;
+  const label = it.nome || it.titulo || it.t || 'item';
   let msg = `Excluir “${label}”?`;
-  if (col === 'participantes') { const u = usage(id).length; if (u) msg += `\n\n${it.nome} aparece em ${u} lugar(es). O nome será mantido como texto nesses lugares.\nSe a pessoa apenas saiu do projeto, prefira marcá-la como Inativo.`; }
-  if (!confirm(msg)) return;
-  if (col === 'participantes') {
-    const tok = '@' + id;
-    for (const c in SCHEMAS) SCHEMAS[c].fields.filter(f => f.t === 'people' || f.t === 'person').forEach(f => S[c].forEach(x => { if (x[f.k]) x[f.k] = x[f.k].map(t => t === tok ? it.nome : t); }));
-    S.projeto.fases.forEach(f => { f.lid = f.lid.map(t => t === tok ? it.nome : t); });
-  }
-  const clear = (c, k) => S[c].forEach(x => { if (x[k] === id) x[k] = ''; });
-  if (col === 'areas') { clear('participantes', 'area'); clear('processos', 'area'); clear('ideias', 'area'); }
-  if (col === 'tipos') clear('participantes', 'tipo');
-  if (col === 'modulos') { clear('processos', 'modulo'); clear('tarefas', 'modulo'); }
-  if (col === 'processos') clear('tarefas', 'processo');
-  S[col] = S[col].filter(x => x.id !== id);
-  modal.close(); persist('Excluído'); render();
+  if (col === 'participantes') { const u = usage(id).length; if (u) msg += ` ${label} aparece em ${u} lugar(es); o nome será mantido como texto. Se a pessoa apenas saiu do projeto, prefira o status Inativo.`; }
+  if (!(await ask(msg, true))) return;
+  commit(st => {
+    const clr = (c, k) => (st[c] || []).forEach(x => { if (x[k] === id) x[k] = ''; });
+    if (col === 'participantes') {
+      const tok = '@' + id, fix = a => (a || []).map(t => t === tok ? label : t);
+      for (const c in PEOPLE_FIELDS) (st[c] || []).forEach(x => PEOPLE_FIELDS[c].forEach(([k]) => { if (x[k]) x[k] = fix(x[k]); }));
+      st.projeto.fases.forEach(f => { f.lid = fix(f.lid); });
+    }
+    if (col === 'areas') { clr('participantes', 'area'); clr('processos', 'area'); clr('ideias', 'area'); }
+    if (col === 'tipos') clr('participantes', 'tipo');
+    if (col === 'modulos') clr('processos', 'modulo');
+    const arr = arrOf(st, col), i = arr.findIndex(x => x.id === id); if (i >= 0) arr.splice(i, 1);
+  }, true);
+}
+const modal = $('#modal');
+function openPicker(p, single) {
+  const toks = getP(S, p) || [];
+  const ativos = S.participantes.filter(x => x.status !== 'Inativo' && !toks.includes('@' + x.id)).sort((a, b) => a.nome.localeCompare(b.nome));
+  modal.innerHTML = `<div class="m-head"><h2>${single ? 'Definir' : 'Adicionar'} pessoa</h2><button class="rm" data-act="close">✕</button></div>
+    <div class="m-body">
+      <label class="fi-field"><span class="fi-label">Participante cadastrado</span><select class="fi-select" id="pkSel"><option value="">—</option>${ativos.map(x => `<option value="@${esc(x.id)}">${esc(x.nome)} — ${esc(x.cargo)}</option>`).join('')}</select></label>
+      <label class="fi-field"><span class="fi-label">ou texto livre</span><input class="fi-input" id="pkTxt" placeholder="ex.: Gestor da área, Financeiro, Solicitante"><span class="fi-field__help">Se o texto for o nome de um participante, ele é vinculado ao cadastro.</span></label>
+    </div>
+    <div class="m-foot"><button class="fi-btn" data-act="close">Cancelar</button><button class="fi-btn fi-btn--primary" data-act="pk-ok" data-p="${esc(p)}" data-single="${single ? 1 : ''}">${single ? 'Definir' : 'Adicionar'}</button></div>`;
+  modal.showModal(); $('#pkSel').focus();
+}
+function pickerOk(p, single) {
+  let tok = $('#pkSel').value || $('#pkTxt').value.trim();
+  if (!tok) { notify('Escolha um participante ou digite um texto.', 'warning'); return; }
+  if (tok[0] !== '@') { const m = S.participantes.find(x => norm(x.nome) === norm(tok)); if (m) tok = '@' + m.id; }
+  modal.close();
+  commit(st => { const a = getP(st, p) || []; if (a.includes(tok)) return; setP(st, p, single ? [tok] : [...a, tok]); }, true);
 }
 function showPerson(pid) {
   const p = byId('participantes', pid); if (!p) return;
-  const u = usage(pid), groups = {};
-  u.forEach(x => { (groups[x.col] = groups[x.col] || []).push(x); });
-  const lbl = { ...COL_LABEL_PLURAL, fases: 'Fases do projeto' };
-  modal.innerHTML = `
-    <div class="m-head"><span class="av lg">${esc(initials(p.nome))}</span><h2>${esc(p.nome)}<div class="muted" style="font-size:12px;font-weight:500;margin-top:3px">${esc(p.cargo)}</div></h2><button class="icon-btn" data-act="close">✕</button></div>
+  const u = usage(pid), g = {};
+  u.forEach(x => (g[x.col] = g[x.col] || []).push(x));
+  modal.innerHTML = `<div class="m-head"><span class="av lg">${esc(initials(p.nome))}</span><h2>${esc(p.nome)}<div class="muted" style="font-size:.76rem;font-weight:500;margin-top:2px">${esc(p.cargo)}</div></h2><button class="rm" data-act="close">✕</button></div>
     <div class="m-body">
       <div class="kv">
-        <div><div class="k">Área</div><div class="v">${esc(nome('areas', p.area)) || '—'}</div></div>
-        <div><div class="k">Papel no projeto</div><div class="v">${esc(nome('tipos', p.tipo)) || '—'}</div></div>
-        <div><div class="k">Nível de atuação</div><div class="v">${esc(p.nivel) || '—'}</div></div>
-        <div><div class="k">Status</div><div class="v">${pill(p.status)}</div></div>
-        ${p.resp ? `<div class="full"><div class="k">Responsabilidades</div><div class="v">${esc(p.resp)}</div></div>` : ''}
-        ${p.foco ? `<div class="full"><div class="k">Foco de decisão</div><div class="v">${esc(p.foco)}</div></div>` : ''}
+        <div><div class="k">Área</div>${esc(nome('areas', p.area)) || '—'}</div><div><div class="k">Papel no projeto</div>${esc(nome('tipos', p.tipo)) || '—'}</div>
+        <div><div class="k">Nível de atuação</div>${esc(p.nivel) || '—'}</div><div><div class="k">Status</div>${pill(p.status)}</div>
+        ${p.resp ? `<div class="full"><div class="k">Responsabilidades</div>${esc(p.resp)}</div>` : ''}
       </div>
-      <div class="usage">${u.length ? Object.entries(groups).map(([c, l]) => `<h4>${esc(lbl[c] || c)} · ${l.length}</h4><ul>${l.map(x => `<li>${x.id ? `<a href="#" data-act="edit" data-col="${c}" data-id="${esc(x.id)}">${esc(x.nome)}</a>` : esc(x.nome)} <span class="muted">— ${esc(x.papel)}</span></li>`).join('')}</ul>`).join('') : '<p class="muted">Ainda não vinculado a nenhum item.</p>'}</div>
+      <div class="usage">${u.length ? Object.entries(g).map(([c, l]) => `<h4>${esc(COL_LABEL[c] || c)} · ${l.length}</h4><ul>${l.map(x => `<li>${esc(x.nome)} <span class="muted">— ${esc(x.papel)}</span></li>`).join('')}</ul>`).join('') : '<p class="muted">Ainda não vinculado a nenhum item.</p>'}</div>
     </div>
-    <div class="m-foot"><span class="grow"></span><button class="btn" data-act="close">Fechar</button><button class="btn primary" data-act="edit" data-col="participantes" data-id="${esc(p.id)}">Editar cadastro</button></div>`;
+    <div class="m-foot">${isAdm ? `<button class="fi-btn" data-act="adm-go" data-id="participantes">Editar cadastro</button>` : ''}<button class="fi-btn fi-btn--primary" data-act="close">Fechar</button></div>`;
   if (!modal.open) modal.showModal();
 }
-
-/* =====================================================================
-   8. EXPORTAÇÃO / IMPORTAÇÃO
-   ===================================================================== */
 function download(name, content, type) {
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([content], { type }));
-  a.download = name; document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([content], { type })); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 const today = () => new Date().toISOString().slice(0, 10);
-function exportJson() { download(`projeto-fiorella-dados-${today()}.json`, JSON.stringify(S, null, 2), 'application/json'); toast('Backup exportado'); }
 function exportCsv() {
-  const cols = [['Processo', p => p.nome], ['Área', p => nome('areas', p.area)], ['Módulo', p => nome('modulos', p.modulo)],
-    ['Responsável', p => (p.resp || []).map(tokName).join(', ')], ['Executor', p => (p.exec || []).map(tokName).join(', ')], ['Aprovador', p => (p.aprov || []).map(tokName).join(', ')],
-    ['Consultado', p => (p.cons || []).map(tokName).join(', ')], ['Informado', p => (p.inf || []).map(tokName).join(', ')], ['Suplente', p => (p.sup || []).map(tokName).join(', ')],
-    ['Prazo / SLA', p => p.prazo], ['Escalonamento', p => p.escal], ['Sistema / Integração', p => p.integ], ['Status', p => p.status], ['Etapa', p => p.etapa], ['Observações', p => p.obs]];
+  const pp = (p, k) => (p[k] || []).map(tokName).join(', ');
+  const cols = [['Processo', p => p.nome], ['Área', p => nome('areas', p.area)], ['Módulo', p => nome('modulos', p.modulo)], ...PEOPLE_FIELDS.processos.map(([k, l]) => [l, p => pp(p, k)]),
+    ['Prazo / SLA', p => p.prazo], ['Escalonamento', p => p.escal], ['Sistema / Integração', p => p.integ], ['Status', p => p.status], ['Etapa', p => nome('etapas', p.etapa)], ['Observações', p => p.obs]];
   const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
-  const csv = [cols.map(c => q(c[0])).join(';'), ...S.processos.map(p => cols.map(c => q(c[1](p))).join(';'))].join('\r\n');
-  download(`processos-fiorella-${today()}.csv`, '﻿' + csv, 'text/csv;charset=utf-8'); toast('CSV exportado');
+  download(`processos-fiorella-${today()}.csv`, '﻿' + [cols.map(c => q(c[0])).join(';'), ...S.processos.map(p => cols.map(c => q(c[1](p))).join(';'))].join('\r\n'), 'text/csv;charset=utf-8');
 }
+function replaceAll(novo) { const snap = clone(novo); commit(st => { for (const k of Object.keys(st)) delete st[k]; Object.assign(st, clone(snap)); }, true); }
 $('#importFile').addEventListener('change', e => {
   const f = e.target.files[0]; if (!f) return;
   const r = new FileReader();
-  r.onload = () => {
+  r.onload = async () => {
     try {
       const d = JSON.parse(r.result);
-      if (!d || !Array.isArray(d.participantes) || !Array.isArray(d.processos)) throw new Error();
-      if (!confirm('Substituir os dados deste navegador pelo arquivo importado?')) return;
-      S = fillMissing(d); persist('Dados importados'); render(); renderTabs();
-    } catch (err) { toast('Arquivo inválido'); }
+      if (!d || !Array.isArray(d.participantes)) throw new Error();
+      if (await ask('Substituir o projeto de todos os usuários pelo arquivo importado?')) { replaceAll(migrate(d)); notify('Dados importados', 'success'); }
+    } catch (err) { notify('Arquivo inválido', 'danger'); }
   };
   r.readAsText(f); e.target.value = '';
 });
 
-/* =====================================================================
-   9. EVENTOS
-   ===================================================================== */
-document.addEventListener('click', e => {
+document.addEventListener('click', async e => {
   const el = e.target.closest('[data-act]'); if (!el || el.disabled) return;
-  const a = el.dataset.act, id = el.dataset.id, col = el.dataset.col;
-  if (el.tagName === 'A') e.preventDefault();
+  const a = el.dataset.act, id = el.dataset.id;
+  if (el.tagName === 'A' && a === 'tab') e.preventDefault();
   switch (a) {
-    case 'tab': go(id); window.scrollTo({ top: 0 }); break;
-    case 'new': openForm(col, null, col === 'processos' && ui.procArea && ui.procArea !== '*' ? { area: ui.procArea } : null); break;
-    case 'edit': e.stopPropagation(); openForm(col, id); break;
-    case 'person': e.stopPropagation(); showPerson(id); break;
+    case 'tab': go(id); scrollTo({ top: 0 }); break;
+    case 'toggle-edit': ui.edit = !ui.edit; try { sessionStorage.setItem('projetoFiorella.edit', ui.edit ? '1' : ''); } catch (err) {} render(); break;
+    case 'retry': flush(); break;
+    case 'add': addItem(el.dataset.col); break;
+    case 'rm': removeItem(el.dataset.col, id); break;
+    case 'ppl-add': openPicker(el.dataset.p, !!el.dataset.single); break;
+    case 'ppl-rm': commit(st => { const arr = getP(st, el.dataset.p) || []; arr.splice(+el.dataset.i, 1); }, true); break;
+    case 'pk-ok': pickerOk(el.dataset.p, !!el.dataset.single); break;
+    case 'person': showPerson(id); break;
     case 'close': modal.close(); break;
-    case 'save': saveForm(); break;
-    case 'del': deleteItem(); break;
-    case 'pk-rm': form.draft[el.dataset.k].splice(+el.dataset.i, 1); drawPicker(el.dataset.k); break;
-    case 'proc-area': ui.procArea = id; vProcessos(); break;
-    case 'proc-view': ui.procView = id; vProcessos(); break;
+    case 'view': ui[el.dataset.k] = id; render(); break;
+    case 'proc-area': ui.procArea = id; render(); break;
     case 'proc-mod': ui.procMod = id; if (id) { ui.procArea = '*'; ui.procQ = ''; ui.procStatus = ''; } go('processos'); break;
-    case 'task-filter': ui.taskFilter = id; vTarefas(); break;
-    case 'task-proc': ui.taskProc = id; ui.taskFilter = id ? 'todas' : ui.taskFilter; go('tarefas'); break;
-    case 'impl-kind': ui.implKind = id; vImplantacao(); break;
+    case 'ideia-st': ui.ideiaStatus = id; render(); break;
     case 'move': {
-      const it = byId(col, id), i = ETAPA_NOMES.indexOf(it.etapa || 'Levantamento'), n = i + (+el.dataset.dir);
-      if (n >= 0 && n < ETAPAS.length) { it.etapa = ETAPA_NOMES[n]; persist(`${it.nome} → ${it.etapa}`); vImplantacao(); }
+      const col = el.dataset.col, it = byId(col, id), ids = S.etapas.map(x => x.id), n = ids.indexOf(it.etapa) + (+el.dataset.dir);
+      if (n >= 0 && n < ids.length) commit(st => { const x = st[col].find(y => y.id === id); if (x) x.etapa = ids[n]; }, true);
       break;
     }
-    case 'ideia-st': ui.ideiaStatus = id; vBacklog(); break;
-    case 'adm-go': ui.admSec = id; go('adm'); break;
-    case 'export-json': exportJson(); break;
+    case 'adm-go': if (modal.open) modal.close(); ui.admSec = id; go('adm'); break;
     case 'export-csv': exportCsv(); break;
+    case 'export-json': download(`projeto-fiorella-${today()}.json`, JSON.stringify(S, null, 2), 'application/json'); break;
     case 'import-json': $('#importFile').click(); break;
-    case 'reset': if (confirm('Restaurar os dados iniciais da planilha? As alterações deste navegador serão perdidas.')) { S = clone(SEED); try { localStorage.removeItem(LS_KEY); } catch (err) {} stamp(); render(); toast('Dados restaurados'); } break;
-    case 'theme': {
-      const r = document.documentElement, dark = r.dataset.theme ? r.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
-      r.dataset.theme = dark ? 'light' : 'dark'; try { localStorage.setItem(LS_KEY + '.theme', r.dataset.theme); } catch (err) {}
-      break;
-    }
+    case 'reset': if (await ask('Restaurar o conteúdo original da planilha para todos os usuários? As alterações feitas serão substituídas (continuam no histórico do banco).', true)) replaceAll(migrate(clone(SEED))); break;
   }
 });
-document.addEventListener('input', e => {
-  const k = e.target.dataset.ui; if (!k) return;
-  ui[k] = e.target.value; (FILLS[ui.tab] || render)();
-});
-document.addEventListener('change', e => {
-  const t = e.target;
-  if (t.dataset.pkSel && t.value) { pkAdd(t.dataset.pkSel, t.value); }
+/* Texto editado: salva ao sair do campo (sem redesenhar, para não perder o foco) */
+document.addEventListener('focusin', e => { const t = e.target; if (t.classList && t.classList.contains('et') && t.isContentEditable) t.dataset.orig = t.textContent; });
+document.addEventListener('focusout', e => {
+  const t = e.target; if (!t.classList || !t.classList.contains('et') || !t.isContentEditable) return;
+  const v = t.textContent.replace(/ /g, ' ').trim();
+  if (v === (t.dataset.orig || '').trim()) return;
+  const p = t.dataset.p; commit(st => setP(st, p, v), false);
+  if (t.classList.contains('one') && !v) t.textContent = '';
 });
 document.addEventListener('keydown', e => {
   const t = e.target;
-  if (t.dataset && t.dataset.pkTxt && e.key === 'Enter') { e.preventDefault(); pkAdd(t.dataset.pkTxt, t.value); t.value = ''; }
+  if (t.classList && t.classList.contains('et') && t.isContentEditable) {
+    if (e.key === 'Enter' && (t.classList.contains('one') || e.ctrlKey)) { e.preventDefault(); t.blur(); }
+    if (e.key === 'Escape') { t.textContent = t.dataset.orig || ''; t.blur(); }
+  }
+  if (t.id === 'pkTxt' && e.key === 'Enter') { e.preventDefault(); modal.querySelector('[data-act="pk-ok"]').click(); }
 });
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.classList.contains('es')) { const p = t.dataset.p, v = t.value; commit(st => setP(st, p, v), true); return; }
+  if (t.dataset.lista) { const k = t.dataset.lista, v = t.value.split('\n').map(s => s.trim()).filter(Boolean); commit(st => { st.listas[k] = v; }, false); }
+});
+document.addEventListener('input', e => { const k = e.target.dataset && e.target.dataset.ui; if (!k) return; ui[k] = e.target.value; (FILLS[ui.tab] || render)(); });
 modal.addEventListener('click', e => { if (e.target === modal) modal.close(); });
 window.addEventListener('hashchange', () => { const h = location.hash.slice(1); if (h && h !== ui.tab) go(h); });
 
 /* =====================================================================
-   10. INÍCIO
+   10. INÍCIO — espera o login (guard.js) e carrega o projeto do banco
    ===================================================================== */
-try { const th = localStorage.getItem(LS_KEY + '.theme'); if (th) document.documentElement.dataset.theme = th; } catch (e) {}
-stamp();
-go(location.hash.slice(1) || 'visao');
+function fatal(msg) { $('#view').innerHTML = `<div class="fi-card fi-empty"><div><strong>Não foi possível abrir o projeto</strong><br>${esc(msg)}</div></div>`; }
+(async function init() {
+  if (!window.APP || !APP.pronto) { fatal('A Central de Acesso Fiorella não carregou. Confira a conexão e recarregue a página.'); return; }
+  try { await APP.pronto; } catch (e) { return; } /* o guard já mostrou login / aviso */
+  sb = APP.sb; canEdit = APP.podeEditar(); isAdm = APP.eAdmin();
+  try { ui.edit = canEdit && sessionStorage.getItem('projetoFiorella.edit') === '1'; } catch (e) {}
+  try {
+    const rem = await fetchRemote();
+    if (rem) { S = migrate(rem.dados); VER = rem.versao; META = { em: rem.atualizado_em, por: rem.atualizado_por }; }
+    else {
+      /* Primeiro acesso: base da planilha (ou os dados da versão anterior salvos neste navegador) */
+      S = migrate(clone(SEED)); VER = 0;
+      let local = null; try { local = JSON.parse(localStorage.getItem('projetoFiorella.v1') || 'null'); } catch (e) {}
+      if (canEdit) {
+        const usarLocal = local && Array.isArray(local.participantes) && await ask('Encontramos dados da versão anterior salvos neste navegador. Usar esses dados como ponto de partida do projeto compartilhado?');
+        replaceAll(usarLocal ? migrate(local) : S);
+      }
+    }
+  } catch (e) {
+    console.error('[projeto] carregar', e);
+    fatal(/sem_permissao/.test(e.message || '') ? 'Seu usuário não tem acesso a esta ferramenta.' : 'Erro ao carregar os dados do projeto. Recarregue a página.');
+    return;
+  }
+  const me = norm(APP.usuario && APP.usuario.email), p = me && S.participantes.find(x => norm(x.email) === me);
+  USER_TOK = p ? '@' + p.id : '';
+  setSync(ops.length ? 'pendente' : 'ok');
+  let first = location.hash.slice(1);
+  if (!first) try { first = localStorage.getItem('projetoFiorella.tab') || ''; } catch (e) {}
+  go(first || 'modulos');
+})();
 </script>
 </body>
 </html>
