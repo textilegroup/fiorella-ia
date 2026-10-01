@@ -127,6 +127,17 @@ body.editing .et[contenteditable]:focus{outline:2px solid var(--exec);background
 .phases.seq{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:22px}
 .phases.seq .phase{position:relative}
 .phases.seq .phase:not(:last-child)::after{content:"";position:absolute;right:-16px;top:22px;width:9px;height:9px;border-top:2px solid var(--doc);border-right:2px solid var(--doc);transform:rotate(45deg)}
+.vinc{margin:8px 0 2px}
+.vchip{display:inline-flex;align-items:center;border:1px solid color-mix(in srgb,var(--exec) 35%,var(--fi-line,#dfe3e8));background:color-mix(in srgb,var(--exec) 6%,var(--fi-surface,#fff));color:var(--fi-text);border-radius:6px;padding:2px 9px;font:inherit;font-size:.76rem;font-weight:650;cursor:pointer}
+.vchip:hover{border-color:var(--exec)}
+.vfalta{font-size:.76rem;color:var(--fi-warning,#a16207)!important;font-weight:600}
+.vbox{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:4px 12px;max-height:180px;overflow:auto;border:1px solid var(--fi-line,#dfe3e8);border-radius:7px;padding:8px 10px;font-size:.84rem;margin-bottom:6px}
+.vbox label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.ficha .fi-field{display:flex;flex-direction:column;gap:4px}
+.ficha .fi-field.erro .fi-input,.ficha .fi-field.erro .vbox,.ficha .fi-field.erro .fi-select{border-color:var(--fi-danger,#c0122c);box-shadow:0 0 0 2px color-mix(in srgb,var(--fi-danger,#c0122c) 18%,transparent)}
+.req{color:var(--fi-danger,#c0122c)}
+dialog .m-body{max-height:calc(100vh - 170px)}
+.passos .et{display:block;white-space:pre-wrap;color:var(--fi-text)}
 .trilha-w{margin:10px 0 2px}.trilha-w .k b{color:var(--exec)}
 .trilha{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:3px}
 .tr-s{display:flex;flex-direction:column;gap:3px;min-width:0}
@@ -270,7 +281,7 @@ dialog::backdrop{background:rgba(9,12,16,.55)}
    ADM → Dados → Restaurar. Referência a participante = "@id";
    qualquer outro texto é texto livre (ex.: "Gestor da área").
    ===================================================================== */
-const SCHEMA = 3;
+const SCHEMA = 4;
 const SEED = {
   schema: SCHEMA,
   textos: {
@@ -298,6 +309,7 @@ const SEED = {
       admTipos: 'Tipos / Funções no projeto',
       admListas: 'Listas de opções',
       admDados: 'Dados e acessos',
+      admCad: 'Cadastro de módulos e processos',
     },
   },
   projeto: {
@@ -392,8 +404,8 @@ const SEED = {
 
   sistemas: [
     { id: 'protheus', nome: 'Protheus (TOTVS)', cat: 'ERP', desc: 'ERP e sistema oficial: registros transacionais, fiscais, contábeis, financeiros, estoque e funções próprias.', integ: 'Base de todos os módulos da plataforma', resp: ['@flavio', '@alexandre'], status: 'Em uso' },
-    { id: 'plataforma', nome: 'Plataforma / Portal Fiorella', cat: 'Plataforma', desc: 'Ambiente cotidiano de gestão e execução dos processos: BPM, tarefas, aprovações, comunicação, CRM e módulos setoriais.', integ: 'Protheus, sistemas internos e serviços externos', resp: ['@thiago', '@alexandre'], status: 'Em construção' },
-    { id: 'producao', nome: 'Sistema de Produção', cat: 'Sistema interno', desc: 'Controles e apontamentos do chão de fábrica. Objetivo: digitalizar controles em papel e gerar indicadores.', integ: 'Protheus / Plataforma (Produção Digital)', resp: ['@flavio'], status: 'A mapear' },
+    { id: 'plataforma', nome: 'Plataforma / Portal Fiorella (Streamlit)', cat: 'Plataforma', desc: 'Ambiente cotidiano de gestão e execução dos processos: BPM, tarefas, aprovações, comunicação, CRM e módulos setoriais.', integ: 'Protheus, sistemas internos e serviços externos', resp: ['@thiago', '@alexandre'], status: 'Em construção' },
+    { id: 'producao', nome: 'Gestão de Produção (contratado)', cat: 'Sistema interno', desc: 'Controles e apontamentos do chão de fábrica. Objetivo: digitalizar controles em papel e gerar indicadores.', integ: 'Protheus / Plataforma (Produção Digital)', resp: ['@flavio'], status: 'A mapear' },
     { id: 'dinamometro', nome: 'Dinamômetro', cat: 'Equipamento / Indústria', desc: 'Equipamento de ensaios. Resultados podem alimentar laudos, rastreabilidade e Qualidade.', integ: 'Qualidade / Produção', resp: [], status: 'A mapear' },
     { id: 'bancos', nome: 'Bancos (DDA, boletos, cartões)', cat: 'Externo', desc: 'Cobranças, cartões, bancos, DDA, boletos e conciliações.', integ: 'Financeiro / Protheus', resp: [], status: 'Futura integração' },
     { id: 'nfe', nome: 'Portal NF-e (API)', cat: 'Externo', desc: 'Captura e gestão de NF-e recebidas.', integ: 'Fiscal / Compras / Protheus', resp: [], status: 'Futura integração' },
@@ -435,9 +447,9 @@ const SEED = {
   ],
 
   processos: [
-    { id: 'p_compra', nome: 'Solicitação de compra', area: 'compras', modulo: 'compras', resp: ['Gestor da área'], exec: ['Compras'], aprov: ['Conforme alçada'], cons: ['Financeiro'], inf: ['Solicitante'], sup: [], prazo: '2 dias úteis', escal: 'Superior após SLA', integ: 'Plataforma / Protheus', status: 'A mapear', etapa: 'levantamento', obs: 'Exemplo do modelo de mapeamento.' },
-    { id: 'p_rnc', nome: 'RNC de cliente', area: 'qualidade', modulo: 'qualidade', resp: ['Qualidade'], exec: ['Responsável da etapa'], aprov: ['Conforme fluxo'], cons: ['Produção', 'Comercial'], inf: ['Solicitante'], sup: [], prazo: '', escal: 'Gestor da área', integ: 'CRM / Qualidade', status: 'A mapear', etapa: 'levantamento', obs: 'Exemplo do modelo de mapeamento.' },
-    { id: 'p_dev', nome: 'Desenvolvimento de produto', area: 'desenvolvimento', modulo: '', resp: [], exec: ['Responsável da etapa'], aprov: [], cons: ['Comercial', 'Produção', 'Qualidade'], inf: ['Partes envolvidas'], sup: [], prazo: '', escal: '', integ: 'CRM / Produção', status: 'A mapear', etapa: 'levantamento', obs: 'Exemplo do modelo de mapeamento.' },
+    { id: 'p_compra', nome: 'Solicitação de compra', area: 'compras', modulos: ['compras'], resp: ['Gestor da área'], exec: ['Compras'], aprov: ['Conforme alçada'], cons: ['Financeiro'], inf: ['Solicitante'], sup: [], prazo: '2 dias úteis', escal: 'Superior após SLA', integ: 'Plataforma / Protheus', status: 'A mapear', etapa: 'levantamento', obs: 'Exemplo do modelo de mapeamento.' },
+    { id: 'p_rnc', nome: 'RNC de cliente', area: 'qualidade', modulos: ['qualidade'], resp: ['Qualidade'], exec: ['Responsável da etapa'], aprov: ['Conforme fluxo'], cons: ['Produção', 'Comercial'], inf: ['Solicitante'], sup: [], prazo: '', escal: 'Gestor da área', integ: 'CRM / Qualidade', status: 'A mapear', etapa: 'levantamento', obs: 'Exemplo do modelo de mapeamento.' },
+    { id: 'p_dev', nome: 'Desenvolvimento de produto', area: 'desenvolvimento', modulos: [], resp: [], exec: ['Responsável da etapa'], aprov: [], cons: ['Comercial', 'Produção', 'Qualidade'], inf: ['Partes envolvidas'], sup: [], prazo: '', escal: '', integ: 'CRM / Produção', status: 'A mapear', etapa: 'levantamento', obs: 'Exemplo do modelo de mapeamento.' },
   ],
 
   ideias: [
@@ -447,6 +459,102 @@ const SEED = {
     { id: 'i4', titulo: 'Apontamentos de produção pelo celular', area: 'producao', autor: [], desc: 'Tela simplificada para apontamentos no chão de fábrica.', beneficio: 'Substitui controles em papel.', prioridade: 'Média', status: 'Nova' },
   ],
 };
+
+/* =====================================================================
+   1b. PLANILHA PROJETO_IA.xlsx (inventário de sistemas e novos projetos)
+   Aplicada uma única vez sobre os dados (flag "planilhaIA"): o texto é
+   acrescentado aos cadastros existentes, sem apagar o que já foi escrito.
+   ===================================================================== */
+const PLANILHA_IA = {
+  sistemas: {
+    protheus: 'Tecnologia: linguagem ADVPL · banco de dados SQL Server.\nMódulos em uso: Compras / NFs · Produção / Controle de estoque · Vendas / Faturamento · Cobrança · Financeiro · Folha / eSocial · Contabilidade · Livros Fiscais.',
+    plataforma: 'Portal Fiorella — desenvolvimento interno. Tecnologia: Streamlit (Python) · banco de dados MySQL.\nMódulos já existentes: gestão de solicitações de compras · ordem de serviços (Compras) · TER e RIR (recebimento de insumos) · ordem de serviços (Manutenção) · gestão e impressão de folder para catálogo (Fiorella e Wendell) · Comercial (somente relatórios, até o momento) · gestão de funcionários (complementar ao Protheus, base para outras ferramentas) · controle de refeição · controle de EPI · gestão de treinamento · Informática (equipamentos de TI e CFTV) · Administrador (usuários, acessos e menus).',
+    producao: 'Gestão de Produção — sistema contratado. Tecnologia: Python / HTML / Apache · banco de dados SQL Server.\nCobre: balanças e chão de fábrica (registros de produção) · Qualidade (fichas técnicas e laudos de testes) · Expedição (movimentação e separação de materiais, despacho de notas).',
+    dinamometro: 'Software do dinamômetro — desenvolvimento interno. Tecnologia: CSS / HTML / JavaScript / Electron · banco de dados MySQL.\nMódulo existente: testes de materiais integrado.',
+  },
+  modulos: {
+    nucleo: 'Já existe no Portal: módulo Administrador (usuários, acessos e menus).',
+    compras: 'Já existe no Portal: gestão de solicitações de compras, ordem de serviços da área de Compras e TER / RIR (recebimento de insumos).',
+    nfe: 'Novos projetos: gestão das notas recebidas pelos CNPJs via API PortalNFE; indicadores de desempenho do setor.\nLivros Fiscais: conferir notas / CT-es recebidos x lançados no Protheus; prévia de apuração de impostos.',
+    manutencao: 'Já existe no Portal: ordem de serviços da Manutenção.\nNovos projetos: incluir manutenções programadas na ordem de serviços; melhorar a gestão de horas e a análise de dados do setor, com indicadores e metas.',
+    producao: 'Hoje: sistema contratado de Gestão de Produção (balanças, chão de fábrica, qualidade e expedição).\nNovos projetos: formulários digitais para substituir os controles em papel; análise de desvios e falhas nos apontamentos e consumos de materiais; indicadores do setor; avaliar etiqueta de radiofrequência (RFID).',
+    crm: 'Já existe no Portal: módulo Comercial (somente relatórios) e folder de catálogo Fiorella / Wendell.\nNovos projetos: consultas Serasa e Sintegra via API e Receita Federal (verificar API); pré-cadastro de clientes (migrar do Protheus para o portal); remessas pelos Correios via API; lançamento de pedidos de e-commerce; orçamentos e pedidos com controle de preços, comissões, condição de pagamento, prazo de entrega e análise de estoque; acompanhamento das entregas; consulta financeira e análise de crédito do cliente; consulta e controle de comissões; perfil de compras dos clientes (produtos, periodicidade e preços); metas e indicadores.',
+    comunicacao: 'Novos projetos: portal de comunicação entre setores.',
+    qualidade: 'Hoje: fichas técnicas e laudos no sistema de Gestão de Produção; módulo de testes de materiais no software do dinamômetro.\nNovos projetos: portal de RNCs.',
+    financeiro: 'Novos projetos — Cobrança: gestão de recebimento de cartão de crédito; migrar do Protheus os avisos de cobrança e o envio de boletos por e-mail; análise de crédito.\nFinanceiro: DDA e extratos bancários x lançamentos no Protheus; migrar os relatórios do Protheus para acesso no portal.',
+    rh: 'Já existe no Portal: gestão de funcionários (complementar ao Protheus), controle de refeição, controle de EPI e gestão de treinamento.\nNovos projetos: controle de vencimentos de documentos, exames e contratos.',
+    contratos: 'Novos projetos: gestão de contratos diversos.',
+  },
+  processos: {
+    p_dev: 'Novos projetos: portal de novos desenvolvimentos de produtos.',
+  },
+};
+function aplicarPlanilhaIA(d) {
+  const tag = '— Planilha PROJETO_IA —';
+  const add = (it, campo, txt) => { if (it && txt && !String(it[campo] || '').includes(tag)) it[campo] = (it[campo] ? it[campo] + '\n\n' : '') + tag + '\n' + txt; };
+  for (const id in PLANILHA_IA.sistemas) add((d.sistemas || []).find(x => x.id === id), 'desc', PLANILHA_IA.sistemas[id]);
+  for (const id in PLANILHA_IA.modulos) add((d.modulos || []).find(x => x.id === id), 'escopo', PLANILHA_IA.modulos[id]);
+  for (const id in PLANILHA_IA.processos) add((d.processos || []).find(x => x.id === id), 'obs', PLANILHA_IA.processos[id]);
+}
+
+
+/* =====================================================================
+   1c. CADASTRO DE MÓDULOS E PROCESSOS — perguntas da ficha
+   O tipo de cada campo é fixo; pergunta, ajuda, "mostrar" e
+   "obrigatório" são parametrizáveis em ADM → Cadastro de módulos e processos.
+   "_vinc" = vínculo recíproco módulo ⇄ processo.
+   ===================================================================== */
+const CAMPOS = {
+  modulos: [
+    { k: 'nome', tipo: 'texto', fixo: 1, pergunta: 'Qual o nome do módulo?', ajuda: 'Nome curto, como vai aparecer na plataforma. Ex.: CRM Comercial, Gestão de NF-e.' },
+    { k: '_vinc', tipo: 'vinculo', pergunta: 'Quais processos este módulo atende?', ajuda: 'Marque os processos já cadastrados ou digite o nome de um processo novo para criá-lo junto.' },
+    { k: 'objetivo', tipo: 'area', pergunta: 'Que problema ele resolve?', ajuda: 'O que acontece hoje (planilha, papel, retrabalho, falta de controle) e vai melhorar.' },
+    { k: 'escopo', tipo: 'area', pergunta: 'O que ele precisa fazer?', ajuda: 'Principais funções, em poucas linhas.' },
+    { k: 'sistema', tipo: 'ref', col: 'sistemas', pergunta: 'Em qual sistema vai rodar?', ajuda: 'Protheus, Portal Fiorella, sistema contratado…' },
+    { k: 'sponsor', tipo: 'pessoa', pergunta: 'Quem patrocina e decide sobre ele?' },
+    { k: 'dono', tipo: 'pessoa', pergunta: 'Quem é o dono funcional (área que vai usar)?' },
+    { k: 'keyuser', tipo: 'pessoa', pergunta: 'Quem vai testar e homologar (key user)?' },
+    { k: 'prioridade', tipo: 'lista', lista: 'prioridades', pergunta: 'Qual a prioridade?' },
+    { k: 'dep', tipo: 'texto', pergunta: 'Depende de algo para começar?', ajuda: 'Outro módulo, integração ou sistema.' },
+    { k: 'indicador', tipo: 'texto', pergunta: 'Como saberemos que deu certo?', ajuda: 'Indicador de sucesso. Ex.: aprovação de compra em até 2 dias.' },
+    { k: 'proximos', tipo: 'area', pergunta: 'Qual o próximo passo?' },
+  ],
+  processos: [
+    { k: 'nome', tipo: 'texto', fixo: 1, pergunta: 'Qual o nome do processo?', ajuda: 'Verbo + objeto. Ex.: Solicitar amostra, Faturar pedido.' },
+    { k: '_vinc', tipo: 'vinculo', pergunta: 'Em quais módulos ele acontece?', ajuda: 'Marque os módulos já cadastrados ou digite o nome de um módulo novo para criá-lo junto.' },
+    { k: 'area', tipo: 'ref', col: 'areas', pergunta: 'Qual área é dona do processo?' },
+    { k: 'gatilho', tipo: 'texto', pergunta: 'O que dispara o processo?', ajuda: 'Quando ele começa. Ex.: cliente pede amostra; pedido aprovado.' },
+    { k: 'entrega', tipo: 'texto', pergunta: 'Quando ele termina e qual o resultado?', ajuda: 'Ex.: amostra enviada com laudo; NF emitida e despachada.' },
+    { k: 'passos', tipo: 'area', pergunta: 'Quais são os passos, em ordem?', ajuda: 'Uma etapa por linha: etapa — quem faz — módulo. Esta é a sequência de trabalho.' },
+    { k: 'resp', tipo: 'pessoa', pergunta: 'Quem é o responsável (dono)?' },
+    { k: 'exec', tipo: 'pessoa', pergunta: 'Quem executa?' },
+    { k: 'aprov', tipo: 'pessoa', pergunta: 'Quem aprova?' },
+    { k: 'prazo', tipo: 'texto', pergunta: 'Qual o prazo (SLA)?', ajuda: 'Ex.: 2 dias úteis.' },
+    { k: 'escal', tipo: 'texto', pergunta: 'Se atrasar, quem é acionado?' },
+    { k: 'frequencia', tipo: 'texto', pergunta: 'Com que frequência acontece?', ajuda: 'Volume aproximado. Ex.: 20 por semana.' },
+    { k: 'integ', tipo: 'texto', pergunta: 'Precisa de integração com outro sistema?', ajuda: 'Ex.: Protheus, API dos Correios.' },
+    { k: 'obs', tipo: 'area', pergunta: 'Observações' },
+  ],
+};
+const VINC = { modulos: { outro: 'processos', rot: 'Processos', um: 'processo' }, processos: { outro: 'modulos', rot: 'Módulos', um: 'módulo' } };
+function cadPadrao() {
+  const out = {};
+  for (const col in CAMPOS) out[col] = { criar: 'editores', editar: 'editores', excluir: 'editores',
+    campos: Object.fromEntries(CAMPOS[col].map(c => [c.k, { pergunta: c.pergunta, ajuda: c.ajuda || '', mostrar: true, obrig: c.k === 'nome' || c.k === '_vinc' }])) };
+  return out;
+}
+const cfgCad = col => (S.cadastro && S.cadastro[col]) || cadPadrao()[col];
+const campoCfg = (col, k) => cfgCad(col).campos[k] || {};
+/* Permissões parametrizadas: "editores" (quem tem Editar) ou "admin" */
+const podeCad = (col, acao) => canEdit && (cfgCad(col)[acao] === 'admin' ? isAdm : true);
+/* Vínculo recíproco: a fonte é processo.modulos; o módulo lê dali */
+const procsDoModulo = mid => S.processos.filter(p => (p.modulos || []).includes(mid));
+const vincIds = (col, it) => col === 'processos' ? (it.modulos || []) : procsDoModulo(it.id).map(p => p.id);
+function setVinc(st, col, id, outroId, on) {
+  const [pid, mid] = col === 'processos' ? [id, outroId] : [outroId, id];
+  const p = st.processos.find(x => x.id === pid); if (!p) return;
+  const a = new Set(p.modulos || []); on ? a.add(mid) : a.delete(mid); p.modulos = [...a];
+}
 
 /* Campos de pessoas (para vínculos e exclusão de participante) */
 const PEOPLE_FIELDS = {
@@ -459,12 +567,12 @@ const PEOPLE_FIELDS = {
 };
 const COL_LABEL = { modulos: 'Módulos', processos: 'Processos', sistemas: 'Sistemas', areas: 'Áreas', ideias: 'Backlog', etapas: 'Etapas de implantação', fases: 'Fases do projeto' };
 /* Coleções editáveis somente por admin (guia ADM) */
-const ADM_ROOTS = ['participantes', 'areas', 'tipos', 'listas'];
+const ADM_ROOTS = ['participantes', 'areas', 'tipos', 'listas', 'cadastro'];
 
 /* Novos itens */
 const NEW = {
-  modulos: () => ({ nome: 'Novo módulo', sponsor: [], dono: [], coord: [], dev: [], proc: [], keyuser: [], prioridade: 'Média', dep: '', status: 'Planejamento', etapa: 'levantamento', escopo: '', proximos: '' }),
-  processos: () => ({ nome: 'Novo processo', area: ui.procArea && ui.procArea !== '*' ? ui.procArea : '', modulo: '', resp: [], exec: [], aprov: [], cons: [], inf: [], sup: [], prazo: '', escal: '', integ: '', status: 'A mapear', etapa: 'levantamento', obs: '' }),
+  modulos: () => ({ nome: 'Novo módulo', sponsor: [], dono: [], coord: [], dev: [], proc: [], keyuser: [], prioridade: 'Média', dep: '', status: 'Planejamento', etapa: 'levantamento', escopo: '', proximos: '', objetivo: '', sistema: '', indicador: '' }),
+  processos: () => ({ nome: 'Novo processo', area: ui.procArea && ui.procArea !== '*' ? ui.procArea : '', modulos: [], gatilho: '', entrega: '', passos: '', frequencia: '', resp: [], exec: [], aprov: [], cons: [], inf: [], sup: [], prazo: '', escal: '', integ: '', status: 'A mapear', etapa: 'levantamento', obs: '' }),
   sistemas: () => ({ nome: 'Novo sistema', cat: '', desc: '', integ: '', resp: [], status: 'A mapear' }),
   ideias: () => ({ titulo: 'Nova ideia', area: '', autor: USER_TOK ? [USER_TOK] : [], desc: '', beneficio: '', prioridade: 'Média', status: 'Nova' }),
   participantes: () => ({ nome: 'Novo participante', email: '', cargo: '', area: '', tipo: '', nivel: '', resp: '', foco: '', status: 'Ativo' }),
@@ -509,6 +617,19 @@ function migrate(d) {
   if ((d.schema || 0) < 3) {
     ['fases', 'fasesNota', 'fluxo'].forEach(k => { d.textos.sec[k] = SEED.textos.sec[k]; });
     d.textos.visao.d = SEED.textos.visao.d; d.textos.implantacao.d = SEED.textos.implantacao.d;
+  }
+  if (!d.planilhaIA) { aplicarPlanilhaIA(d); d.planilhaIA = 1; }
+  /* versão 4: vínculo recíproco módulo ⇄ processo e ficha de cadastro parametrizável */
+  (d.processos || []).forEach(p => {
+    if (!Array.isArray(p.modulos)) p.modulos = p.modulo ? [p.modulo] : [];
+    delete p.modulo;
+    p.modulos = p.modulos.filter(m => (d.modulos || []).some(x => x.id === m));
+  });
+  const pad = cadPadrao(); d.cadastro = d.cadastro || {};
+  for (const c in pad) {
+    d.cadastro[c] = Object.assign({}, pad[c], d.cadastro[c] || {});
+    d.cadastro[c].campos = Object.assign({}, pad[c].campos, (d.cadastro[c] || {}).campos || {});
+    for (const k in pad[c].campos) d.cadastro[c].campos[k] = Object.assign({}, pad[c].campos[k], d.cadastro[c].campos[k]);
   }
   delete d.tarefas; delete d._savedAt;
   d.schema = SCHEMA;
@@ -609,7 +730,7 @@ function tokName(t) { if (!t) return ''; if (t[0] === '@') { const p = byId('par
 function notify(msg, type) { if (window.FiorellaUI) FiorellaUI.notify(msg, { type }); else console.log(msg); }
 async function ask(message, danger) { return window.FiorellaUI ? FiorellaUI.confirm({ title: danger ? 'Excluir' : 'Confirmar', message, confirmText: danger ? 'Excluir' : 'Confirmar', danger }) : confirm(message); }
 
-function canEditPath(p) { if (!ui.edit || !canEdit) return false; return ADM_ROOTS.includes(p.split('.')[0]) ? isAdm : true; }
+function canEditPath(p) { if (!ui.edit || !canEdit) return false; const r = p.split('.')[0]; if (r === 'modulos' || r === 'processos') return podeCad(r, 'editar'); return ADM_ROOTS.includes(r) ? isAdm : true; }
 const edCol = col => ui.edit && canEdit && (!ADM_ROOTS.includes(col) || isAdm);
 
 /* Texto editável (contenteditable) */
@@ -652,8 +773,8 @@ function PPL(p, o = {}) {
   if (ed) h += `<button class="padd" data-act="ppl-add" data-p="${esc(p)}"${o.single ? ' data-single="1"' : ''} title="Adicionar pessoa">＋</button>`;
   return `<span class="ppl">${h}</span>`;
 }
-const RM = (col, id) => edCol(col.split('.')[0]) ? `<button class="rm" data-act="rm" data-col="${esc(col)}" data-id="${esc(id)}" title="Excluir">✕</button>` : '';
-const ADD = (col, label) => edCol(col.split('.')[0]) ? `<button class="fi-btn fi-btn--primary" data-act="add" data-col="${esc(col)}">＋ ${esc(label)}</button>` : '';
+const RM = (col, id) => (col === 'modulos' || col === 'processos' ? ui.edit && podeCad(col, 'excluir') : edCol(col.split('.')[0])) ? `<button class="rm" data-act="rm" data-col="${esc(col)}" data-id="${esc(id)}" title="Excluir">✕</button>` : '';
+const ADD = (col, label) => (col === 'modulos' || col === 'processos') ? (podeCad(col, 'criar') ? `<button class="fi-btn fi-btn--primary" data-act="novo" data-col="${esc(col)}">＋ ${esc(label)}</button>` : '') : edCol(col.split('.')[0]) ? `<button class="fi-btn fi-btn--primary" data-act="add" data-col="${esc(col)}">＋ ${esc(label)}</button>` : '';
 
 /* Roadmap individual: as 6 etapas em sequência, com a etapa atual destacada */
 function trilha(x) {
@@ -661,6 +782,16 @@ function trilha(x) {
   return `<div class="trilha-w"><div class="k">Roadmap individual · etapa ${i + 1} de ${S.etapas.length}: <b>${esc((S.etapas[i] || {}).nome || '—')}</b></div>
     <div class="trilha">${S.etapas.map((e, k) =>
     `<span class="tr-s${k < i ? ' feito' : k === i ? ' atual' : ''}" title="${k + 1}. ${esc(e.nome)}"><b>${k + 1}</b></span>`).join('')}</div></div>`;
+}
+
+/* Chips do vínculo recíproco módulo ⇄ processo */
+function VINCS(col, it) {
+  const v = VINC[col], ids = vincIds(col, it), ed = ui.edit && podeCad(col, 'editar') && podeCad(v.outro, 'editar');
+  let h = ids.map(oid => { const o = byId(v.outro, oid); if (!o) return '';
+    return `<span class="pw"><button class="vchip" data-act="vinc-ir" data-col="${v.outro}" data-id="${esc(oid)}" title="Abrir">${esc(o.nome)}</button>${ed ? `<button class="x" data-act="vinc-rm" data-col="${col}" data-id="${esc(it.id)}" data-o="${esc(oid)}" title="Desvincular">×</button>` : ''}</span>`; }).join('');
+  if (!ids.length) h = `<span class="muted vfalta">Sem ${v.um} vinculado</span>`;
+  if (ed) h += `<button class="padd" data-act="vinc-add" data-col="${col}" data-id="${esc(it.id)}" title="Vincular ${v.um}">＋</button>`;
+  return `<span class="ppl">${h}</span>`;
 }
 
 /* Vínculos de um participante em todo o projeto */
@@ -746,15 +877,15 @@ function vModulos() {
 function fillModulos() {
   const q = norm(ui.modQ), ord = { 'Alta': 0, 'Média': 1, 'Baixa': 2 };
   const l = S.modulos.filter(m => (!ui.modPrio || m.prioridade === ui.modPrio) &&
-    (!q || norm([m.nome, m.dep, m.escopo, m.proximos, ...PEOPLE_FIELDS.modulos.flatMap(([k]) => (m[k] || []).map(tokName))].join(' ')).includes(q)));
+    (!q || norm([m.nome, m.dep, m.escopo, m.proximos, m.objetivo, ...procsDoModulo(m.id).map(p => p.nome), ...PEOPLE_FIELDS.modulos.flatMap(([k]) => (m[k] || []).map(tokName))].join(' ')).includes(q)));
   if (!ui.edit) l.sort((a, b) => (ord[a.prioridade] ?? 3) - (ord[b.prioridade] ?? 3));
   if (!l.length) { $('#list').innerHTML = `<div class="fi-card fi-empty">Nenhum módulo encontrado.</div>`; return; }
   const P = (m, k) => `modulos.#${m.id}.${k}`;
   if (ui.modView === 'planilha') {
     $('#list').innerHTML = `<div class="fi-table-wrap"><table class="fi-table sheet"><thead><tr>
-      <th>Módulo</th><th>Prioridade</th><th>Situação</th><th>Etapa</th><th>Sponsor</th><th>Dono funcional</th><th>Coord. técnico</th><th>Desenvolvimento</th><th>Processos</th><th>Key User</th><th>Dependências</th><th>Próximos passos</th><th></th></tr></thead>
+      <th>Módulo</th><th>Processos</th><th>Prioridade</th><th>Situação</th><th>Etapa</th><th>Sponsor</th><th>Dono funcional</th><th>Coord. técnico</th><th>Desenvolvimento</th><th>Processos</th><th>Key User</th><th>Dependências</th><th>Próximos passos</th><th></th></tr></thead>
       <tbody>${l.map(m => `<tr>
-        <td class="wide"><b>${T(P(m, 'nome'), { one: 1 })}</b></td><td class="nw">${SEL(P(m, 'prioridade'), 'prioridades')}</td>
+        <td class="wide"><b>${T(P(m, 'nome'), { one: 1 })}</b></td><td>${VINCS('modulos', m)}</td><td class="nw">${SEL(P(m, 'prioridade'), 'prioridades')}</td>
         <td class="nw">${SEL(P(m, 'status'), 'stModulo')}</td><td class="nw">${REF(P(m, 'etapa'), 'etapas')}</td>
         ${PEOPLE_FIELDS.modulos.map(([k]) => `<td>${PPL(P(m, k))}</td>`).join('')}
         <td>${T(P(m, 'dep'))}</td><td class="wide">${T(P(m, 'proximos'))}</td><td class="nw">${RM('modulos', m.id)}</td></tr>`).join('')}
@@ -762,13 +893,18 @@ function fillModulos() {
     return;
   }
   $('#list').innerHTML = `<div class="gauto">${l.map(m => {
-    const np = S.processos.filter(p => p.modulo === m.id).length;
+    const np = procsDoModulo(m.id).length, mc = k => campoCfg('modulos', k).mostrar !== false;
     return `<div class="fi-card item">
       <div class="card-top"><div class="grow"><h3>${T(P(m, 'nome'), { one: 1 })}</h3>
         <div class="sub">Dependências: ${T(P(m, 'dep'), { ph: '—' })}</div></div>${RM('modulos', m.id)}</div>
       <div class="row">${SEL(P(m, 'prioridade'), 'prioridades', { title: 'Prioridade' })}${SEL(P(m, 'status'), 'stModulo', { title: 'Situação' })}<span class="tag">Etapa: ${REF(P(m, 'etapa'), 'etapas')}</span></div>
       ${trilha(m)}
+      <div class="vinc"><div class="k">Processos vinculados</div>${VINCS('modulos', m)}</div>
+      ${mc('objetivo') && (m.objetivo || canEditPath(P(m, 'objetivo'))) ? `<div><div class="k">Problema que resolve</div>${T(P(m, 'objetivo'), { tag: 'div', cls: 'txt' })}</div>` : ''}
       ${T(P(m, 'escopo'), { tag: 'div', cls: 'txt' })}
+      ${(mc('sistema') && (m.sistema || canEditPath(P(m, 'sistema')))) || (mc('indicador') && (m.indicador || canEditPath(P(m, 'indicador')))) ? `<div class="kv">
+        ${mc('sistema') ? `<div><div class="k">Sistema</div>${REF(P(m, 'sistema'), 'sistemas')}</div>` : ''}
+        ${mc('indicador') ? `<div><div class="k">Indicador de sucesso</div>${T(P(m, 'indicador'), { tag: 'div', ph: '—' })}</div>` : ''}</div>` : ''}
       <div class="kv">${PEOPLE_FIELDS.modulos.map(([k, lb]) => `<div><div class="k">${lb}</div>${PPL(P(m, k))}</div>`).join('')}</div>
       <div class="next"><div class="k">Próximos passos</div>${T(P(m, 'proximos'), { tag: 'div', ph: 'A definir' })}</div>
       <div class="foot"><span>${np} processo(s) vinculado(s)</span>${np ? `<button class="fi-btn" style="min-height:28px;padding:3px 10px" data-act="proc-mod" data-id="${esc(m.id)}">Ver processos</button>` : ''}</div>
@@ -802,15 +938,15 @@ function vProcessos() {
 function fillProcessos() {
   const q = norm(ui.procQ);
   const l = S.processos.filter(p => (ui.procArea === '*' || (ui.procArea === '' ? !byId('areas', p.area) : p.area === ui.procArea)) &&
-    (!ui.procStatus || p.status === ui.procStatus) && (!ui.procMod || p.modulo === ui.procMod) &&
-    (!q || norm([p.nome, p.obs, p.integ, ...PEOPLE_FIELDS.processos.flatMap(([k]) => (p[k] || []).map(tokName))].join(' ')).includes(q)));
+    (!ui.procStatus || p.status === ui.procStatus) && (!ui.procMod || (p.modulos || []).includes(ui.procMod)) &&
+    (!q || norm([p.nome, p.obs, p.integ, p.gatilho, p.entrega, p.passos, ...(p.modulos || []).map(m => nome('modulos', m)), ...PEOPLE_FIELDS.processos.flatMap(([k]) => (p[k] || []).map(tokName))].join(' ')).includes(q)));
   if (!l.length) { $('#list').innerHTML = `<div class="fi-card fi-empty"><div>Nenhum processo nesta seleção.${canEdit && !ui.edit ? '<br><br>Clique em <b>✎ Editar</b> no topo para cadastrar.' : ''}</div></div>`; return; }
   const P = (p, k) => `processos.#${p.id}.${k}`;
   if (ui.procView === 'planilha') {
     $('#list').innerHTML = `<div class="fi-table-wrap"><table class="fi-table sheet"><thead><tr>
-      <th>Processo</th><th>Área</th><th>Módulo</th><th>Responsável</th><th>Executor</th><th>Aprovador</th><th>Consultado</th><th>Informado</th><th>Suplente</th><th>Prazo / SLA</th><th>Escalonamento</th><th>Integração</th><th>Status</th><th>Etapa</th><th>Observações</th><th></th></tr></thead>
+      <th>Processo</th><th>Área</th><th>Módulos</th><th>Responsável</th><th>Executor</th><th>Aprovador</th><th>Consultado</th><th>Informado</th><th>Suplente</th><th>Prazo / SLA</th><th>Escalonamento</th><th>Integração</th><th>Status</th><th>Etapa</th><th>Observações</th><th></th></tr></thead>
       <tbody>${l.map(p => `<tr>
-        <td class="wide"><b>${T(P(p, 'nome'), { one: 1 })}</b></td><td>${REF(P(p, 'area'), 'areas')}</td><td>${REF(P(p, 'modulo'), 'modulos')}</td>
+        <td class="wide"><b>${T(P(p, 'nome'), { one: 1 })}</b></td><td>${REF(P(p, 'area'), 'areas')}</td><td>${VINCS('processos', p)}</td>
         ${PEOPLE_FIELDS.processos.map(([k]) => `<td>${PPL(P(p, k), { single: k === 'resp', empty: '—' })}</td>`).join('')}
         <td>${T(P(p, 'prazo'))}</td><td>${T(P(p, 'escal'))}</td><td>${T(P(p, 'integ'))}</td><td class="nw">${SEL(P(p, 'status'), 'stProcesso')}</td><td class="nw">${REF(P(p, 'etapa'), 'etapas')}</td>
         <td class="wide">${T(P(p, 'obs'))}</td><td class="nw">${RM('processos', p.id)}</td></tr>`).join('')}
@@ -820,21 +956,24 @@ function fillProcessos() {
   const L = { resp: 'R', exec: 'E', aprov: 'A', cons: 'C', inf: 'I', sup: 'S' };
   $('#list').innerHTML = `<div class="fi-grid fi-grid--2">${l.map(p => `<div class="fi-card proc">
       <div class="proc-top"><div class="grow" style="flex:1;min-width:0"><h3>${T(P(p, 'nome'), { one: 1 })}</h3>
-        <div class="sub row">${REF(P(p, 'area'), 'areas', { tag: 1, empty: 'Sem área' })}<span class="tag">Módulo: ${REF(P(p, 'modulo'), 'modulos')}</span>${SEL(P(p, 'status'), 'stProcesso')}<span class="tag">Etapa: ${REF(P(p, 'etapa'), 'etapas')}</span></div>${trilha(p)}</div>
+        <div class="sub row">${REF(P(p, 'area'), 'areas', { tag: 1, empty: 'Sem área' })}${SEL(P(p, 'status'), 'stProcesso')}<span class="tag">Etapa: ${REF(P(p, 'etapa'), 'etapas')}</span></div>
+        <div class="vinc"><div class="k">Módulos envolvidos</div>${VINCS('processos', p)}</div>${trilha(p)}</div>
         ${RM('processos', p.id)}</div>
       <div class="raci">${PEOPLE_FIELDS.processos.map(([k, lb]) => `<div><div class="k"><i>${L[k]}</i>${lb}</div>${PPL(P(p, k), { single: k === 'resp' })}</div>`).join('')}</div>
       <div class="proc-bottom">
         <div><div class="k">Prazo / SLA</div>${T(P(p, 'prazo'), { ph: 'A definir' })}</div>
         <div><div class="k">Escalonamento</div>${T(P(p, 'escal'), { ph: 'A definir' })}</div>
         <div><div class="k">Sistema / Integração</div>${T(P(p, 'integ'), { ph: 'A definir' })}</div>
+        ${['gatilho', 'entrega', 'frequencia'].filter(k => campoCfg('processos', k).mostrar !== false && (p[k] || canEditPath(P(p, k)))).map(k => `<div><div class="k">${({ gatilho: 'Começa quando', entrega: 'Termina com', frequencia: 'Frequência' })[k]}</div>${T(P(p, k), { ph: '—' })}</div>`).join('')}
       </div>
+      ${campoCfg('processos', 'passos').mostrar !== false && (p.passos || canEditPath(P(p, 'passos'))) ? `<div class="proc-obs passos"><div class="k">Sequência de trabalho</div>${T(P(p, 'passos'), { tag: 'div', phEdit: 'Uma etapa por linha: etapa — quem faz — módulo' })}</div>` : ''}
       <div class="proc-obs">${T(P(p, 'obs'), { tag: 'div', phEdit: 'Observações' })}</div>
     </div>`).join('')}</div>`;
 }
 
 /* ---------- Implantação ---------- */
 function vImplantacao() {
-  const col = ui.implKind, ed = canEdit;
+  const col = ui.implKind, ed = podeCad(col, 'editar');
   $('#view').className = 'fi-page fam-ink-exec';
   $('#view').innerHTML = `
     ${head('implantacao')}
@@ -960,7 +1099,7 @@ function vSistemas() {
    ===================================================================== */
 function vAdm() {
   const s = ui.admSec;
-  const nav = [['participantes', 'Participantes', S.participantes.length], ['areas', 'Áreas / Setores', S.areas.length], ['tipos', 'Tipos / Funções', S.tipos.length], ['listas', 'Listas de opções', Object.keys(S.listas).length]];
+  const nav = [['participantes', 'Participantes', S.participantes.length], ['areas', 'Áreas / Setores', S.areas.length], ['tipos', 'Tipos / Funções', S.tipos.length], ['listas', 'Listas de opções', Object.keys(S.listas).length], ['cadastro', 'Cadastro de módulos e processos', 2]];
   $('#view').className = 'fi-page fam-ink-adm';
   $('#view').innerHTML = `
     ${head('adm')}
@@ -1003,6 +1142,23 @@ function vAdm() {
     body.innerHTML = `${sec('admListas')}
       <div class="fi-alert" style="margin-bottom:12px">Uma opção por linha. As opções aparecem nas caixas de seleção de todas as guias. Renomear uma opção aqui não altera os itens que já usam o nome antigo.</div>
       <div class="lists">${Object.keys(S.listas).map(k => `<label class="fi-field"><span class="fi-label">${esc(nomes[k] || k)}</span><textarea data-lista="${k}" ${ui.edit ? '' : 'readonly'}>${esc(S.listas[k].join('\n'))}</textarea></label>`).join('')}</div>`;
+  } else if (s === 'cadastro') {
+    const ed = ui.edit && isAdm, dis = ed ? '' : 'disabled';
+    const perm = (col, a, lb) => `<label class="fi-field"><span class="fi-label">${lb}</span><select class="fi-select" data-cfg="cadastro.${col}.${a}" ${dis}>${[['editores', 'Quem tem acesso Editar'], ['admin', 'Somente admin']].map(([v, l]) => `<option value="${v}"${cfgCad(col)[a] === v ? ' selected' : ''}>${l}</option>`).join('')}</select></label>`;
+    const tabela = col => `<div class="fi-card card-pad" style="margin-bottom:16px">
+      <h3 style="font-size:1rem;margin-bottom:10px">${col === 'modulos' ? 'Módulos' : 'Processos'}</h3>
+      <div class="fi-grid fi-grid--3" style="margin-bottom:12px">${perm(col, 'criar', 'Quem pode cadastrar')}${perm(col, 'editar', 'Quem pode editar')}${perm(col, 'excluir', 'Quem pode excluir')}</div>
+      <div class="fi-table-wrap"><table class="fi-table sheet"><thead><tr><th>Campo</th><th>Pergunta na ficha</th><th>Ajuda (texto de exemplo)</th><th>Mostrar</th><th>Obrigatório</th></tr></thead>
+      <tbody>${CAMPOS[col].map(c => { const f = cfgCad(col).campos[c.k] || {}, b = `cadastro.${col}.campos.${c.k}`;
+        return `<tr><td class="nw"><b>${esc(c.k === '_vinc' ? VINC[col].rot + ' vinculados' : c.k)}</b><div class="muted" style="font-size:.7rem">${esc(c.tipo)}</div></td>
+          <td class="wide"><input class="fi-input" data-cfg="${b}.pergunta" value="${esc(f.pergunta)}" ${dis}></td>
+          <td class="wide"><input class="fi-input" data-cfg="${b}.ajuda" value="${esc(f.ajuda)}" ${dis}></td>
+          <td class="nw"><input type="checkbox" data-cfg="${b}.mostrar" ${f.mostrar !== false ? 'checked' : ''} ${c.fixo ? 'disabled' : dis}></td>
+          <td class="nw"><input type="checkbox" data-cfg="${b}.obrig" ${c.fixo || f.obrig ? 'checked' : ''} ${c.fixo ? 'disabled' : dis}></td></tr>`; }).join('')}</tbody></table></div></div>`;
+    body.innerHTML = `${ed ? '' : `<div class="fi-alert" style="margin-bottom:12px">Clique em <b>✎ Editar</b> no topo para alterar.</div>`}${sec('admCad')}
+      <div class="fi-alert" style="margin-bottom:12px">Define a ficha que aparece ao clicar em <b>＋ Módulo</b> e <b>＋ Processo</b>: o texto de cada pergunta, se ela aparece e se é obrigatória, e quem pode cadastrar, editar e excluir. Com o vínculo obrigatório, todo módulo precisa de pelo menos um processo e vice-versa; na ficha dá para criar o outro lado na hora, digitando o nome.</div>
+      ${tabela('modulos')}${tabela('processos')}
+      ${ed ? `<button class="fi-btn" data-act="cad-reset">↺ Voltar às perguntas padrão</button>` : ''}`;
   } else {
     body.innerHTML = `${sec('admDados')}
       <div class="fi-grid fi-grid--2">
@@ -1035,6 +1191,8 @@ async function removeItem(col, id) {
   const it = (arrOf(S, col) || []).find(x => x.id === id); if (!it) return;
   const label = it.nome || it.titulo || it.t || 'item';
   let msg = `Excluir “${label}”?`;
+  if (col === 'modulos') { const n = procsDoModulo(id), orf = n.filter(p => p.modulos.length === 1).length; if (n.length) msg += ` ${n.length} processo(s) vinculado(s) perdem este vínculo${orf ? `; ${orf} ficará(ão) sem módulo` : ''}.`; }
+  if (col === 'processos' && it.modulos && it.modulos.length) msg += ` O vínculo com ${it.modulos.length} módulo(s) será removido.`;
   if (col === 'participantes') { const u = usage(id).length; if (u) msg += ` ${label} aparece em ${u} lugar(es); o nome será mantido como texto. Se a pessoa apenas saiu do projeto, prefira o status Inativo.`; }
   if (!(await ask(msg, true))) return;
   commit(st => {
@@ -1046,11 +1204,96 @@ async function removeItem(col, id) {
     }
     if (col === 'areas') { clr('participantes', 'area'); clr('processos', 'area'); clr('ideias', 'area'); }
     if (col === 'tipos') clr('participantes', 'tipo');
-    if (col === 'modulos') clr('processos', 'modulo');
+    if (col === 'modulos') (st.processos || []).forEach(p => { p.modulos = (p.modulos || []).filter(m => m !== id); });
     const arr = arrOf(st, col), i = arr.findIndex(x => x.id === id); if (i >= 0) arr.splice(i, 1);
   }, true);
 }
 const modal = $('#modal');
+/* Ficha de cadastro de módulo / processo (perguntas parametrizadas no ADM) */
+function abrirFicha(col) {
+  if (!podeCad(col, 'criar')) { notify('Sem permissão para cadastrar.', 'warning'); return; }
+  const v = VINC[col], cfg = cfgCad(col);
+  const ativos = S.participantes.filter(x => x.status !== 'Inativo').sort((a, b) => a.nome.localeCompare(b.nome));
+  const campo = c => {
+    const f = cfg.campos[c.k] || {}; if (!c.fixo && f.mostrar === false) return '';
+    const ob = c.fixo || f.obrig, lab = `<span class="fi-label">${esc(f.pergunta || c.pergunta)}${ob ? ' <b class="req">*</b>' : ''}</span>`, help = f.ajuda ? `<span class="fi-field__help">${esc(f.ajuda)}</span>` : '';
+    const nm = `data-k="${c.k}"`;
+    let inp;
+    if (c.tipo === 'texto') inp = `<input class="fi-input" ${nm}>`;
+    else if (c.tipo === 'area') inp = `<textarea class="fi-input" rows="3" ${nm}></textarea>`;
+    else if (c.tipo === 'lista') inp = `<select class="fi-select" ${nm}><option value="">—</option>${(S.listas[c.lista] || []).map(o => `<option>${esc(o)}</option>`).join('')}</select>`;
+    else if (c.tipo === 'ref') inp = `<select class="fi-select" ${nm}><option value="">—</option>${(S[c.col] || []).map(o => `<option value="${esc(o.id)}">${esc(o.nome)}</option>`).join('')}</select>`;
+    else if (c.tipo === 'pessoa') inp = `<input class="fi-input" list="fichaPessoas" ${nm} placeholder="Participante ou texto livre">`;
+    else if (c.tipo === 'vinculo') inp = `<div class="vbox">${S[v.outro].map(o => `<label><input type="checkbox" data-vinc="${esc(o.id)}"> ${esc(o.nome)}</label>`).join('') || `<span class="muted">Nenhum ${v.um} cadastrado ainda.</span>`}</div>
+      <input class="fi-input" data-vnovo placeholder="Novo ${v.um}: digite o nome (vários separados por ;)">`;
+    return `<label class="fi-field" data-campo="${c.k}">${lab}${inp}${help}</label>`;
+  };
+  modal.innerHTML = `<div class="m-head"><h2>Cadastrar ${col === 'modulos' ? 'módulo' : 'processo'}</h2><button class="rm" data-act="close">✕</button></div>
+    <div class="m-body ficha">${CAMPOS[col].map(campo).join('')}
+      <datalist id="fichaPessoas">${ativos.map(x => `<option value="${esc(x.nome)}">${esc(x.cargo)}</option>`).join('')}</datalist>
+      <span class="muted" style="font-size:.74rem"><b class="req">*</b> obrigatório</span></div>
+    <div class="m-foot"><button class="fi-btn" data-act="close">Cancelar</button><button class="fi-btn fi-btn--primary" data-act="ficha-ok" data-col="${col}">Cadastrar</button></div>`;
+  modal.showModal(); const f = modal.querySelector('[data-k="nome"]'); if (f) f.focus();
+}
+function fichaOk(col) {
+  const v = VINC[col], cfg = cfgCad(col), val = {}, falta = [];
+  CAMPOS[col].forEach(c => {
+    const f = cfg.campos[c.k] || {}; if (!c.fixo && f.mostrar === false) return;
+    const ob = c.fixo || f.obrig;
+    if (c.tipo === 'vinculo') {
+      const ids = [...modal.querySelectorAll('[data-vinc]:checked')].map(x => x.dataset.vinc);
+      const novos = (modal.querySelector('[data-vnovo]').value || '').split(';').map(x => x.trim()).filter(Boolean);
+      val._vinc = { ids, novos }; if (ob && !ids.length && !novos.length) falta.push(f.pergunta || c.pergunta); return;
+    }
+    const el = modal.querySelector(`[data-k="${c.k}"]`), x = (el.value || '').trim();
+    if (ob && !x) falta.push(f.pergunta || c.pergunta);
+    if (c.tipo === 'pessoa') { if (x) { const m = S.participantes.find(p => norm(p.nome) === norm(x)); val[c.k] = [m ? '@' + m.id : x]; } }
+    else if (x) val[c.k] = x;
+  });
+  modal.querySelectorAll('.fi-field.erro').forEach(e => e.classList.remove('erro'));
+  if (falta.length) {
+    CAMPOS[col].forEach(c => { const f = cfg.campos[c.k] || {}; if (falta.includes(f.pergunta || c.pergunta)) { const e = modal.querySelector(`[data-campo="${c.k}"]`); if (e) e.classList.add('erro'); } });
+    notify('Responda: ' + falta.join(' · '), 'warning'); return;
+  }
+  const { ids, novos } = val._vinc || { ids: [], novos: [] }; delete val._vinc;
+  const it = Object.assign({ id: uid(val.nome) }, NEW[col](), val);
+  const criados = novos.map(n => Object.assign({ id: uid(n) }, NEW[v.outro](), { nome: n }));
+  if (col === 'processos') it.modulos = [...ids, ...criados.map(x => x.id)];
+  else criados.forEach(p => { p.modulos = [it.id]; });
+  modal.close();
+  commit(st => {
+    st[col].push(clone(it)); criados.forEach(x => st[v.outro].push(clone(x)));
+    if (col === 'modulos') ids.forEach(pid => setVinc(st, 'modulos', it.id, pid, true));
+  }, false);
+  if (col === 'processos') { ui.procStatus = ''; ui.procQ = ''; ui.procMod = ''; ui.procArea = '*'; } else { ui.modPrio = ''; ui.modQ = ''; }
+  render();
+  notify(`${col === 'modulos' ? 'Módulo' : 'Processo'} cadastrado${criados.length ? ` com ${criados.length} ${v.um}(s) novo(s) — complete a ficha deles` : ''}`, 'success');
+}
+/* Vincular / desvincular a partir de qualquer um dos lados */
+function abrirVinc(col, id) {
+  const v = VINC[col], it = byId(col, id), ja = vincIds(col, it);
+  const ops = S[v.outro].filter(o => !ja.includes(o.id));
+  modal.innerHTML = `<div class="m-head"><h2>Vincular ${v.um} a “${esc(it.nome)}”</h2><button class="rm" data-act="close">✕</button></div>
+    <div class="m-body"><label class="fi-field"><span class="fi-label">${v.rot} cadastrados</span><div class="vbox">${ops.map(o => `<label><input type="checkbox" data-vinc="${esc(o.id)}"> ${esc(o.nome)}</label>`).join('') || '<span class="muted">Todos já vinculados.</span>'}</div></label>
+      ${podeCad(v.outro, 'criar') ? `<label class="fi-field"><span class="fi-label">ou cadastrar ${v.um} novo</span><input class="fi-input" data-vnovo placeholder="Nome (vários separados por ;)"></label>` : ''}</div>
+    <div class="m-foot"><button class="fi-btn" data-act="close">Cancelar</button><button class="fi-btn fi-btn--primary" data-act="vinc-ok" data-col="${col}" data-id="${esc(id)}">Vincular</button></div>`;
+  modal.showModal();
+}
+function vincOk(col, id) {
+  const v = VINC[col], ids = [...modal.querySelectorAll('[data-vinc]:checked')].map(x => x.dataset.vinc);
+  const nv = modal.querySelector('[data-vnovo]'), novos = nv ? nv.value.split(';').map(x => x.trim()).filter(Boolean) : [];
+  if (!ids.length && !novos.length) { notify(`Escolha ou digite um ${v.um}.`, 'warning'); return; }
+  const criados = novos.map(n => Object.assign({ id: uid(n) }, NEW[v.outro](), { nome: n }));
+  modal.close();
+  commit(st => { criados.forEach(x => st[v.outro].push(clone(x))); [...ids, ...criados.map(x => x.id)].forEach(o => setVinc(st, col, id, o, true)); }, true);
+}
+function vincRm(col, id, outro) {
+  const v = VINC[col], it = byId(col, id), o = byId(v.outro, outro);
+  const ultimo = (x, c) => vincIds(c, x).length <= 1 && campoCfg(c, '_vinc').obrig;
+  if (ultimo(it, col)) { notify(`“${it.nome}” precisa de pelo menos um ${v.um} vinculado (ADM → Cadastro).`, 'warning'); return; }
+  if (o && ultimo(o, v.outro)) { notify(`“${o.nome}” ficaria sem ${VINC[v.outro].um} vinculado.`, 'warning'); return; }
+  commit(st => setVinc(st, col, id, outro, false), true);
+}
 function openPicker(p, single) {
   const toks = getP(S, p) || [];
   const ativos = S.participantes.filter(x => x.status !== 'Inativo' && !toks.includes('@' + x.id)).sort((a, b) => a.nome.localeCompare(b.nome));
@@ -1092,7 +1335,7 @@ function download(name, content, type) {
 const today = () => new Date().toISOString().slice(0, 10);
 function exportCsv() {
   const pp = (p, k) => (p[k] || []).map(tokName).join(', ');
-  const cols = [['Processo', p => p.nome], ['Área', p => nome('areas', p.area)], ['Módulo', p => nome('modulos', p.modulo)], ...PEOPLE_FIELDS.processos.map(([k, l]) => [l, p => pp(p, k)]),
+  const cols = [['Processo', p => p.nome], ['Área', p => nome('areas', p.area)], ['Módulos', p => (p.modulos || []).map(m => nome('modulos', m)).join(', ')], ['Começa quando', p => p.gatilho || ''], ['Termina com', p => p.entrega || ''], ['Sequência de trabalho', p => p.passos || ''], ...PEOPLE_FIELDS.processos.map(([k, l]) => [l, p => pp(p, k)]),
     ['Prazo / SLA', p => p.prazo], ['Escalonamento', p => p.escal], ['Sistema / Integração', p => p.integ], ['Status', p => p.status], ['Etapa', p => nome('etapas', p.etapa)], ['Observações', p => p.obs]];
   const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
   download(`processos-fiorella-${today()}.csv`, '﻿' + [cols.map(c => q(c[0])).join(';'), ...S.processos.map(p => cols.map(c => q(c[1](p))).join(';'))].join('\r\n'), 'text/csv;charset=utf-8');
@@ -1120,6 +1363,12 @@ document.addEventListener('click', async e => {
     case 'toggle-edit': ui.edit = !ui.edit; try { sessionStorage.setItem('projetoFiorella.edit', ui.edit ? '1' : ''); } catch (err) {} render(); break;
     case 'retry': flush(); break;
     case 'add': addItem(el.dataset.col); break;
+    case 'novo': abrirFicha(el.dataset.col); break;
+    case 'ficha-ok': fichaOk(el.dataset.col); break;
+    case 'vinc-add': abrirVinc(el.dataset.col, id); break;
+    case 'vinc-ok': vincOk(el.dataset.col, id); break;
+    case 'vinc-rm': vincRm(el.dataset.col, id, el.dataset.o); break;
+    case 'vinc-ir': if (modal.open) modal.close(); if (el.dataset.col === 'processos') { ui.procMod = ''; ui.procQ = (byId('processos', id) || {}).nome || ''; ui.procArea = '*'; ui.procStatus = ''; go('processos'); } else { ui.modQ = (byId('modulos', id) || {}).nome || ''; ui.modPrio = ''; go('modulos'); } break;
     case 'rm': removeItem(el.dataset.col, id); break;
     case 'ppl-add': openPicker(el.dataset.p, !!el.dataset.single); break;
     case 'ppl-rm': commit(st => { const arr = getP(st, el.dataset.p) || []; arr.splice(+el.dataset.i, 1); }, true); break;
@@ -1137,6 +1386,7 @@ document.addEventListener('click', async e => {
     }
     case 'adm-go': if (modal.open) modal.close(); ui.admSec = id; go('adm'); break;
     case 'export-csv': exportCsv(); break;
+    case 'cad-reset': if (await ask('Voltar a ficha de módulos e processos às perguntas e permissões padrão?')) commit(st => { st.cadastro = cadPadrao(); }, true); break;
     case 'export-json': download(`projeto-fiorella-${today()}.json`, JSON.stringify(S, null, 2), 'application/json'); break;
     case 'import-json': $('#importFile').click(); break;
     case 'reset': if (await ask('Restaurar o conteúdo original da planilha para todos os usuários? As alterações feitas serão substituídas (continuam no histórico do banco).', true)) replaceAll(migrate(clone(SEED))); break;
@@ -1162,6 +1412,7 @@ document.addEventListener('keydown', e => {
 document.addEventListener('change', e => {
   const t = e.target;
   if (t.classList.contains('es')) { const p = t.dataset.p, v = t.value; commit(st => setP(st, p, v), true); return; }
+  if (t.dataset.cfg && isAdm) { const p = t.dataset.cfg, v = t.type === 'checkbox' ? t.checked : t.value; commit(st => setP(st, p, v), true); return; }
   if (t.dataset.lista) { const k = t.dataset.lista, v = t.value.split('\n').map(s => s.trim()).filter(Boolean); commit(st => { st.listas[k] = v; }, false); }
 });
 document.addEventListener('input', e => { const k = e.target.dataset && e.target.dataset.ui; if (!k) return; ui[k] = e.target.value; (FILLS[ui.tab] || render)(); });
