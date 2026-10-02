@@ -158,6 +158,34 @@ input.up::placeholder{text-transform:none}
 .anterior .kv{margin-top:8px}
 .proc .anterior{margin:0 18px 12px}
 .bcard .etapa-ctl{margin-top:6px}.bcard .ped{flex-direction:column;align-items:flex-start}
+.resumo{display:flex;flex-wrap:wrap;gap:4px 18px;align-items:center;font-size:.8rem;color:var(--fi-muted);padding:6px 2px 10px;border-bottom:1px solid var(--fi-line,#dfe3e8);margin-bottom:14px}
+.resumo b{color:var(--fi-text)}
+.resumo a{color:var(--fi-muted);text-decoration:none;cursor:pointer}
+.resumo a:hover{color:var(--exec);text-decoration:underline}
+.resumo a.alerta,.resumo a.alerta b{color:var(--exec);font-weight:700}
+.tab-badge{margin-left:6px;background:var(--exec);color:#fff;border-radius:999px;padding:0 6px;font-size:.66rem;line-height:1.5;font-weight:800}
+.rchip{border-style:dashed}
+.notas{margin-top:10px;border-top:1px solid var(--fi-line,#dfe3e8);padding-top:8px;display:grid;gap:6px}
+.notas .count{margin-left:4px;opacity:.7}
+.nl-tag{margin-left:6px;background:color-mix(in srgb,var(--exec) 14%,transparent);color:var(--exec);border-radius:999px;padding:0 7px;font-size:.66rem;font-weight:800;text-transform:none;letter-spacing:0}
+.nota{border-left:3px solid var(--fi-line,#dfe3e8);padding:3px 8px;border-radius:0 6px 6px 0;font-size:.8rem;background:var(--fi-surface-alt,#f6f7f9)}
+.nota.nova{border-left-color:var(--exec)}
+.nota.sis{font-style:italic}
+.nota.pisca{outline:2px solid var(--exec);outline-offset:2px}
+.nh,.upd-h{display:flex;align-items:center;gap:6px;font-size:.72rem;flex-wrap:wrap}
+.nmark{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:color-mix(in srgb,var(--exec) 14%,transparent);color:var(--exec);font-size:.58rem;font-weight:800;flex:none}
+.nt{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:2px}
+.men{color:var(--doc);font-weight:700}
+.nform{display:grid;gap:6px}
+.nform textarea{width:100%;font:inherit;font-size:.82rem;resize:vertical}
+.nform-bt{display:flex;gap:6px;justify-content:space-between;align-items:center}
+.nmen{max-width:170px;font-size:.76rem;min-height:26px;padding:2px 6px}
+.linkbtn{border:0;background:none;color:var(--exec);font:inherit;font-size:.74rem;font-weight:650;cursor:pointer;padding:0;justify-self:start}
+.proc-notas{padding:0 18px 14px}
+.upd-list{display:grid;gap:8px}
+.upd{padding:10px 14px;border-left:4px solid transparent}
+.upd.nova{border-left-color:var(--exec)}
+.upd-f{margin-top:6px}
 .trilha-w{margin:10px 0 2px}.trilha-w .k b{color:var(--exec)}
 .trilha{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:3px}
 .tr-s{display:flex;flex-direction:column;gap:3px;min-width:0}
@@ -301,7 +329,7 @@ dialog::backdrop{background:rgba(9,12,16,.55)}
    ADM → Dados → Restaurar. Referência a participante = "@id";
    qualquer outro texto é texto livre (ex.: "Gestor da área").
    ===================================================================== */
-const SCHEMA = 5;
+const SCHEMA = 6;
 const SEED = {
   schema: SCHEMA,
   textos: {
@@ -312,6 +340,7 @@ const SEED = {
     processos: { t: 'Processos', d: 'Cadastro de processos: área, responsável, executor, aprovador, consultado, informado, suplente, prazo, escalonamento, integração e status.' },
     implantacao: { t: 'Implantação', d: 'Roadmap individual: cada módulo e cada processo percorre as mesmas 6 etapas, em sequência. Os itens andam em paralelo, cada um no seu ritmo.' },
     backlog: { t: 'Ideias / Backlog', d: 'Novas funcionalidades e melhorias ainda não aprovadas. Uma ideia aprovada pode virar módulo ou processo.' },
+    atualizacoes: { t: 'Atualizações', d: 'Anotações registradas nos cartões de módulos e processos. Marque como lida ou não lida, veja onde foi mencionado com @ e clique para ir ao cartão de origem.' },
     adm: { t: 'Administração', d: 'Cadastros-base que alimentam as demais guias. Um participante cadastrado uma única vez pode aparecer como sponsor, responsável, executor, aprovador, consultado, informado ou suplente em qualquer item.' },
     sec: {
       conceito: 'Conceito: Protheus + Plataforma Fiorella + IA',
@@ -527,6 +556,7 @@ const CAMPOS = {
   modulos: [
     { k: 'nome', tipo: 'texto', fixo: 1, pergunta: 'Qual o nome do módulo?', ajuda: 'Nome curto, como vai aparecer na plataforma. Ex.: CRM Comercial, Gestão de NF-e.' },
     { k: '_vinc', tipo: 'vinculo', pergunta: 'Quais processos este módulo atende?', ajuda: 'Marque os processos já cadastrados ou digite o nome de um processo novo para criá-lo junto.' },
+    { k: '_rel', tipo: 'relacao', pergunta: 'Quais outros módulos se relacionam com este?', ajuda: 'Módulos que trocam dados ou dependem deste. Marque “Nenhum” se não houver.' },
     { k: 'objetivo', tipo: 'area', pergunta: 'Que problema ele resolve?', ajuda: 'O que acontece hoje (planilha, papel, retrabalho, falta de controle) e vai melhorar.' },
     { k: 'escopo', tipo: 'area', pergunta: 'O que ele precisa fazer?', ajuda: 'Principais funções, em poucas linhas.' },
     { k: 'sistema', tipo: 'ref', col: 'sistemas', pergunta: 'Em qual sistema vai rodar?', ajuda: 'Protheus, Portal Fiorella, sistema contratado…' },
@@ -541,6 +571,7 @@ const CAMPOS = {
   processos: [
     { k: 'nome', tipo: 'texto', fixo: 1, pergunta: 'Qual o nome do processo?', ajuda: 'Verbo + objeto. Ex.: Solicitar amostra, Faturar pedido.' },
     { k: '_vinc', tipo: 'vinculo', pergunta: 'Em quais módulos ele acontece?', ajuda: 'Marque os módulos já cadastrados ou digite o nome de um módulo novo para criá-lo junto.' },
+    { k: '_rel', tipo: 'relacao', pergunta: 'Quais outros processos se relacionam com este?', ajuda: 'Processos que vêm antes, depois ou dependem deste. Marque “Nenhum” se não houver.' },
     { k: 'area', tipo: 'ref', col: 'areas', pergunta: 'Qual área responde pelo processo?' },
     { k: 'gatilho', tipo: 'texto', pergunta: 'O que dispara o processo?', ajuda: 'Quando ele começa. Ex.: cliente pede amostra; pedido aprovado.' },
     { k: 'entrega', tipo: 'texto', pergunta: 'Quando ele termina e qual o resultado?', ajuda: 'Ex.: amostra enviada com laudo; NF emitida e despachada.' },
@@ -596,8 +627,8 @@ const ADM_ROOTS = ['participantes', 'areas', 'tipos', 'listas', 'cadastro'];
 
 /* Novos itens */
 const NEW = {
-  modulos: () => ({ nome: 'NOVO MÓDULO', semProcesso: false, sponsor: [], dono: [], coord: [], dev: [], proc: [], keyuser: [], prioridade: 'Média', dep: '', status: 'Planejamento', etapa: 'levantamento', escopo: '', proximos: '', objetivo: '', sistema: '', indicador: '' }),
-  processos: () => ({ nome: 'NOVO PROCESSO', area: ui.procArea && ui.procArea !== '*' ? ui.procArea : '', modulos: [], gatilho: '', entrega: '', passos: '', frequencia: '', resp: [], exec: [], aprov: [], cons: [], inf: [], sup: [], prazo: '', escal: '', integ: '', status: 'A mapear', etapa: 'levantamento', obs: '' }),
+  modulos: () => ({ nome: 'NOVO MÓDULO', semProcesso: false, rel: [], notas: [], sponsor: [], dono: [], coord: [], dev: [], proc: [], keyuser: [], prioridade: 'Média', dep: '', status: 'Planejamento', etapa: 'levantamento', escopo: '', proximos: '', objetivo: '', sistema: '', indicador: '' }),
+  processos: () => ({ nome: 'NOVO PROCESSO', rel: [], notas: [], area: ui.procArea && ui.procArea !== '*' ? ui.procArea : '', modulos: [], gatilho: '', entrega: '', passos: '', frequencia: '', resp: [], exec: [], aprov: [], cons: [], inf: [], sup: [], prazo: '', escal: '', integ: '', status: 'A mapear', etapa: 'levantamento', obs: '' }),
   sistemas: () => ({ nome: 'NOVO SISTEMA', cat: '', desc: '', integ: '', resp: [], status: 'A mapear' }),
   ideias: () => ({ titulo: 'Nova ideia', area: '', autor: USER_TOK ? [USER_TOK] : [], desc: '', beneficio: '', prioridade: 'Média', status: 'Nova' }),
   participantes: () => ({ nome: 'Novo participante', email: '', area: '', tipo: '', resp: '', foco: '', status: 'Ativo' }),
@@ -667,6 +698,7 @@ function migrate(d) {
   for (const c in d.cadastro) for (const k in d.cadastro[c].campos) d.cadastro[c].campos[k].pergunta = gestor(d.cadastro[c].campos[k].pergunta);
   if (d.cadastro.modulos && d.cadastro.modulos.campos.sponsor && /patrocina/i.test(d.cadastro.modulos.campos.sponsor.pergunta || '')) Object.assign(d.cadastro.modulos.campos.sponsor, { pergunta: 'Quem é o sponsor do módulo?', ajuda: 'Somente participantes da Direção (papel no projeto do grupo Direção), como Victor e Flávio.' });
   (d.modulos || []).forEach(m => { if (m.semProcesso === undefined) m.semProcesso = false; });
+  ['modulos', 'processos'].forEach(c => (d[c] || []).forEach(x => { if (!Array.isArray(x.rel)) x.rel = []; if (!Array.isArray(x.notas)) x.notas = []; }));
   delete d.tarefas; delete d._savedAt;
   d.schema = SCHEMA;
   return d;
@@ -843,7 +875,8 @@ function etapaCtl(col, x, compact) {
 function etPedir(col, id, dir) {
   const x = byId(col, id), ids = S.etapas.map(e => e.id), n = ids.indexOf(x.etapa) + dir;
   if (n < 0 || n >= ids.length) return;
-  commit(st => { const y = st[col].find(z => z.id === id); if (y) y.pedido = { para: ids[n], por: quemSou(), em: new Date().toISOString() }; }, true);
+  commit(st => { const y = st[col].find(z => z.id === id); if (!y) return; y.pedido = { para: ids[n], por: quemSou(), em: new Date().toISOString() };
+    novaNota(st, col, id, `Pediu mudança de etapa: ${nome('etapas', y.etapa)} → ${nome('etapas', ids[n])}. Aguardando aprovação da Direção.`, { sis: true, men: diretores().map(p => '@' + p.id) }); }, true);
   notify('Pedido enviado. A etapa muda quando for aprovado.', 'info');
 }
 async function etDecidir(col, id, ok) {
@@ -853,7 +886,8 @@ async function etDecidir(col, id, ok) {
   commit(st => { const y = st[col].find(z => z.id === id); if (!y || !y.pedido) return;
     const reg = { de: y.etapa, para: y.pedido.para, por: y.pedido.por, pedidoEm: y.pedido.em, aprov: quemSou(), em: new Date().toISOString(), res: ok ? 'aprovado' : 'recusado' };
     if (ok) y.etapa = y.pedido.para;
-    y.hist = [reg, ...(y.hist || [])].slice(0, 50); delete y.pedido; }, true);
+    y.hist = [reg, ...(y.hist || [])].slice(0, 50); delete y.pedido;
+    novaNota(st, col, id, `${ok ? 'Aprovou' : 'Recusou'} a mudança de etapa: ${nome('etapas', reg.de)} → ${nome('etapas', reg.para)} (pedido de ${reg.por}).`, { sis: true }); }, true);
 }
 
 /* Converter módulo ⇄ processo sem perder o que foi lançado */
@@ -893,12 +927,105 @@ async function converter(col, id) {
     const statusAnt = o.status; novo.status = (o.convertido && o.convertido.status && lista.includes(o.convertido.status)) ? o.convertido.status : NEW[tgt]().status;
     novo.convertido = { de: col, em: new Date().toISOString(), por: quemSou(), status: statusAnt };
     delete novo.pedido;
+    arr.forEach(y => { if (y.rel) y.rel = y.rel.filter(r => r !== id); });
+    const relAntes = o.exRel || []; novo.exRel = (o.rel || []).slice(); novo.rel = [];
     arr.splice(i, 1); st[tgt].push(novo);
+    relAntes.forEach(r => setRel(st, tgt, id, r, true));
     st.modulos.forEach(m => { m.semProcesso = m.semProcesso && !st.processos.some(p => (p.modulos || []).includes(m.id)); });
   }, false);
   if (tgt === 'processos') { ui.procQ = x.nome; ui.procArea = '*'; ui.procStatus = ''; ui.procMod = ''; } else { ui.modQ = x.nome; ui.modPrio = ''; }
   go(tgt);
   notify(`Convertido em ${VINC[col].um}.`, 'success');
+}
+
+/* Relação entre itens do mesmo tipo (módulo ⇄ módulo, processo ⇄ processo) — sempre nos dois sentidos */
+function setRel(st, col, a, b, on) {
+  if (a === b) return;
+  [[a, b], [b, a]].forEach(([x, y]) => { const it = st[col].find(z => z.id === x); if (!it) return;
+    const r = new Set(it.rel || []); on ? r.add(y) : r.delete(y); it.rel = [...r]; });
+}
+function RELS(col, it) {
+  const ed = ui.edit && podeCad(col, 'editar'), um = col === 'modulos' ? 'módulo' : 'processo';
+  const ids = (it.rel || []).filter(o => byId(col, o));
+  let h = ids.map(o => `<span class="pw"><button class="vchip rchip" data-act="vinc-ir" data-col="${col}" data-id="${esc(o)}">${esc(nome(col, o))}</button>${ed ? `<button class="x" data-act="rel-rm" data-col="${col}" data-id="${esc(it.id)}" data-o="${esc(o)}" title="Desfazer relação">×</button>` : ''}</span>`).join('');
+  if (!ids.length) h = `<span class="muted">Nenhum</span>`;
+  if (ed) h += `<button class="padd" data-act="rel-add" data-col="${col}" data-id="${esc(it.id)}" title="Relacionar ${um}">＋</button>`;
+  return `<span class="ppl">${h}</span>`;
+}
+function abrirRel(col, id) {
+  const it = byId(col, id), um = col === 'modulos' ? 'módulo' : 'processo', ops = S[col].filter(o => o.id !== id && !(it.rel || []).includes(o.id));
+  modal.innerHTML = `<div class="m-head"><h2>Relacionar ${um} a “${esc(it.nome)}”</h2><button class="rm" data-act="close">✕</button></div>
+    <div class="m-body"><div class="vbox">${ops.map(o => `<label><input type="checkbox" data-relc="${esc(o.id)}"> ${esc(o.nome)}</label>`).join('') || '<span class="muted">Nada para relacionar.</span>'}</div></div>
+    <div class="m-foot"><button class="fi-btn" data-act="close">Cancelar</button><button class="fi-btn fi-btn--primary" data-act="rel-ok" data-col="${col}" data-id="${esc(id)}">Relacionar</button></div>`;
+  modal.showModal();
+}
+
+/* ============ Anotações nos cartões + Atualizações (não lidas, @menções) ============ */
+const meuTok = () => USER_TOK || ('mail:' + norm((window.APP && APP.usuario && APP.usuario.email) || 'anon'));
+const nid = () => 'n' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+function leituraMapa() {
+  if (canEdit) return ((S.leitura || {})[meuTok()]) || {};
+  try { return JSON.parse(localStorage.getItem('projetoFiorella.lidas') || '{}'); } catch (e) { return {}; }
+}
+function setLeitura(ids, v) {
+  if (!ids.length) return;
+  if (canEdit) commit(st => { st.leitura = st.leitura || {}; const m = st.leitura[meuTok()] = st.leitura[meuTok()] || {}; ids.forEach(i => { m[i] = v; }); }, true);
+  else { const m = leituraMapa(); ids.forEach(i => { m[i] = v; }); try { localStorage.setItem('projetoFiorella.lidas', JSON.stringify(m)); } catch (e) {} render(); }
+  renderMenu();
+}
+const minhaNota = n => n.porTok === meuTok();
+const lida = (n, mapa) => minhaNota(n) || (mapa || leituraMapa())[n.id] === 1;
+const meMenciona = n => (n.men || []).includes(meuTok());
+function todasNotas() {
+  const out = [];
+  ['modulos', 'processos'].forEach(col => (S[col] || []).forEach(x => (x.notas || []).forEach(n => out.push({ n, col, x }))));
+  return out.sort((a, b) => String(b.n.em).localeCompare(String(a.n.em)));
+}
+function nNaoLidas() { try { const m = leituraMapa(); return todasNotas().filter(({ n }) => !lida(n, m)).length; } catch (e) { return 0; } }
+function mencoesDe(txt) {
+  const t = norm(txt), out = [];
+  S.participantes.forEach(p => { const k = '@' + norm(p.nome); const i = t.indexOf(k); if (i >= 0 && !/[a-z0-9]/.test(t[i + k.length] || '')) out.push('@' + p.id); });
+  return out;
+}
+function notaHtml(txt) {
+  let h = esc(txt);
+  S.participantes.forEach(p => { h = h.replace(new RegExp('@' + esc(p.nome).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![\\wÀ-ÿ])', 'gi'), m => `<span class="men">${m}</span>`); });
+  return h;
+}
+function novaNota(st, col, id, txt, extra) {
+  const it = st[col].find(z => z.id === id); if (!it) return;
+  it.notas = [Object.assign({ id: nid(), txt, por: quemSou(), porTok: meuTok(), em: new Date().toISOString(), men: mencoesDe(txt) }, extra || {}), ...(it.notas || [])];
+}
+function notasBloco(col, x) {
+  const ns = x.notas || [], aberto = ui.notasAbertas && ui.notasAbertas[x.id], vis = aberto ? ns : ns.slice(0, 3), mapa = leituraMapa();
+  const pode = canEdit, key = `${col}:${x.id}`;
+  return `<div class="notas"><div class="k">Anotações gerais ${ns.length ? `<span class="count">${ns.length}</span>` : ''}${ns.filter(n => !lida(n, mapa)).length ? `<span class="nl-tag">${ns.filter(n => !lida(n, mapa)).length} não lida(s)</span>` : ''}</div>
+    ${vis.map(n => `<div class="nota${lida(n, mapa) ? '' : ' nova'}${n.sis ? ' sis' : ''}" data-nota="${esc(n.id)}" tabindex="-1">
+      <div class="nh"><span class="nmark">${esc(initials(n.por || '?'))}</span><b>${esc(n.por)}</b><span class="muted">${esc(dataBR(n.em))}</span>
+        ${(minhaNota(n) || isAdm) && !n.sis ? `<button class="x" data-act="nota-rm" data-col="${col}" data-id="${esc(x.id)}" data-n="${esc(n.id)}" title="Apagar anotação">×</button>` : ''}</div>
+      <div class="nt">${notaHtml(n.txt)}</div></div>`).join('') || '<div class="muted" style="font-size:.76rem">Nenhuma anotação ainda.</div>'}
+    ${ns.length > 3 ? `<button class="linkbtn" data-act="notas-tog" data-id="${esc(x.id)}">${aberto ? 'Mostrar menos' : `Ver todas (${ns.length})`}</button>` : ''}
+    ${pode ? `<div class="nform"><textarea class="fi-input" rows="2" data-nota-txt="${key}" placeholder="Registrar andamento… use @ para mencionar"></textarea>
+      <div class="nform-bt"><select class="fi-select nmen" data-men-for="${key}"><option value="">@ mencionar…</option>${S.participantes.filter(p => p.status !== 'Inativo').map(p => `<option value="${esc(p.nome)}">${esc(p.nome)}</option>`).join('')}</select>
+      <button class="fi-btn fi-btn--primary bt-s" data-act="nota-add" data-col="${col}" data-id="${esc(x.id)}">Registrar</button></div></div>` : ''}
+  </div>`;
+}
+function vAtualizacoes() {
+  const f = ui.updF || 'naolidas', mapa = leituraMapa(), all = todasNotas();
+  const l = all.filter(({ n }) => f === 'todas' || (f === 'naolidas' ? !lida(n, mapa) : meMenciona(n)));
+  const cnt = { naolidas: all.filter(({ n }) => !lida(n, mapa)).length, mencoes: all.filter(({ n }) => meMenciona(n)).length, todas: all.length };
+  $('#view').className = 'fi-page fam-ink-exec';
+  $('#view').innerHTML = `
+    ${head('atualizacoes', cnt.naolidas ? `<button class="fi-btn" data-act="upd-todas">✓ Marcar todas como lidas</button>` : '')}
+    <div class="subnav">${[['naolidas', 'Não lidas'], ['mencoes', 'Menções a mim'], ['todas', 'Todas']].map(([k, lb]) => `<button class="${f === k ? 'on' : ''}" data-act="upd-f" data-id="${k}">${lb}<b>${cnt[k]}</b></button>`).join('')}</div>
+    ${!USER_TOK ? `<div class="fi-alert" style="margin-bottom:12px">Seu e-mail de login não está em ADM → Participantes: as anotações aparecem com o seu e-mail e as menções com @ não chegam até você.</div>` : ''}
+    ${!l.length ? `<div class="fi-card fi-empty">${f === 'naolidas' ? 'Tudo lido. 👍' : 'Nada por aqui.'}</div>` : `<div class="upd-list">${l.map(({ n, col, x }) => { const li = lida(n, mapa); return `
+      <div class="fi-card upd${li ? '' : ' nova'}">
+        <div class="upd-h"><span class="nmark">${esc(initials(n.por || '?'))}</span><b>${esc(n.por)}</b><span class="muted">${esc(dataBR(n.em))}</span>${meMenciona(n) ? '<span class="nl-tag">mencionou você</span>' : ''}
+          <span style="flex:1"></span><button class="vchip" data-act="nota-abrir" data-col="${col}" data-id="${esc(x.id)}" data-n="${esc(n.id)}" title="Abrir o cartão de origem">${col === 'modulos' ? 'Módulo' : 'Processo'} · ${esc(x.nome)} ↗</button></div>
+        <div class="nt">${notaHtml(n.txt)}</div>
+        <div class="upd-f">${minhaNota(n) ? '<span class="muted">Sua anotação</span>' : `<button class="linkbtn" data-act="${li ? 'upd-naolida' : 'upd-lida'}" data-n="${esc(n.id)}">${li ? 'Marcar como não lida' : 'Marcar como lida'}</button>`}</div>
+      </div>`; }).join('')}</div>`}`;
 }
 
 /* Chips do vínculo recíproco módulo ⇄ processo */
@@ -928,7 +1055,7 @@ const ICON = {
   adm: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
 };
 const MENU = [
-  { fam: 'exec', label: 'Acompanhamento', tabs: [['modulos', 'Módulos'], ['processos', 'Processos'], ['implantacao', 'Implantação'], ['backlog', 'Backlog']] },
+  { fam: 'exec', label: 'Acompanhamento', tabs: [['modulos', 'Módulos'], ['processos', 'Processos'], ['implantacao', 'Implantação'], ['backlog', 'Backlog'], ['atualizacoes', 'Atualizações']] },
   { fam: 'doc', label: 'Sobre o projeto', tabs: [['visao', 'Visão Geral'], ['equipe', 'Equipe'], ['sistemas', 'Sistemas']] },
   { fam: 'adm', label: '', tabs: [['adm', 'ADM']], admin: true },
 ];
@@ -936,7 +1063,7 @@ const FAM_OF = Object.fromEntries(MENU.flatMap(g => g.tabs.map(([id]) => [id, g]
 function renderMenu() {
   $('#menu').innerHTML = MENU.filter(g => !g.admin || isAdm).map(g => `<div class="fam fam-${g.fam}">
     ${g.label ? `<span class="fam-l">${ICON[g.fam]}${g.label}</span>` : ''}
-    ${g.tabs.map(([id, l]) => `<a href="#${id}" class="tab${ui.tab === id ? ' on' : ''}" data-act="tab" data-id="${id}">${g.label ? '' : ICON[g.fam]}${l}</a>`).join('')}
+    ${g.tabs.map(([id, l]) => `<a href="#${id}" class="tab${ui.tab === id ? ' on' : ''}" data-act="tab" data-id="${id}">${g.label ? '' : ICON[g.fam]}${l}${id === 'atualizacoes' && nNaoLidas() ? `<b class="tab-badge">${nNaoLidas()}</b>` : ''}</a>`).join('')}
   </div>`).join('');
 }
 function go(tab) {
@@ -976,11 +1103,12 @@ function vModulos() {
   $('#view').className = 'fi-page fam-ink-exec';
   $('#view').innerHTML = `
     ${head('modulos', ADD('modulos', 'Módulo'))}
-    <div class="fi-grid fi-grid--4" style="margin-bottom:16px">
-      <div class="fi-card fi-metric fi-metric--brand"><div class="fi-metric__top"><span>Módulos / projetos</span></div><div class="fi-metric__value">${S.modulos.length}</div><div class="fi-metric__foot">${S.modulos.filter(m => m.prioridade === 'Alta').length} com prioridade alta</div></div>
-      <button class="fi-card fi-metric" data-act="tab" data-id="processos"><div class="fi-metric__top"><span>Processos cadastrados</span></div><div class="fi-metric__value">${S.processos.length}</div><div class="fi-metric__foot">${S.processos.filter(p => p.status === 'Implantado').length} implantados</div></button>
-      <button class="fi-card fi-metric" data-act="tab" data-id="equipe"><div class="fi-metric__top"><span>Referências por setor</span></div><div class="fi-metric__value">${comRef}/${setores.length}</div><div class="fi-metric__foot">${setores.length - comRef} setor(es) pendente(s)</div></button>
-      <button class="fi-card fi-metric" data-act="tab" data-id="backlog"><div class="fi-metric__top"><span>Ideias no backlog</span></div><div class="fi-metric__value">${S.ideias.filter(i => i.status === 'Nova' || i.status === 'Em análise').length}</div><div class="fi-metric__foot">novas ou em análise</div></button>
+    <div class="resumo">
+      <span><b>${S.modulos.length}</b> módulos · ${S.modulos.filter(m => m.prioridade === 'Alta').length} prioridade alta</span>
+      <a data-act="tab" data-id="processos"><b>${S.processos.length}</b> processos · ${S.processos.filter(p => p.status === 'Implantado').length} implantados</a>
+      <a data-act="tab" data-id="equipe">referências <b>${comRef}/${setores.length}</b> setores</a>
+      <a data-act="tab" data-id="backlog"><b>${S.ideias.filter(i => i.status === 'Nova' || i.status === 'Em análise').length}</b> ideias no backlog</a>
+      <a data-act="tab" data-id="atualizacoes"${nNaoLidas() ? ' class="alerta"' : ''}><b>${nNaoLidas()}</b> atualização(ões) não lida(s)</a>
     </div>
     <div class="toolbar">
       <input class="fi-input search" placeholder="Buscar módulo, pessoa, dependência…" data-ui="modQ" value="${esc(ui.modQ)}">
@@ -1017,6 +1145,7 @@ function fillModulos() {
       <div class="row">${SEL(P(m, 'prioridade'), 'prioridades', { title: 'Prioridade' })}${SEL(P(m, 'status'), 'stModulo', { title: 'Situação' })}<span class="tag">Etapa: ${esc(nome('etapas', m.etapa))}</span>${CONV('modulos', m)}</div>
       ${trilha(m)}${etapaCtl('modulos', m)}${anterior('modulos', m)}
       <div class="vinc"><div class="k">Processos vinculados</div>${VINCS('modulos', m)}</div>
+      <div class="vinc"><div class="k">Módulos relacionados</div>${RELS('modulos', m)}</div>
       ${mc('objetivo') && (m.objetivo || canEditPath(P(m, 'objetivo'))) ? `<div><div class="k">Problema que resolve</div>${T(P(m, 'objetivo'), { tag: 'div', cls: 'txt' })}</div>` : ''}
       ${T(P(m, 'escopo'), { tag: 'div', cls: 'txt' })}
       ${(mc('sistema') && (m.sistema || canEditPath(P(m, 'sistema')))) || (mc('indicador') && (m.indicador || canEditPath(P(m, 'indicador')))) ? `<div class="kv">
@@ -1024,6 +1153,7 @@ function fillModulos() {
         ${mc('indicador') ? `<div><div class="k">Indicador de sucesso</div>${T(P(m, 'indicador'), { tag: 'div', ph: '—' })}</div>` : ''}</div>` : ''}
       <div class="kv">${PEOPLE_FIELDS.modulos.map(([k, lb]) => `<div><div class="k">${lb}</div>${PPL(P(m, k))}</div>`).join('')}</div>
       <div class="next"><div class="k">Próximos passos</div>${T(P(m, 'proximos'), { tag: 'div', ph: 'A definir' })}</div>
+      ${notasBloco('modulos', m)}
       <div class="foot"><span>${np} processo(s) vinculado(s)</span>${np ? `<button class="fi-btn" style="min-height:28px;padding:3px 10px" data-act="proc-mod" data-id="${esc(m.id)}">Ver processos</button>` : ''}</div>
     </div>`; }).join('')}</div>`;
 }
@@ -1074,7 +1204,8 @@ function fillProcessos() {
   $('#list').innerHTML = `<div class="fi-grid fi-grid--2">${l.map(p => `<div class="fi-card proc">
       <div class="proc-top"><div class="grow" style="flex:1;min-width:0"><h3>${T(P(p, 'nome'), { one: 1 })}</h3>
         <div class="sub row">${REF(P(p, 'area'), 'areas', { tag: 1, empty: 'Sem área' })}${SEL(P(p, 'status'), 'stProcesso')}<span class="tag">Etapa: ${esc(nome('etapas', p.etapa))}</span>${CONV('processos', p)}</div>
-        <div class="vinc"><div class="k">Módulos envolvidos</div>${VINCS('processos', p)}</div>${trilha(p)}${etapaCtl('processos', p)}</div>
+        <div class="vinc"><div class="k">Módulos envolvidos</div>${VINCS('processos', p)}</div>
+        <div class="vinc"><div class="k">Processos relacionados</div>${RELS('processos', p)}</div>${trilha(p)}${etapaCtl('processos', p)}</div>
         ${RM('processos', p.id)}</div>
       <div class="raci">${PEOPLE_FIELDS.processos.map(([k, lb]) => `<div><div class="k"><i>${L[k]}</i>${lb}</div>${PPL(P(p, k), { single: k === 'resp' })}</div>`).join('')}</div>
       <div class="proc-bottom">
@@ -1086,6 +1217,7 @@ function fillProcessos() {
       ${campoCfg('processos', 'passos').mostrar !== false && (p.passos || canEditPath(P(p, 'passos'))) ? `<div class="proc-obs passos"><div class="k">Sequência de trabalho</div>${T(P(p, 'passos'), { tag: 'div', phEdit: 'Uma etapa por linha: etapa — quem faz — módulo' })}</div>` : ''}
       <div class="proc-obs">${T(P(p, 'obs'), { tag: 'div', phEdit: 'Observações' })}</div>
       ${anterior('processos', p)}
+      <div class="proc-notas">${notasBloco('processos', p)}</div>
     </div>`).join('')}</div>`;
 }
 
@@ -1267,7 +1399,7 @@ function vAdm() {
       <div class="fi-grid fi-grid--4" style="margin-bottom:12px">${perm(col, 'criar', 'Quem pode cadastrar')}${perm(col, 'editar', 'Quem pode editar e pedir mudança de etapa')}${perm(col, 'excluir', 'Quem pode excluir')}<label class="fi-field"><span class="fi-label">Quem aprova mudança de etapa</span><select class="fi-select" data-cfg="cadastro.${col}.aprovar" ${dis}>${[['diretores', 'Direção (sponsors) e admin'], ['admin', 'Somente admin']].map(([v, l]) => `<option value="${v}"${cfgCad(col).aprovar === v ? ' selected' : ''}>${l}</option>`).join('')}</select></label></div>
       <div class="fi-table-wrap"><table class="fi-table sheet"><thead><tr><th>Campo</th><th>Pergunta na ficha</th><th>Ajuda (texto de exemplo)</th><th>Mostrar</th><th>Obrigatório</th></tr></thead>
       <tbody>${CAMPOS[col].map(c => { const f = cfgCad(col).campos[c.k] || {}, b = `cadastro.${col}.campos.${c.k}`;
-        return `<tr><td class="nw"><b>${esc(c.k === '_vinc' ? VINC[col].rot + ' vinculados' : c.k)}</b><div class="muted" style="font-size:.7rem">${esc(c.tipo)}</div></td>
+        return `<tr><td class="nw"><b>${esc(c.k === '_vinc' ? VINC[col].rot + ' vinculados' : c.k === '_rel' ? (col === 'modulos' ? 'Módulos' : 'Processos') + ' relacionados' : c.k)}</b><div class="muted" style="font-size:.7rem">${esc(c.tipo)}</div></td>
           <td class="wide"><input class="fi-input" data-cfg="${b}.pergunta" value="${esc(f.pergunta)}" ${dis}></td>
           <td class="wide"><input class="fi-input" data-cfg="${b}.ajuda" value="${esc(f.ajuda)}" ${dis}></td>
           <td class="nw"><input type="checkbox" data-cfg="${b}.mostrar" ${f.mostrar !== false ? 'checked' : ''} ${c.fixo ? 'disabled' : dis}></td>
@@ -1287,7 +1419,7 @@ function vAdm() {
   }
 }
 
-const VIEWS = { modulos: vModulos, processos: vProcessos, implantacao: vImplantacao, backlog: vBacklog, visao: vVisao, equipe: vEquipe, sistemas: vSistemas, adm: vAdm };
+const VIEWS = { atualizacoes: vAtualizacoes, modulos: vModulos, processos: vProcessos, implantacao: vImplantacao, backlog: vBacklog, visao: vVisao, equipe: vEquipe, sistemas: vSistemas, adm: vAdm };
 const FILLS = { modulos: fillModulos, processos: fillProcessos };
 
 /* =====================================================================
@@ -1323,6 +1455,7 @@ async function removeItem(col, id) {
     if (col === 'areas') { clr('participantes', 'area'); clr('processos', 'area'); clr('ideias', 'area'); }
     if (col === 'tipos') clr('participantes', 'tipo');
     if (col === 'modulos') (st.processos || []).forEach(p => { p.modulos = (p.modulos || []).filter(m => m !== id); });
+    if (col === 'modulos' || col === 'processos') (st[col] || []).forEach(x => { if (x.rel) x.rel = x.rel.filter(o => o !== id); });
     const arr = arrOf(st, col), i = arr.findIndex(x => x.id === id); if (i >= 0) arr.splice(i, 1);
   }, true);
 }
@@ -1338,6 +1471,8 @@ function abrirFicha(col) {
     const nm = `data-k="${c.k}"`;
     let inp;
     if (c.tipo === 'texto') inp = c.k === 'nome' ? `<input class="fi-input up" ${nm} data-upper>` : `<input class="fi-input" ${nm}>`;
+    else if (c.tipo === 'relacao') inp = `<div class="vbox">${S[col].map(o => `<label><input type="checkbox" data-relc="${esc(o.id)}"> ${esc(o.nome)}</label>`).join('') || `<span class="muted">Ainda não há outro ${col === 'modulos' ? 'módulo' : 'processo'}.</span>`}</div>
+      <label class="nenhum"><input type="checkbox" data-relnenhum> <b>Nenhum</b></label>`;
     else if (c.tipo === 'diretor') inp = `<div class="vbox">${diretores().map(p => `<label><input type="checkbox" data-diretor="${esc(p.id)}"> ${esc(p.nome)}</label>`).join('') || '<span class="muted">Nenhum participante da Direção cadastrado (ADM → Participantes).</span>'}</div>`;
     else if (c.tipo === 'area') inp = `<textarea class="fi-input" rows="3" ${nm}></textarea>`;
     else if (c.tipo === 'lista') inp = `<select class="fi-select" ${nm}><option value="">—</option>${(S.listas[c.lista] || []).map(o => `<option>${esc(o)}</option>`).join('')}</select>`;
@@ -1367,6 +1502,10 @@ function fichaOk(col) {
       if (nen && (ids.length || novos.length)) { falta.push('marque “Nenhum” ou escolha processos, não os dois'); return; }
       val._vinc = { ids, novos, nen }; if (ob && !ids.length && !novos.length && !nen) falta.push(f.pergunta || c.pergunta); return;
     }
+    if (c.tipo === 'relacao') {
+      const ids = [...modal.querySelectorAll('[data-relc]:checked')].map(x => x.dataset.relc), nen = !!(modal.querySelector('[data-relnenhum]') || {}).checked;
+      if (ob && !ids.length && !nen) falta.push(f.pergunta || c.pergunta); val._rel = ids; return;
+    }
     if (c.tipo === 'diretor') {
       const ids = [...modal.querySelectorAll('[data-diretor]:checked')].map(x => '@' + x.dataset.diretor);
       if (ob && !ids.length) falta.push(f.pergunta || c.pergunta); if (ids.length) val[c.k] = ids; return;
@@ -1382,6 +1521,7 @@ function fichaOk(col) {
     notify('Responda: ' + falta.join(' · '), 'warning'); return;
   }
   const { ids, novos, nen } = val._vinc || { ids: [], novos: [] }; delete val._vinc;
+  const rels = val._rel || []; delete val._rel;
   const it = Object.assign({ id: uid(val.nome) }, NEW[col](), val);
   const criados = novos.map(n => Object.assign({ id: uid(n) }, NEW[v.outro](), { nome: n }));
   if (col === 'modulos') it.semProcesso = !!nen && !ids.length && !criados.length;
@@ -1391,6 +1531,7 @@ function fichaOk(col) {
   commit(st => {
     st[col].push(clone(it)); criados.forEach(x => st[v.outro].push(clone(x)));
     if (col === 'modulos') ids.forEach(pid => setVinc(st, 'modulos', it.id, pid, true));
+    rels.forEach(o => setRel(st, col, it.id, o, true));
   }, false);
   if (col === 'processos') { ui.procStatus = ''; ui.procQ = ''; ui.procMod = ''; ui.procArea = '*'; } else { ui.modPrio = ''; ui.modQ = ''; }
   render();
@@ -1491,6 +1632,29 @@ document.addEventListener('click', async e => {
     case 'retry': flush(); break;
     case 'add': addItem(el.dataset.col); break;
     case 'novo': abrirFicha(el.dataset.col); break;
+    case 'rel-add': abrirRel(el.dataset.col, id); break;
+    case 'rel-rm': commit(st => setRel(st, el.dataset.col, id, el.dataset.o, false), true); break;
+    case 'rel-ok': { const c = el.dataset.col, sel = [...modal.querySelectorAll('[data-relc]:checked')].map(x => x.dataset.relc); if (!sel.length) { notify('Marque pelo menos um.', 'warning'); break; } modal.close(); commit(st => sel.forEach(o => setRel(st, c, id, o, true)), true); break; }
+    case 'nota-add': {
+      const c = el.dataset.col, ta = document.querySelector(`[data-nota-txt="${c}:${id}"]`), txt = ta ? ta.value.trim() : '';
+      if (!txt) { notify('Escreva a anotação.', 'warning'); break; }
+      commit(st => novaNota(st, c, id, txt), true); renderMenu(); notify('Anotação registrada.', 'success'); break;
+    }
+    case 'nota-rm': if (await ask('Apagar esta anotação?', true)) commit(st => { const y = st[el.dataset.col].find(z => z.id === id); if (y) y.notas = (y.notas || []).filter(n => n.id !== el.dataset.n); }, true); renderMenu(); break;
+    case 'notas-tog': ui.notasAbertas = ui.notasAbertas || {}; ui.notasAbertas[id] = !ui.notasAbertas[id]; render(); break;
+    case 'upd-f': ui.updF = id; render(); break;
+    case 'upd-lida': setLeitura([el.dataset.n], 1); break;
+    case 'upd-naolida': setLeitura([el.dataset.n], 0); break;
+    case 'upd-todas': { const m = leituraMapa(); setLeitura(todasNotas().filter(({ n }) => !lida(n, m)).map(({ n }) => n.id), 1); break; }
+    case 'nota-abrir': {
+      const c = el.dataset.col, x = byId(c, id); if (!x) break;
+      setLeitura([el.dataset.n], 1);
+      ui.notasAbertas = ui.notasAbertas || {}; ui.notasAbertas[id] = true;
+      if (c === 'processos') { ui.procQ = x.nome; ui.procArea = '*'; ui.procStatus = ''; ui.procMod = ''; ui.procView = 'cards'; } else { ui.modQ = x.nome; ui.modPrio = ''; ui.modView = 'cards'; }
+      ui.focus = `[data-nota="${el.dataset.n}"]`; go(c);
+      setTimeout(() => { const e = document.querySelector(`[data-nota="${el.dataset.n}"]`); if (e) { e.classList.add('pisca'); setTimeout(() => e.classList.remove('pisca'), 2200); } }, 50);
+      break;
+    }
     case 'et-pedir': etPedir(el.dataset.col, id, +el.dataset.dir); break;
     case 'et-ok': etDecidir(el.dataset.col, id, true); break;
     case 'et-no': etDecidir(el.dataset.col, id, false); break;
@@ -1540,6 +1704,7 @@ document.addEventListener('keydown', e => {
 });
 document.addEventListener('change', e => {
   const t = e.target;
+  if (t.dataset && t.dataset.menFor) { const ta = document.querySelector(`[data-nota-txt="${t.dataset.menFor}"]`); if (ta && t.value) { ta.value = (ta.value && !/\s$/.test(ta.value) ? ta.value + ' ' : ta.value) + '@' + t.value + ' '; ta.focus(); } t.value = ''; return; }
   if (t.dataset && t.dataset.upper !== undefined) { const c = t.selectionStart; t.value = UP(t.value); try { t.setSelectionRange(c, c); } catch (err) {} }
   if (t.classList.contains('es')) { const p = t.dataset.p, v = t.value; commit(st => setP(st, p, v), true); return; }
   if (t.dataset.cfg && isAdm) { const p = t.dataset.cfg, v = t.type === 'checkbox' ? t.checked : t.value; commit(st => setP(st, p, v), true); return; }
