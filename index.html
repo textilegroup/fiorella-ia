@@ -138,6 +138,26 @@ body.editing .et[contenteditable]:focus{outline:2px solid var(--exec);background
 .req{color:var(--fi-danger,#c0122c)}
 dialog .m-body{max-height:calc(100vh - 170px)}
 .passos .et{display:block;white-space:pre-wrap;color:var(--fi-text)}
+/* Coluna Nome (ADM → Participantes): não quebrar o nome letra a letra */
+.sheet td.ncol{min-width:170px}
+.sheet td.ecol{min-width:190px}
+.nome-cel{display:inline-flex;align-items:center;gap:8px;flex-wrap:nowrap}
+.nome-cel .av{flex:none}
+.nome-cel b,.nome-cel .et{white-space:nowrap;overflow-wrap:normal;word-break:normal}
+.sheet td.nw .et{overflow-wrap:normal;word-break:normal}
+.et[data-p$=".nome"][data-p^="modulos."],.et[data-p$=".nome"][data-p^="processos."],.et[data-p$=".nome"][data-p^="sistemas."],input.up{text-transform:uppercase}
+input.up::placeholder{text-transform:none}
+.nenhum{display:flex;gap:6px;align-items:center;font-size:.84rem;margin-top:4px;cursor:pointer}
+.etapa-ctl{margin-top:8px;display:grid;gap:6px}
+.ped{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;justify-content:space-between;background:color-mix(in srgb,var(--fi-warning,#a16207) 10%,var(--fi-surface,#fff));border:1px solid color-mix(in srgb,var(--fi-warning,#a16207) 35%,transparent);border-radius:7px;padding:6px 9px;font-size:.76rem}
+.ped-bt{display:flex;flex-wrap:wrap;gap:6px}
+.bt-s{min-height:26px!important;padding:2px 10px!important;font-size:.74rem!important}
+.hist{font-size:.7rem}
+.anterior{margin:8px 0 0;border:1px dashed var(--fi-line,#dfe3e8);border-radius:7px;padding:6px 10px;font-size:.78rem}
+.anterior summary{cursor:pointer;color:var(--fi-muted);font-weight:650}
+.anterior .kv{margin-top:8px}
+.proc .anterior{margin:0 18px 12px}
+.bcard .etapa-ctl{margin-top:6px}.bcard .ped{flex-direction:column;align-items:flex-start}
 .trilha-w{margin:10px 0 2px}.trilha-w .k b{color:var(--exec)}
 .trilha{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:3px}
 .tr-s{display:flex;flex-direction:column;gap:3px;min-width:0}
@@ -281,7 +301,7 @@ dialog::backdrop{background:rgba(9,12,16,.55)}
    ADM → Dados → Restaurar. Referência a participante = "@id";
    qualquer outro texto é texto livre (ex.: "Gestor da área").
    ===================================================================== */
-const SCHEMA = 4;
+const SCHEMA = 5;
 const SEED = {
   schema: SCHEMA,
   textos: {
@@ -306,7 +326,7 @@ const SEED = {
       setaProtheus: '↕ integração: a plataforma fica “abaixo” do Protheus, sem substituí-lo',
       admPart: 'Participantes do projeto',
       admAreas: 'Áreas / Setores',
-      admTipos: 'Tipos / Funções no projeto',
+      admTipos: 'Papéis no projeto',
       admListas: 'Listas de opções',
       admDados: 'Dados e acessos',
       admCad: 'Cadastro de módulos e processos',
@@ -333,9 +353,9 @@ const SEED = {
   /* Fluxo simples: levantamento → definição → avaliação técnica → aprovação → execução → acompanhamento */
   etapas: [
     { id: 'levantamento', nome: 'Levantamento', desc: 'Documentar a rotina real (AS-IS): quem faz, como faz, documentos, sistemas usados e gargalos.', resp: ['@wesley'], part: 'Referência do setor / Key User', entrega: 'Mapa do processo atual e lista de gargalos' },
-    { id: 'definicao', nome: 'Definição', desc: 'Desenhar o processo futuro (TO-BE): responsável, executor, aprovador, prazo, escalonamento e integrações.', resp: ['@victor', '@flavio'], part: 'Dono da área + Wesley', entrega: 'Processo futuro definido' },
+    { id: 'definicao', nome: 'Definição', desc: 'Desenhar o processo futuro (TO-BE): responsável, executor, aprovador, prazo, escalonamento e integrações.', resp: ['@victor', '@flavio'], part: 'Gestor da área + Wesley', entrega: 'Processo futuro definido' },
     { id: 'avaliacao', nome: 'Avaliação técnica', desc: 'Verificar viabilidade, integração com o Protheus, arquitetura, segurança e esforço.', resp: ['@thiago'], part: 'Alexandre', entrega: 'Parecer técnico e solução proposta' },
-    { id: 'aprovacao', nome: 'Aprovação', desc: 'Validação dos sponsors antes de iniciar desenvolvimento ou configuração.', resp: ['@flavio', '@victor'], part: 'Dono da área', entrega: 'Escopo aprovado' },
+    { id: 'aprovacao', nome: 'Aprovação', desc: 'Validação dos sponsors antes de iniciar desenvolvimento ou configuração.', resp: ['@flavio', '@victor'], part: 'Gestor da área', entrega: 'Escopo aprovado' },
     { id: 'execucao', nome: 'Execução', desc: 'Desenvolvimento, configuração, testes, homologação pelo key user, treinamento e entrada em produção.', resp: ['@alexandre'], part: 'Thiago + Dailon + Key User', entrega: 'Solução em produção' },
     { id: 'acompanhamento', nome: 'Acompanhamento', desc: 'Medir uso, SLA e conformidade. Processo implantado não basta estar documentado.', resp: ['@wesley'], part: 'Gestor da área', entrega: 'Indicadores de adoção' },
   ],
@@ -347,7 +367,6 @@ const SEED = {
     stIdeia: ['Nova', 'Em análise', 'Aprovada', 'Descartada'],
     stSistema: ['Em uso', 'Em construção', 'A mapear', 'Futura integração'],
     catSistema: ['ERP', 'Plataforma', 'Sistema interno', 'Equipamento / Indústria', 'Externo', 'Camada futura'],
-    niveis: ['Diretivo', 'Coordenação', 'Execução', 'Referência / Consulta'],
     grupos: ['Direção', 'Técnica', 'Processos', 'Setores'],
     stParticipante: ['Ativo', 'Inativo'],
     simNao: ['Sim', 'Não'],
@@ -386,20 +405,20 @@ const SEED = {
   ],
 
   participantes: [
-    { id: 'flavio', nome: 'Flávio', email: '', cargo: 'Sponsor de Tecnologia e Sistemas', area: 'comite', tipo: 'sponsor', nivel: 'Diretivo', resp: 'Arquitetura corporativa, Protheus, segurança, infraestrutura e decisões tecnológicas.', foco: 'Como tecnologicamente', status: 'Ativo' },
-    { id: 'victor', nome: 'Victor', email: '', cargo: 'Sponsor de Processos, BPM e CRM', area: 'comite', tipo: 'sponsor', nivel: 'Diretivo', resp: 'Processos, workflows, CRM, integração entre setores, aprovações e experiência do usuário.', foco: 'Como a empresa deve trabalhar', status: 'Ativo' },
-    { id: 'thiago', nome: 'Thiago', email: '', cargo: 'Arquiteto / Engenheiro Líder Externo', area: 'externo', tipo: 'arquiteto', nivel: 'Coordenação', resp: 'Projetar a arquitetura tecnológica e desenvolver ou indicar as ferramentas necessárias.', foco: 'Engenharia da solução', status: 'Ativo' },
-    { id: 'alexandre', nome: 'Alexandre', email: '', cargo: 'Coordenador Técnico Interno', area: 'ti', tipo: 'coordtec', nivel: 'Coordenação', resp: 'Ponte técnica com Thiago; acompanhar desenvolvimento, integrações, testes e implantação.', foco: 'Domínio técnico interno', status: 'Ativo' },
-    { id: 'dailon', nome: 'Dailon', email: '', cargo: 'Assistente Técnico Interno', area: 'ti', tipo: 'assistec', nivel: 'Execução', resp: 'Configuração, testes, cadastros, documentação e suporte técnico sob Alexandre.', foco: 'Execução técnica', status: 'Ativo' },
-    { id: 'wesley', nome: 'Wesley', email: '', cargo: 'Analista de Processos', area: 'processos', tipo: 'analista', nivel: 'Execução', resp: 'Percorrer setores, mapear rotinas reais, responsáveis, documentos, gargalos e adoção.', foco: 'Processo praticado', status: 'Ativo' },
-    { id: 'roseli', nome: 'Roseli', email: '', cargo: 'Analista de Processos Comerciais e CRM', area: 'comercial', tipo: 'analista', nivel: 'Execução', resp: 'Detalhar, testar e homologar processos comerciais e CRM.', foco: 'Operação comercial', status: 'Ativo' },
-    { id: 'renata', nome: 'Renata', email: '', cargo: 'Referência de Processos — Financeiro', area: 'financeiro', tipo: 'referencia', nivel: 'Referência / Consulta', resp: 'Fornecer informações sobre as rotinas atuais da área (AS-IS).', foco: '', status: 'Ativo' },
-    { id: 'ricardo', nome: 'Ricardo', email: '', cargo: 'Referência de Processos — Fiscal', area: 'fiscal', tipo: 'referencia', nivel: 'Referência / Consulta', resp: 'Fornecer informações sobre as rotinas atuais da área (AS-IS).', foco: '', status: 'Ativo' },
-    { id: 'marcelo', nome: 'Marcelo', email: '', cargo: 'Referência de Processos — Compras', area: 'compras', tipo: 'referencia', nivel: 'Referência / Consulta', resp: 'Fornecer informações sobre as rotinas atuais da área (AS-IS).', foco: '', status: 'Ativo' },
-    { id: 'rayline', nome: 'Rayline', email: '', cargo: 'Referência de Processos — RH', area: 'rh', tipo: 'referencia', nivel: 'Referência / Consulta', resp: 'Fornecer informações sobre as rotinas atuais da área (AS-IS).', foco: '', status: 'Ativo' },
-    { id: 'agenor', nome: 'Agenor', email: '', cargo: 'Referência de Processos — Manutenção', area: 'manutencao', tipo: 'referencia', nivel: 'Referência / Consulta', resp: 'Fornecer informações sobre as rotinas atuais da área (AS-IS).', foco: '', status: 'Ativo' },
-    { id: 'angelo', nome: 'Ângelo', email: '', cargo: 'Referência de Processos — Qualidade', area: 'qualidade', tipo: 'referencia', nivel: 'Referência / Consulta', resp: 'Fornecer informações sobre as rotinas atuais da área (AS-IS).', foco: '', status: 'Ativo' },
-    { id: 'leandro', nome: 'Leandro', email: '', cargo: 'Referência de Processos — Gestão da Qualidade (ISO)', area: 'iso', tipo: 'referencia', nivel: 'Referência / Consulta', resp: 'Fornecer informações sobre as rotinas atuais da área (AS-IS).', foco: '', status: 'Ativo' },
+    { id: 'flavio', nome: 'Flávio', email: '', area: 'comite', tipo: 'sponsor', resp: 'Arquitetura corporativa, Protheus, segurança, infraestrutura e decisões tecnológicas.', foco: 'Como tecnologicamente', status: 'Ativo' },
+    { id: 'victor', nome: 'Victor', email: '', area: 'comite', tipo: 'sponsor', resp: 'Processos, workflows, CRM, integração entre setores, aprovações e experiência do usuário.', foco: 'Como a empresa deve trabalhar', status: 'Ativo' },
+    { id: 'thiago', nome: 'Thiago', email: '', area: 'externo', tipo: 'arquiteto', resp: 'Projetar a arquitetura tecnológica e desenvolver ou indicar as ferramentas necessárias.', foco: 'Engenharia da solução', status: 'Ativo' },
+    { id: 'alexandre', nome: 'Alexandre', email: '', area: 'ti', tipo: 'coordtec', resp: 'Ponte técnica com Thiago; acompanhar desenvolvimento, integrações, testes e implantação.', foco: 'Domínio técnico interno', status: 'Ativo' },
+    { id: 'dailon', nome: 'Dailon', email: '', area: 'ti', tipo: 'assistec', resp: 'Configuração, testes, cadastros, documentação e suporte técnico sob Alexandre.', foco: 'Execução técnica', status: 'Ativo' },
+    { id: 'wesley', nome: 'Wesley', email: '', area: 'processos', tipo: 'analista', resp: 'Percorrer setores, mapear rotinas reais, responsáveis, documentos, gargalos e adoção.', foco: 'Processo praticado', status: 'Ativo' },
+    { id: 'roseli', nome: 'Roseli', email: '', area: 'comercial', tipo: 'analista', resp: 'Detalhar, testar e homologar processos comerciais e CRM.', foco: 'Operação comercial', status: 'Ativo' },
+    { id: 'renata', nome: 'Renata', email: '', area: 'financeiro', tipo: 'referencia', resp: 'Fornecer informações sobre as rotinas atuais da área (AS-IS).', foco: '', status: 'Ativo' },
+    { id: 'ricardo', nome: 'Ricardo', email: '', area: 'fiscal', tipo: 'referencia', resp: 'Fornecer informações sobre as rotinas atuais da área (AS-IS).', foco: '', status: 'Ativo' },
+    { id: 'marcelo', nome: 'Marcelo', email: '', area: 'compras', tipo: 'referencia', resp: 'Fornecer informações sobre as rotinas atuais da área (AS-IS).', foco: '', status: 'Ativo' },
+    { id: 'rayline', nome: 'Rayline', email: '', area: 'rh', tipo: 'referencia', resp: 'Fornecer informações sobre as rotinas atuais da área (AS-IS).', foco: '', status: 'Ativo' },
+    { id: 'agenor', nome: 'Agenor', email: '', area: 'manutencao', tipo: 'referencia', resp: 'Fornecer informações sobre as rotinas atuais da área (AS-IS).', foco: '', status: 'Ativo' },
+    { id: 'angelo', nome: 'Ângelo', email: '', area: 'qualidade', tipo: 'referencia', resp: 'Fornecer informações sobre as rotinas atuais da área (AS-IS).', foco: '', status: 'Ativo' },
+    { id: 'leandro', nome: 'Leandro', email: '', area: 'iso', tipo: 'referencia', resp: 'Fornecer informações sobre as rotinas atuais da área (AS-IS).', foco: '', status: 'Ativo' },
   ],
 
   sistemas: [
@@ -431,10 +450,10 @@ const SEED = {
   ],
 
   modulos: [
-    { id: 'nucleo', nome: 'Núcleo Corporativo', sponsor: ['@flavio', '@victor'], dono: [], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Alta', dep: 'Arquitetura base', status: 'Planejamento', etapa: 'levantamento', escopo: 'Usuários, estrutura organizacional, permissões, notificações, auditoria e pesquisa.', proximos: 'Definir arquitetura base e dono funcional.' },
+    { id: 'nucleo', nome: 'Núcleo Corporativo', sponsor: ['@flavio', '@victor'], dono: [], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Alta', dep: 'Arquitetura base', status: 'Planejamento', etapa: 'levantamento', escopo: 'Usuários, estrutura organizacional, permissões, notificações, auditoria e pesquisa.', proximos: 'Definir arquitetura base e gestor da área.' },
     { id: 'bpm', nome: 'BPM / Workflow', sponsor: ['@victor'], dono: ['@victor'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Alta', dep: 'Núcleo Corporativo', status: 'Planejamento', etapa: 'levantamento', escopo: 'Processos, etapas, responsáveis, SLA, escalonamentos e histórico.', proximos: 'Consolidar o modelo de cadastro de processos (guia Processos).' },
     { id: 'crm', nome: 'CRM Comercial', sponsor: ['@victor'], dono: ['Comercial'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: ['@roseli'], prioridade: 'Alta', dep: 'Protheus / BPM', status: 'Planejamento', etapa: 'levantamento', escopo: 'Clientes, contatos, oportunidades, visitas, pedidos, preços, comissões, crédito e histórico.', proximos: 'Levantamento AS-IS do Comercial com Roseli.' },
-    { id: 'comunicacao', nome: 'Portal de Comunicação entre Setores', sponsor: ['@victor'], dono: [], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Alta', dep: 'BPM / usuários', status: 'Planejamento', etapa: 'levantamento', escopo: 'Chat individual, grupos, canais e conversas vinculadas a processos.', proximos: 'Definir dono funcional e regras “mensagem ≠ tarefa”.' },
+    { id: 'comunicacao', nome: 'Portal de Comunicação entre Setores', sponsor: ['@victor'], dono: [], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Alta', dep: 'BPM / usuários', status: 'Planejamento', etapa: 'levantamento', escopo: 'Chat individual, grupos, canais e conversas vinculadas a processos.', proximos: 'Definir gestor da área e regras “mensagem ≠ tarefa”.' },
     { id: 'compras', nome: 'Compras / Ordens de Serviço', sponsor: ['@flavio', '@victor'], dono: ['Compras'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Alta', dep: 'Protheus / aprovações', status: 'Planejamento', etapa: 'levantamento', escopo: 'Solicitações, cotações, aprovações, pedidos e fornecedores.', proximos: 'Mapear solicitação de compra e alçadas com Marcelo.' },
     { id: 'nfe', nome: 'Gestão de NF-e Recebidas', sponsor: ['@flavio'], dono: ['Fiscal / Compras'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Média', dep: 'API Portal NF-e', status: 'Planejamento', etapa: 'levantamento', escopo: 'Captura, conferência e gestão das NF-e recebidas.', proximos: 'Avaliar API do portal NF-e.' },
     { id: 'producao', nome: 'Produção Digital', sponsor: ['@flavio'], dono: ['Produção'], coord: ['@alexandre'], dev: ['@thiago'], proc: ['@wesley'], keyuser: [], prioridade: 'Alta', dep: 'Protheus / chão de fábrica', status: 'Planejamento', etapa: 'levantamento', escopo: 'Digitalização de controles, apontamentos, indicadores e integrações industriais.', proximos: 'Inventariar controles em papel da Produção.' },
@@ -511,8 +530,8 @@ const CAMPOS = {
     { k: 'objetivo', tipo: 'area', pergunta: 'Que problema ele resolve?', ajuda: 'O que acontece hoje (planilha, papel, retrabalho, falta de controle) e vai melhorar.' },
     { k: 'escopo', tipo: 'area', pergunta: 'O que ele precisa fazer?', ajuda: 'Principais funções, em poucas linhas.' },
     { k: 'sistema', tipo: 'ref', col: 'sistemas', pergunta: 'Em qual sistema vai rodar?', ajuda: 'Protheus, Portal Fiorella, sistema contratado…' },
-    { k: 'sponsor', tipo: 'pessoa', pergunta: 'Quem patrocina e decide sobre ele?' },
-    { k: 'dono', tipo: 'pessoa', pergunta: 'Quem é o dono funcional (área que vai usar)?' },
+    { k: 'sponsor', tipo: 'diretor', pergunta: 'Quem é o sponsor do módulo?', ajuda: 'Somente participantes da Direção (papel no projeto do grupo Direção), como Victor e Flávio.' },
+    { k: 'dono', tipo: 'pessoa', pergunta: 'Quem é o gestor da área que vai usar?' },
     { k: 'keyuser', tipo: 'pessoa', pergunta: 'Quem vai testar e homologar (key user)?' },
     { k: 'prioridade', tipo: 'lista', lista: 'prioridades', pergunta: 'Qual a prioridade?' },
     { k: 'dep', tipo: 'texto', pergunta: 'Depende de algo para começar?', ajuda: 'Outro módulo, integração ou sistema.' },
@@ -522,11 +541,11 @@ const CAMPOS = {
   processos: [
     { k: 'nome', tipo: 'texto', fixo: 1, pergunta: 'Qual o nome do processo?', ajuda: 'Verbo + objeto. Ex.: Solicitar amostra, Faturar pedido.' },
     { k: '_vinc', tipo: 'vinculo', pergunta: 'Em quais módulos ele acontece?', ajuda: 'Marque os módulos já cadastrados ou digite o nome de um módulo novo para criá-lo junto.' },
-    { k: 'area', tipo: 'ref', col: 'areas', pergunta: 'Qual área é dona do processo?' },
+    { k: 'area', tipo: 'ref', col: 'areas', pergunta: 'Qual área responde pelo processo?' },
     { k: 'gatilho', tipo: 'texto', pergunta: 'O que dispara o processo?', ajuda: 'Quando ele começa. Ex.: cliente pede amostra; pedido aprovado.' },
     { k: 'entrega', tipo: 'texto', pergunta: 'Quando ele termina e qual o resultado?', ajuda: 'Ex.: amostra enviada com laudo; NF emitida e despachada.' },
     { k: 'passos', tipo: 'area', pergunta: 'Quais são os passos, em ordem?', ajuda: 'Uma etapa por linha: etapa — quem faz — módulo. Esta é a sequência de trabalho.' },
-    { k: 'resp', tipo: 'pessoa', pergunta: 'Quem é o responsável (dono)?' },
+    { k: 'resp', tipo: 'pessoa', pergunta: 'Quem é o responsável?' },
     { k: 'exec', tipo: 'pessoa', pergunta: 'Quem executa?' },
     { k: 'aprov', tipo: 'pessoa', pergunta: 'Quem aprova?' },
     { k: 'prazo', tipo: 'texto', pergunta: 'Qual o prazo (SLA)?', ajuda: 'Ex.: 2 dias úteis.' },
@@ -536,10 +555,14 @@ const CAMPOS = {
     { k: 'obs', tipo: 'area', pergunta: 'Observações' },
   ],
 };
+const UP = t => String(t || '').toLocaleUpperCase('pt-BR');
+const papel = p => (byId('tipos', p && p.tipo) || {}).nome || '';
+/* Direção = participantes ativos cujo papel no projeto é do grupo "Direção" (ex.: Victor e Flávio) */
+const diretores = () => S.participantes.filter(p => p.status !== 'Inativo' && (byId('tipos', p.tipo) || {}).grupo === 'Direção').sort((a, b) => a.nome.localeCompare(b.nome));
 const VINC = { modulos: { outro: 'processos', rot: 'Processos', um: 'processo' }, processos: { outro: 'modulos', rot: 'Módulos', um: 'módulo' } };
 function cadPadrao() {
   const out = {};
-  for (const col in CAMPOS) out[col] = { criar: 'editores', editar: 'editores', excluir: 'editores',
+  for (const col in CAMPOS) out[col] = { criar: 'editores', editar: 'editores', excluir: 'editores', aprovar: 'diretores',
     campos: Object.fromEntries(CAMPOS[col].map(c => [c.k, { pergunta: c.pergunta, ajuda: c.ajuda || '', mostrar: true, obrig: c.k === 'nome' || c.k === '_vinc' }])) };
   return out;
 }
@@ -554,11 +577,13 @@ function setVinc(st, col, id, outroId, on) {
   const [pid, mid] = col === 'processos' ? [id, outroId] : [outroId, id];
   const p = st.processos.find(x => x.id === pid); if (!p) return;
   const a = new Set(p.modulos || []); on ? a.add(mid) : a.delete(mid); p.modulos = [...a];
+  const m = st.modulos.find(x => x.id === mid);
+  if (m) m.semProcesso = !st.processos.some(x => (x.modulos || []).includes(mid));
 }
 
 /* Campos de pessoas (para vínculos e exclusão de participante) */
 const PEOPLE_FIELDS = {
-  modulos: [['sponsor', 'Sponsor'], ['dono', 'Dono funcional'], ['coord', 'Coord. técnico'], ['dev', 'Desenvolvimento'], ['proc', 'Processos'], ['keyuser', 'Key User']],
+  modulos: [['sponsor', 'Sponsor'], ['dono', 'Gestor da área'], ['coord', 'Coord. técnico'], ['dev', 'Desenvolvimento'], ['proc', 'Processos'], ['keyuser', 'Key User']],
   processos: [['resp', 'Responsável'], ['exec', 'Executor'], ['aprov', 'Aprovador'], ['cons', 'Consultado'], ['inf', 'Informado'], ['sup', 'Suplente']],
   sistemas: [['resp', 'Responsável']],
   areas: [['referencia', 'Referência do setor']],
@@ -571,11 +596,11 @@ const ADM_ROOTS = ['participantes', 'areas', 'tipos', 'listas', 'cadastro'];
 
 /* Novos itens */
 const NEW = {
-  modulos: () => ({ nome: 'Novo módulo', sponsor: [], dono: [], coord: [], dev: [], proc: [], keyuser: [], prioridade: 'Média', dep: '', status: 'Planejamento', etapa: 'levantamento', escopo: '', proximos: '', objetivo: '', sistema: '', indicador: '' }),
-  processos: () => ({ nome: 'Novo processo', area: ui.procArea && ui.procArea !== '*' ? ui.procArea : '', modulos: [], gatilho: '', entrega: '', passos: '', frequencia: '', resp: [], exec: [], aprov: [], cons: [], inf: [], sup: [], prazo: '', escal: '', integ: '', status: 'A mapear', etapa: 'levantamento', obs: '' }),
-  sistemas: () => ({ nome: 'Novo sistema', cat: '', desc: '', integ: '', resp: [], status: 'A mapear' }),
+  modulos: () => ({ nome: 'NOVO MÓDULO', semProcesso: false, sponsor: [], dono: [], coord: [], dev: [], proc: [], keyuser: [], prioridade: 'Média', dep: '', status: 'Planejamento', etapa: 'levantamento', escopo: '', proximos: '', objetivo: '', sistema: '', indicador: '' }),
+  processos: () => ({ nome: 'NOVO PROCESSO', area: ui.procArea && ui.procArea !== '*' ? ui.procArea : '', modulos: [], gatilho: '', entrega: '', passos: '', frequencia: '', resp: [], exec: [], aprov: [], cons: [], inf: [], sup: [], prazo: '', escal: '', integ: '', status: 'A mapear', etapa: 'levantamento', obs: '' }),
+  sistemas: () => ({ nome: 'NOVO SISTEMA', cat: '', desc: '', integ: '', resp: [], status: 'A mapear' }),
   ideias: () => ({ titulo: 'Nova ideia', area: '', autor: USER_TOK ? [USER_TOK] : [], desc: '', beneficio: '', prioridade: 'Média', status: 'Nova' }),
-  participantes: () => ({ nome: 'Novo participante', email: '', cargo: '', area: '', tipo: '', nivel: '', resp: '', foco: '', status: 'Ativo' }),
+  participantes: () => ({ nome: 'Novo participante', email: '', area: '', tipo: '', resp: '', foco: '', status: 'Ativo' }),
   areas: () => ({ nome: 'Nova área', mapear: 'Sim', referencia: [] }),
   tipos: () => ({ nome: 'Novo tipo', grupo: '', desc: '' }),
   blocos: () => ({ nome: 'Novo bloco', escopo: '', integ: '', obs: '' }),
@@ -628,9 +653,20 @@ function migrate(d) {
   const pad = cadPadrao(); d.cadastro = d.cadastro || {};
   for (const c in pad) {
     d.cadastro[c] = Object.assign({}, pad[c], d.cadastro[c] || {});
+    if (!d.cadastro[c].aprovar) d.cadastro[c].aprovar = 'diretores';
     d.cadastro[c].campos = Object.assign({}, pad[c].campos, (d.cadastro[c] || {}).campos || {});
     for (const k in pad[c].campos) d.cadastro[c].campos[k] = Object.assign({}, pad[c].campos[k], d.cadastro[c].campos[k]);
   }
+  /* versão 5: nomes em maiúsculas; sem cargo e nível; "dono" → "gestor da área" */
+  ['modulos', 'processos', 'sistemas'].forEach(c => (d[c] || []).forEach(x => { if (x.nome) x.nome = UP(x.nome); }));
+  (d.participantes || []).forEach(p => { delete p.cargo; delete p.nivel; });
+  delete d.listas.niveis;
+  const gestor = t => typeof t === 'string' ? t.replace(/dono funcional|dono da área/gi, m => m[0] === 'D' ? 'Gestor da área' : 'gestor da área').replace(/\(dono\)/gi, '').replace(/área é dona do processo/gi, 'área responde pelo processo') : t;
+  (d.etapas || []).forEach(e => { e.part = gestor(e.part); e.desc = gestor(e.desc); });
+  (d.modulos || []).forEach(m => { m.proximos = gestor(m.proximos); m.escopo = gestor(m.escopo); });
+  for (const c in d.cadastro) for (const k in d.cadastro[c].campos) d.cadastro[c].campos[k].pergunta = gestor(d.cadastro[c].campos[k].pergunta);
+  if (d.cadastro.modulos && d.cadastro.modulos.campos.sponsor && /patrocina/i.test(d.cadastro.modulos.campos.sponsor.pergunta || '')) Object.assign(d.cadastro.modulos.campos.sponsor, { pergunta: 'Quem é o sponsor do módulo?', ajuda: 'Somente participantes da Direção (papel no projeto do grupo Direção), como Victor e Flávio.' });
+  (d.modulos || []).forEach(m => { if (m.semProcesso === undefined) m.semProcesso = false; });
   delete d.tarefas; delete d._savedAt;
   d.schema = SCHEMA;
   return d;
@@ -762,7 +798,7 @@ function chip(t) {
   if (t[0] === '@') {
     const p = byId('participantes', t.slice(1));
     if (!p) return `<span class="tchip">(removido)</span>`;
-    return `<button class="pchip${p.status === 'Inativo' ? ' off' : ''}" data-act="person" data-id="${esc(p.id)}" title="${esc(p.cargo)}"><span class="av">${esc(initials(p.nome))}</span>${esc(p.nome)}</button>`;
+    return `<button class="pchip${p.status === 'Inativo' ? ' off' : ''}" data-act="person" data-id="${esc(p.id)}" title="${esc(papel(p))}"><span class="av">${esc(initials(p.nome))}</span>${esc(p.nome)}</button>`;
   }
   return `<span class="tchip">${esc(t)}</span>`;
 }
@@ -784,12 +820,93 @@ function trilha(x) {
     `<span class="tr-s${k < i ? ' feito' : k === i ? ' atual' : ''}" title="${k + 1}. ${esc(e.nome)}"><b>${k + 1}</b></span>`).join('')}</div></div>`;
 }
 
+/* Mudança de etapa: pedido + aprovação por botão dentro do cartão */
+const quemSou = () => { const p = USER_TOK && byId('participantes', USER_TOK.slice(1)); return p ? p.nome : ((window.APP && APP.usuario && APP.usuario.email) || 'usuário'); };
+const souDiretor = () => !!(USER_TOK && diretores().some(p => '@' + p.id === USER_TOK));
+const podeAprovar = col => canEdit && (isAdm || (cfgCad(col).aprovar !== 'admin' && souDiretor()));
+const dataBR = iso => { try { const d = new Date(iso); return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; } };
+function etapaCtl(col, x, compact) {
+  const i = S.etapas.findIndex(e => e.id === x.etapa), ped = x.pedido, nm = id => nome('etapas', id);
+  let h = '';
+  if (ped) {
+    h += `<div class="ped"><span>⏳ Aguardando aprovação: <b>${esc(nm(x.etapa))} → ${esc(nm(ped.para))}</b>${compact ? '' : ` · pedido por ${esc(ped.por)} em ${esc(dataBR(ped.em))}`}</span>
+      <span class="ped-bt">${podeAprovar(col) ? `<button class="fi-btn fi-btn--primary bt-s" data-act="et-ok" data-col="${col}" data-id="${esc(x.id)}">✓ Aprovar</button><button class="fi-btn bt-s" data-act="et-no" data-col="${col}" data-id="${esc(x.id)}">✕ Recusar</button>` : ''}
+      ${podeCad(col, 'editar') ? `<button class="fi-btn bt-s" data-act="et-cancel" data-col="${col}" data-id="${esc(x.id)}">Cancelar pedido</button>` : ''}</span></div>`;
+  } else if (podeCad(col, 'editar')) {
+    h += `<div class="ped-bt">${i < S.etapas.length - 1 ? `<button class="fi-btn bt-s" data-act="et-pedir" data-col="${col}" data-id="${esc(x.id)}" data-dir="1">Solicitar avanço → ${esc(nm(S.etapas[i + 1].id))}</button>` : ''}
+      ${i > 0 && !compact ? `<button class="fi-btn bt-s" data-act="et-pedir" data-col="${col}" data-id="${esc(x.id)}" data-dir="-1">← Solicitar retorno</button>` : ''}</div>`;
+  }
+  const u = (x.hist || [])[0];
+  if (u && !compact) h += `<div class="muted hist">Última decisão: ${esc(nm(u.de))} → ${esc(nm(u.para))} ${u.res === 'aprovado' ? 'aprovada' : 'recusada'} por ${esc(u.aprov)} em ${esc(dataBR(u.em))}</div>`;
+  return `<div class="etapa-ctl">${h}</div>`;
+}
+function etPedir(col, id, dir) {
+  const x = byId(col, id), ids = S.etapas.map(e => e.id), n = ids.indexOf(x.etapa) + dir;
+  if (n < 0 || n >= ids.length) return;
+  commit(st => { const y = st[col].find(z => z.id === id); if (y) y.pedido = { para: ids[n], por: quemSou(), em: new Date().toISOString() }; }, true);
+  notify('Pedido enviado. A etapa muda quando for aprovado.', 'info');
+}
+async function etDecidir(col, id, ok) {
+  const x = byId(col, id); if (!x || !x.pedido) return;
+  if (!podeAprovar(col)) { notify('Somente a Direção (ou admin) aprova mudança de etapa.', 'warning'); return; }
+  if (!(await ask(`${ok ? 'Aprovar' : 'Recusar'} a mudança de “${x.nome}” de ${nome('etapas', x.etapa)} para ${nome('etapas', x.pedido.para)}?`, !ok))) return;
+  commit(st => { const y = st[col].find(z => z.id === id); if (!y || !y.pedido) return;
+    const reg = { de: y.etapa, para: y.pedido.para, por: y.pedido.por, pedidoEm: y.pedido.em, aprov: quemSou(), em: new Date().toISOString(), res: ok ? 'aprovado' : 'recusado' };
+    if (ok) y.etapa = y.pedido.para;
+    y.hist = [reg, ...(y.hist || [])].slice(0, 50); delete y.pedido; }, true);
+}
+
+/* Converter módulo ⇄ processo sem perder o que foi lançado */
+const SO_MOD = [['escopo', 'Escopo'], ['objetivo', 'Problema que resolve'], ['indicador', 'Indicador de sucesso'], ['proximos', 'Próximos passos'], ['dep', 'Dependências'], ['prioridade', 'Prioridade'], ['sistema', 'Sistema'], ['sponsor', 'Sponsor'], ['dono', 'Gestor da área'], ['coord', 'Coord. técnico'], ['dev', 'Desenvolvimento'], ['proc', 'Processos (analista)'], ['keyuser', 'Key User']];
+const SO_PROC = [['area', 'Área'], ['gatilho', 'Começa quando'], ['entrega', 'Termina com'], ['passos', 'Sequência de trabalho'], ['frequencia', 'Frequência'], ['prazo', 'Prazo / SLA'], ['escal', 'Escalonamento'], ['integ', 'Integração'], ['obs', 'Observações'], ['resp', 'Responsável'], ['exec', 'Executor'], ['aprov', 'Aprovador'], ['cons', 'Consultado'], ['inf', 'Informado'], ['sup', 'Suplente']];
+function anterior(col, x) {
+  if (!x.convertido) return '';
+  const lista = col === 'modulos' ? SO_PROC : SO_MOD;
+  const val = (k, v) => Array.isArray(v) ? v.map(tokName).filter(Boolean).join(', ') : k === 'area' ? nome('areas', v) : k === 'sistema' ? nome('sistemas', v) : v;
+  const linhas = lista.map(([k, l]) => [l, val(k, x[k])]).filter(([, v]) => v && String(v).trim());
+  const c = x.convertido;
+  return `<details class="anterior"><summary>⇄ Convertido de ${c.de === 'modulos' ? 'módulo' : 'processo'} em ${esc(dataBR(c.em))} por ${esc(c.por)}${linhas.length ? ` · ${linhas.length} informação(ões) do cadastro anterior` : ''}</summary>
+    ${linhas.length ? `<div class="kv">${linhas.map(([l, v]) => `<div class="full"><div class="k">${esc(l)}</div><div class="txt" style="white-space:pre-wrap">${esc(v)}</div></div>`).join('')}</div>` : ''}
+    ${c.status ? `<div class="muted" style="font-size:.74rem">Situação anterior: ${esc(c.status)}</div>` : ''}</details>`;
+}
+const CONV = (col, x) => ui.edit && podeCad(col, 'excluir') && podeCad(VINC[col].outro, 'criar') ? `<button class="fi-btn bt-s" data-act="converter" data-col="${col}" data-id="${esc(x.id)}" title="Reclassificar sem perder informações">⇄ Converter em ${VINC[col].um}</button>` : '';
+async function converter(col, id) {
+  const x = byId(col, id); if (!x) return;
+  const tgt = VINC[col].outro, ligados = vincIds(col, x).map(o => nome(tgt === 'processos' ? 'modulos' : 'processos', o)).filter(Boolean);
+  if (!(await ask(`Converter “${x.nome}” em ${VINC[col].um}? Tudo o que foi lançado é mantido e aparece no cartão novo.${ligados.length ? ` Os vínculos atuais (${ligados.join(', ')}) ficam guardados e voltam se ele for convertido de novo.` : ''}`))) return;
+  commit(st => {
+    const arr = st[col], i = arr.findIndex(y => y.id === id); if (i < 0) return;
+    const o = arr[i], novo = Object.assign(NEW[tgt](), clone(o));
+    const atuais = col === 'modulos' ? st.processos.filter(p => (p.modulos || []).includes(id)).map(p => p.id) : (o.modulos || []).slice();
+    const guardados = (o.exVinculos || []);
+    if (col === 'modulos') {
+      st.processos.forEach(p => { p.modulos = (p.modulos || []).filter(m => m !== id); });
+      novo.modulos = guardados.filter(m => st.modulos.some(y => y.id === m && y.id !== id));
+      delete novo.semProcesso;
+    } else {
+      delete novo.modulos;
+      guardados.forEach(pid => { const p = st.processos.find(y => y.id === pid && y.id !== id); if (p) p.modulos = [...new Set([...(p.modulos || []), id])]; });
+      novo.semProcesso = false;
+    }
+    novo.exVinculos = atuais;
+    const lista = tgt === 'modulos' ? st.listas.stModulo : st.listas.stProcesso;
+    const statusAnt = o.status; novo.status = (o.convertido && o.convertido.status && lista.includes(o.convertido.status)) ? o.convertido.status : NEW[tgt]().status;
+    novo.convertido = { de: col, em: new Date().toISOString(), por: quemSou(), status: statusAnt };
+    delete novo.pedido;
+    arr.splice(i, 1); st[tgt].push(novo);
+    st.modulos.forEach(m => { m.semProcesso = m.semProcesso && !st.processos.some(p => (p.modulos || []).includes(m.id)); });
+  }, false);
+  if (tgt === 'processos') { ui.procQ = x.nome; ui.procArea = '*'; ui.procStatus = ''; ui.procMod = ''; } else { ui.modQ = x.nome; ui.modPrio = ''; }
+  go(tgt);
+  notify(`Convertido em ${VINC[col].um}.`, 'success');
+}
+
 /* Chips do vínculo recíproco módulo ⇄ processo */
 function VINCS(col, it) {
   const v = VINC[col], ids = vincIds(col, it), ed = ui.edit && podeCad(col, 'editar') && podeCad(v.outro, 'editar');
   let h = ids.map(oid => { const o = byId(v.outro, oid); if (!o) return '';
     return `<span class="pw"><button class="vchip" data-act="vinc-ir" data-col="${v.outro}" data-id="${esc(oid)}" title="Abrir">${esc(o.nome)}</button>${ed ? `<button class="x" data-act="vinc-rm" data-col="${col}" data-id="${esc(it.id)}" data-o="${esc(oid)}" title="Desvincular">×</button>` : ''}</span>`; }).join('');
-  if (!ids.length) h = `<span class="muted vfalta">Sem ${v.um} vinculado</span>`;
+  if (!ids.length) h = col === 'modulos' && it.semProcesso ? `<span class="muted">Nenhum processo</span>` : `<span class="muted vfalta">Sem ${v.um} vinculado</span>`;
   if (ed) h += `<button class="padd" data-act="vinc-add" data-col="${col}" data-id="${esc(it.id)}" title="Vincular ${v.um}">＋</button>`;
   return `<span class="ppl">${h}</span>`;
 }
@@ -883,10 +1000,10 @@ function fillModulos() {
   const P = (m, k) => `modulos.#${m.id}.${k}`;
   if (ui.modView === 'planilha') {
     $('#list').innerHTML = `<div class="fi-table-wrap"><table class="fi-table sheet"><thead><tr>
-      <th>Módulo</th><th>Processos</th><th>Prioridade</th><th>Situação</th><th>Etapa</th><th>Sponsor</th><th>Dono funcional</th><th>Coord. técnico</th><th>Desenvolvimento</th><th>Processos</th><th>Key User</th><th>Dependências</th><th>Próximos passos</th><th></th></tr></thead>
+      <th>Módulo</th><th>Processos</th><th>Prioridade</th><th>Situação</th><th>Etapa</th><th>Sponsor</th><th>Gestor da área</th><th>Coord. técnico</th><th>Desenvolvimento</th><th>Processos</th><th>Key User</th><th>Dependências</th><th>Próximos passos</th><th></th></tr></thead>
       <tbody>${l.map(m => `<tr>
         <td class="wide"><b>${T(P(m, 'nome'), { one: 1 })}</b></td><td>${VINCS('modulos', m)}</td><td class="nw">${SEL(P(m, 'prioridade'), 'prioridades')}</td>
-        <td class="nw">${SEL(P(m, 'status'), 'stModulo')}</td><td class="nw">${REF(P(m, 'etapa'), 'etapas')}</td>
+        <td class="nw">${SEL(P(m, 'status'), 'stModulo')}</td><td class="nw">${esc(nome('etapas', m.etapa))}${m.pedido ? ' ⏳' : ''}</td>
         ${PEOPLE_FIELDS.modulos.map(([k]) => `<td>${PPL(P(m, k))}</td>`).join('')}
         <td>${T(P(m, 'dep'))}</td><td class="wide">${T(P(m, 'proximos'))}</td><td class="nw">${RM('modulos', m.id)}</td></tr>`).join('')}
       </tbody></table></div>`;
@@ -897,8 +1014,8 @@ function fillModulos() {
     return `<div class="fi-card item">
       <div class="card-top"><div class="grow"><h3>${T(P(m, 'nome'), { one: 1 })}</h3>
         <div class="sub">Dependências: ${T(P(m, 'dep'), { ph: '—' })}</div></div>${RM('modulos', m.id)}</div>
-      <div class="row">${SEL(P(m, 'prioridade'), 'prioridades', { title: 'Prioridade' })}${SEL(P(m, 'status'), 'stModulo', { title: 'Situação' })}<span class="tag">Etapa: ${REF(P(m, 'etapa'), 'etapas')}</span></div>
-      ${trilha(m)}
+      <div class="row">${SEL(P(m, 'prioridade'), 'prioridades', { title: 'Prioridade' })}${SEL(P(m, 'status'), 'stModulo', { title: 'Situação' })}<span class="tag">Etapa: ${esc(nome('etapas', m.etapa))}</span>${CONV('modulos', m)}</div>
+      ${trilha(m)}${etapaCtl('modulos', m)}${anterior('modulos', m)}
       <div class="vinc"><div class="k">Processos vinculados</div>${VINCS('modulos', m)}</div>
       ${mc('objetivo') && (m.objetivo || canEditPath(P(m, 'objetivo'))) ? `<div><div class="k">Problema que resolve</div>${T(P(m, 'objetivo'), { tag: 'div', cls: 'txt' })}</div>` : ''}
       ${T(P(m, 'escopo'), { tag: 'div', cls: 'txt' })}
@@ -948,7 +1065,7 @@ function fillProcessos() {
       <tbody>${l.map(p => `<tr>
         <td class="wide"><b>${T(P(p, 'nome'), { one: 1 })}</b></td><td>${REF(P(p, 'area'), 'areas')}</td><td>${VINCS('processos', p)}</td>
         ${PEOPLE_FIELDS.processos.map(([k]) => `<td>${PPL(P(p, k), { single: k === 'resp', empty: '—' })}</td>`).join('')}
-        <td>${T(P(p, 'prazo'))}</td><td>${T(P(p, 'escal'))}</td><td>${T(P(p, 'integ'))}</td><td class="nw">${SEL(P(p, 'status'), 'stProcesso')}</td><td class="nw">${REF(P(p, 'etapa'), 'etapas')}</td>
+        <td>${T(P(p, 'prazo'))}</td><td>${T(P(p, 'escal'))}</td><td>${T(P(p, 'integ'))}</td><td class="nw">${SEL(P(p, 'status'), 'stProcesso')}</td><td class="nw">${esc(nome('etapas', p.etapa))}${p.pedido ? ' ⏳' : ''}</td>
         <td class="wide">${T(P(p, 'obs'))}</td><td class="nw">${RM('processos', p.id)}</td></tr>`).join('')}
       </tbody></table></div>`;
     return;
@@ -956,8 +1073,8 @@ function fillProcessos() {
   const L = { resp: 'R', exec: 'E', aprov: 'A', cons: 'C', inf: 'I', sup: 'S' };
   $('#list').innerHTML = `<div class="fi-grid fi-grid--2">${l.map(p => `<div class="fi-card proc">
       <div class="proc-top"><div class="grow" style="flex:1;min-width:0"><h3>${T(P(p, 'nome'), { one: 1 })}</h3>
-        <div class="sub row">${REF(P(p, 'area'), 'areas', { tag: 1, empty: 'Sem área' })}${SEL(P(p, 'status'), 'stProcesso')}<span class="tag">Etapa: ${REF(P(p, 'etapa'), 'etapas')}</span></div>
-        <div class="vinc"><div class="k">Módulos envolvidos</div>${VINCS('processos', p)}</div>${trilha(p)}</div>
+        <div class="sub row">${REF(P(p, 'area'), 'areas', { tag: 1, empty: 'Sem área' })}${SEL(P(p, 'status'), 'stProcesso')}<span class="tag">Etapa: ${esc(nome('etapas', p.etapa))}</span>${CONV('processos', p)}</div>
+        <div class="vinc"><div class="k">Módulos envolvidos</div>${VINCS('processos', p)}</div>${trilha(p)}${etapaCtl('processos', p)}</div>
         ${RM('processos', p.id)}</div>
       <div class="raci">${PEOPLE_FIELDS.processos.map(([k, lb]) => `<div><div class="k"><i>${L[k]}</i>${lb}</div>${PPL(P(p, k), { single: k === 'resp' })}</div>`).join('')}</div>
       <div class="proc-bottom">
@@ -968,12 +1085,13 @@ function fillProcessos() {
       </div>
       ${campoCfg('processos', 'passos').mostrar !== false && (p.passos || canEditPath(P(p, 'passos'))) ? `<div class="proc-obs passos"><div class="k">Sequência de trabalho</div>${T(P(p, 'passos'), { tag: 'div', phEdit: 'Uma etapa por linha: etapa — quem faz — módulo' })}</div>` : ''}
       <div class="proc-obs">${T(P(p, 'obs'), { tag: 'div', phEdit: 'Observações' })}</div>
+      ${anterior('processos', p)}
     </div>`).join('')}</div>`;
 }
 
 /* ---------- Implantação ---------- */
 function vImplantacao() {
-  const col = ui.implKind, ed = podeCad(col, 'editar');
+  const col = ui.implKind;
   $('#view').className = 'fi-page fam-ink-exec';
   $('#view').innerHTML = `
     ${head('implantacao')}
@@ -987,8 +1105,7 @@ function vImplantacao() {
     <div class="board">${S.etapas.map((e, i) => { const l = S[col].filter(x => x.etapa === e.id); return `<div class="col">
       <div class="col-h"><span>${i + 1}. ${esc(e.nome)}</span><b>${l.length}</b></div>
       ${l.map(x => `<div class="bcard"><div class="t">${esc(x.nome)}</div>
-        <div class="r"><span>${col === 'modulos' ? pill(x.prioridade) : `<span class="tag">${esc(nome('areas', x.area) || '—')}</span>`}</span>
-        ${ed ? `<span><button class="mv" data-act="move" data-col="${col}" data-id="${esc(x.id)}" data-dir="-1" ${i === 0 ? 'disabled' : ''} title="Etapa anterior">◀</button> <button class="mv" data-act="move" data-col="${col}" data-id="${esc(x.id)}" data-dir="1" ${i === S.etapas.length - 1 ? 'disabled' : ''} title="Próxima etapa">▶</button></span>` : ''}</div></div>`).join('') || '<div class="muted" style="font-size:.76rem;padding:4px">—</div>'}
+        <div class="r"><span>${col === 'modulos' ? pill(x.prioridade) : `<span class="tag">${esc(nome('areas', x.area) || '—')}</span>`}</span></div>${etapaCtl(col, x, true)}</div>`).join('') || '<div class="muted" style="font-size:.76rem;padding:4px">—</div>'}
     </div>`; }).join('')}</div>`;
 }
 
@@ -1045,7 +1162,7 @@ function personCard(p) {
   const P = k => `participantes.#${p.id}.${k}`, u = usage(p.id);
   return `<div class="fi-card person">
     <div class="person-head"><span class="av lg">${esc(initials(p.nome))}</span>
-      <div style="min-width:0;flex:1"><h3>${T(P('nome'), { one: 1 })}</h3><div class="cargo">${T(P('cargo'), { one: 1 })}</div></div>${RM('participantes', p.id)}</div>
+      <div style="min-width:0;flex:1"><h3>${T(P('nome'), { one: 1 })}</h3><div class="cargo">${esc(papel(p))}</div></div>${RM('participantes', p.id)}</div>
     <div class="meta">${REF(P('tipo'), 'tipos', { tag: 1, empty: '' })}${REF(P('area'), 'areas', { tag: 1, empty: '' })}${p.status !== 'Ativo' || canEditPath(P('status')) ? SEL(P('status'), 'stParticipante') : ''}</div>
     ${T(P('resp'), { tag: 'p', cls: 'resp' })}
     <div class="foot"><span>Foco: ${T(P('foco'), { ph: '—' })}</span>
@@ -1099,7 +1216,7 @@ function vSistemas() {
    ===================================================================== */
 function vAdm() {
   const s = ui.admSec;
-  const nav = [['participantes', 'Participantes', S.participantes.length], ['areas', 'Áreas / Setores', S.areas.length], ['tipos', 'Tipos / Funções', S.tipos.length], ['listas', 'Listas de opções', Object.keys(S.listas).length], ['cadastro', 'Cadastro de módulos e processos', 2]];
+  const nav = [['participantes', 'Participantes', S.participantes.length], ['areas', 'Áreas / Setores', S.areas.length], ['tipos', 'Papéis no projeto', S.tipos.length], ['listas', 'Listas de opções', Object.keys(S.listas).length], ['cadastro', 'Cadastro de módulos e processos', 2]];
   $('#view').className = 'fi-page fam-ink-adm';
   $('#view').innerHTML = `
     ${head('adm')}
@@ -1115,11 +1232,11 @@ function vAdm() {
   if (s === 'participantes') {
     const P = (p, k) => `participantes.#${p.id}.${k}`;
     body.innerHTML = `${aviso}${sec('admPart', S.participantes.length, ADD('participantes', 'Participante'))}
-      <div class="fi-table-wrap"><table class="fi-table sheet"><thead><tr><th>Nome</th><th>E-mail (login)</th><th>Cargo / Função</th><th>Área</th><th>Papel no projeto</th><th>Nível</th><th>Status</th><th>Responsabilidades</th><th>Foco de decisão</th><th>Vínculos</th><th></th></tr></thead>
+      <div class="fi-table-wrap"><table class="fi-table sheet"><thead><tr><th>Nome</th><th>E-mail (login)</th><th>Área</th><th>Papel no projeto</th><th>Status</th><th>Responsabilidades</th><th>Foco de decisão</th><th>Vínculos</th><th></th></tr></thead>
       <tbody>${S.participantes.map(p => `<tr>
-        <td class="nw"><span class="row" style="flex-wrap:nowrap"><span class="av">${esc(initials(p.nome))}</span><b>${T(P(p, 'nome'), { one: 1 })}</b></span></td>
-        <td>${T(P(p, 'email'), { one: 1, ph: '—' })}</td><td>${T(P(p, 'cargo'))}</td><td>${REF(P(p, 'area'), 'areas')}</td><td>${REF(P(p, 'tipo'), 'tipos')}</td>
-        <td class="nw">${SEL(P(p, 'nivel'), 'niveis')}</td><td class="nw">${SEL(P(p, 'status'), 'stParticipante')}</td><td class="wide">${T(P(p, 'resp'))}</td><td>${T(P(p, 'foco'))}</td>
+        <td class="ncol"><span class="nome-cel"><span class="av">${esc(initials(p.nome))}</span><b>${T(P(p, 'nome'), { one: 1 })}</b></span></td>
+        <td class="ecol">${T(P(p, 'email'), { one: 1, ph: '—' })}</td><td>${REF(P(p, 'area'), 'areas')}</td><td>${REF(P(p, 'tipo'), 'tipos')}</td>
+        <td class="nw">${SEL(P(p, 'status'), 'stParticipante')}</td><td class="wide">${T(P(p, 'resp'))}</td><td>${T(P(p, 'foco'))}</td>
         <td class="nw"><button class="fi-btn" style="min-height:28px;padding:3px 10px" data-act="person" data-id="${esc(p.id)}">${usage(p.id).length}</button></td><td class="nw">${RM('participantes', p.id)}</td></tr>`).join('')}
       </tbody></table></div>
       <div class="fi-alert" style="margin-top:12px">“Agente” fica reservado para futuros agentes de IA. Para tirar alguém do projeto sem perder o histórico, prefira o status <b>Inativo</b>. Trocar sponsors, responsáveis e demais papéis: use os botões ＋ e × nas guias Módulos, Processos, Implantação e Sistemas.</div>`;
@@ -1132,13 +1249,13 @@ function vAdm() {
       </tbody></table></div>`;
   } else if (s === 'tipos') {
     const P = (t, k) => `tipos.#${t.id}.${k}`;
-    body.innerHTML = `${aviso}${sec('admTipos', S.tipos.length, ADD('tipos', 'Tipo'))}
-      <div class="fi-table-wrap"><table class="fi-table sheet"><thead><tr><th>Tipo / Função</th><th>Grupo</th><th>Descrição</th><th>Participantes</th><th></th></tr></thead>
+    body.innerHTML = `${aviso}${sec('admTipos', S.tipos.length, ADD('tipos', 'Papel'))}
+      <div class="fi-table-wrap"><table class="fi-table sheet"><thead><tr><th>Papel no projeto</th><th>Grupo</th><th>Descrição</th><th>Participantes</th><th></th></tr></thead>
       <tbody>${S.tipos.map(t => `<tr><td><b>${T(P(t, 'nome'), { one: 1 })}</b></td><td class="nw">${SEL(P(t, 'grupo'), 'grupos')}</td><td class="wide">${T(P(t, 'desc'))}</td><td>${S.participantes.filter(p => p.tipo === t.id).length}</td><td class="nw">${RM('tipos', t.id)}</td></tr>`).join('')}
       </tbody></table></div>
       <div class="fi-alert" style="margin-top:12px">O <b>grupo</b> define onde o participante aparece na guia Equipe: Direção, Técnica e Processos formam a equipe do projeto; Setores aparece nas referências por setor.</div>`;
   } else if (s === 'listas') {
-    const nomes = { prioridades: 'Prioridades', stModulo: 'Situação do módulo', stProcesso: 'Status do processo', stIdeia: 'Status da ideia', stSistema: 'Situação do sistema', catSistema: 'Categorias de sistema', niveis: 'Níveis de atuação', grupos: 'Grupos de função', stParticipante: 'Status do participante', simNao: 'Sim / Não' };
+    const nomes = { prioridades: 'Prioridades', stModulo: 'Situação do módulo', stProcesso: 'Status do processo', stIdeia: 'Status da ideia', stSistema: 'Situação do sistema', catSistema: 'Categorias de sistema', grupos: 'Grupos de função', stParticipante: 'Status do participante', simNao: 'Sim / Não' };
     body.innerHTML = `${sec('admListas')}
       <div class="fi-alert" style="margin-bottom:12px">Uma opção por linha. As opções aparecem nas caixas de seleção de todas as guias. Renomear uma opção aqui não altera os itens que já usam o nome antigo.</div>
       <div class="lists">${Object.keys(S.listas).map(k => `<label class="fi-field"><span class="fi-label">${esc(nomes[k] || k)}</span><textarea data-lista="${k}" ${ui.edit ? '' : 'readonly'}>${esc(S.listas[k].join('\n'))}</textarea></label>`).join('')}</div>`;
@@ -1147,7 +1264,7 @@ function vAdm() {
     const perm = (col, a, lb) => `<label class="fi-field"><span class="fi-label">${lb}</span><select class="fi-select" data-cfg="cadastro.${col}.${a}" ${dis}>${[['editores', 'Quem tem acesso Editar'], ['admin', 'Somente admin']].map(([v, l]) => `<option value="${v}"${cfgCad(col)[a] === v ? ' selected' : ''}>${l}</option>`).join('')}</select></label>`;
     const tabela = col => `<div class="fi-card card-pad" style="margin-bottom:16px">
       <h3 style="font-size:1rem;margin-bottom:10px">${col === 'modulos' ? 'Módulos' : 'Processos'}</h3>
-      <div class="fi-grid fi-grid--3" style="margin-bottom:12px">${perm(col, 'criar', 'Quem pode cadastrar')}${perm(col, 'editar', 'Quem pode editar')}${perm(col, 'excluir', 'Quem pode excluir')}</div>
+      <div class="fi-grid fi-grid--4" style="margin-bottom:12px">${perm(col, 'criar', 'Quem pode cadastrar')}${perm(col, 'editar', 'Quem pode editar e pedir mudança de etapa')}${perm(col, 'excluir', 'Quem pode excluir')}<label class="fi-field"><span class="fi-label">Quem aprova mudança de etapa</span><select class="fi-select" data-cfg="cadastro.${col}.aprovar" ${dis}>${[['diretores', 'Direção (sponsors) e admin'], ['admin', 'Somente admin']].map(([v, l]) => `<option value="${v}"${cfgCad(col).aprovar === v ? ' selected' : ''}>${l}</option>`).join('')}</select></label></div>
       <div class="fi-table-wrap"><table class="fi-table sheet"><thead><tr><th>Campo</th><th>Pergunta na ficha</th><th>Ajuda (texto de exemplo)</th><th>Mostrar</th><th>Obrigatório</th></tr></thead>
       <tbody>${CAMPOS[col].map(c => { const f = cfgCad(col).campos[c.k] || {}, b = `cadastro.${col}.campos.${c.k}`;
         return `<tr><td class="nw"><b>${esc(c.k === '_vinc' ? VINC[col].rot + ' vinculados' : c.k)}</b><div class="muted" style="font-size:.7rem">${esc(c.tipo)}</div></td>
@@ -1156,7 +1273,7 @@ function vAdm() {
           <td class="nw"><input type="checkbox" data-cfg="${b}.mostrar" ${f.mostrar !== false ? 'checked' : ''} ${c.fixo ? 'disabled' : dis}></td>
           <td class="nw"><input type="checkbox" data-cfg="${b}.obrig" ${c.fixo || f.obrig ? 'checked' : ''} ${c.fixo ? 'disabled' : dis}></td></tr>`; }).join('')}</tbody></table></div></div>`;
     body.innerHTML = `${ed ? '' : `<div class="fi-alert" style="margin-bottom:12px">Clique em <b>✎ Editar</b> no topo para alterar.</div>`}${sec('admCad')}
-      <div class="fi-alert" style="margin-bottom:12px">Define a ficha que aparece ao clicar em <b>＋ Módulo</b> e <b>＋ Processo</b>: o texto de cada pergunta, se ela aparece e se é obrigatória, e quem pode cadastrar, editar e excluir. Com o vínculo obrigatório, todo módulo precisa de pelo menos um processo e vice-versa; na ficha dá para criar o outro lado na hora, digitando o nome.</div>
+      <div class="fi-alert" style="margin-bottom:12px">Define a ficha que aparece ao clicar em <b>＋ Módulo</b> e <b>＋ Processo</b>: o texto de cada pergunta, se ela aparece e se é obrigatória, e quem pode cadastrar, editar e excluir. Com o vínculo obrigatório, todo processo precisa de pelo menos um módulo e todo módulo precisa de processos ou da opção “Nenhum”; na ficha dá para criar o outro lado na hora, digitando o nome. Mudança de etapa: qualquer editor pede pelo botão no cartão; a Direção (identificada pelo e-mail cadastrado em Participantes) ou o admin aprova.</div>
       ${tabela('modulos')}${tabela('processos')}
       ${ed ? `<button class="fi-btn" data-act="cad-reset">↺ Voltar às perguntas padrão</button>` : ''}`;
   } else {
@@ -1199,7 +1316,8 @@ async function removeItem(col, id) {
     const clr = (c, k) => (st[c] || []).forEach(x => { if (x[k] === id) x[k] = ''; });
     if (col === 'participantes') {
       const tok = '@' + id, fix = a => (a || []).map(t => t === tok ? label : t);
-      for (const c in PEOPLE_FIELDS) (st[c] || []).forEach(x => PEOPLE_FIELDS[c].forEach(([k]) => { if (x[k]) x[k] = fix(x[k]); }));
+      const todos = [...PEOPLE_FIELDS.modulos, ...PEOPLE_FIELDS.processos];
+      for (const c in PEOPLE_FIELDS) (st[c] || []).forEach(x => (c === 'modulos' || c === 'processos' ? todos : PEOPLE_FIELDS[c]).forEach(([k]) => { if (Array.isArray(x[k])) x[k] = fix(x[k]); }));
       st.projeto.fases.forEach(f => { f.lid = fix(f.lid); });
     }
     if (col === 'areas') { clr('participantes', 'area'); clr('processos', 'area'); clr('ideias', 'area'); }
@@ -1219,18 +1337,20 @@ function abrirFicha(col) {
     const ob = c.fixo || f.obrig, lab = `<span class="fi-label">${esc(f.pergunta || c.pergunta)}${ob ? ' <b class="req">*</b>' : ''}</span>`, help = f.ajuda ? `<span class="fi-field__help">${esc(f.ajuda)}</span>` : '';
     const nm = `data-k="${c.k}"`;
     let inp;
-    if (c.tipo === 'texto') inp = `<input class="fi-input" ${nm}>`;
+    if (c.tipo === 'texto') inp = c.k === 'nome' ? `<input class="fi-input up" ${nm} data-upper>` : `<input class="fi-input" ${nm}>`;
+    else if (c.tipo === 'diretor') inp = `<div class="vbox">${diretores().map(p => `<label><input type="checkbox" data-diretor="${esc(p.id)}"> ${esc(p.nome)}</label>`).join('') || '<span class="muted">Nenhum participante da Direção cadastrado (ADM → Participantes).</span>'}</div>`;
     else if (c.tipo === 'area') inp = `<textarea class="fi-input" rows="3" ${nm}></textarea>`;
     else if (c.tipo === 'lista') inp = `<select class="fi-select" ${nm}><option value="">—</option>${(S.listas[c.lista] || []).map(o => `<option>${esc(o)}</option>`).join('')}</select>`;
     else if (c.tipo === 'ref') inp = `<select class="fi-select" ${nm}><option value="">—</option>${(S[c.col] || []).map(o => `<option value="${esc(o.id)}">${esc(o.nome)}</option>`).join('')}</select>`;
     else if (c.tipo === 'pessoa') inp = `<input class="fi-input" list="fichaPessoas" ${nm} placeholder="Participante ou texto livre">`;
     else if (c.tipo === 'vinculo') inp = `<div class="vbox">${S[v.outro].map(o => `<label><input type="checkbox" data-vinc="${esc(o.id)}"> ${esc(o.nome)}</label>`).join('') || `<span class="muted">Nenhum ${v.um} cadastrado ainda.</span>`}</div>
-      <input class="fi-input" data-vnovo placeholder="Novo ${v.um}: digite o nome (vários separados por ;)">`;
+      <input class="fi-input up" data-vnovo data-upper placeholder="NOVO ${UP(v.um)}: DIGITE O NOME (VÁRIOS SEPARADOS POR ;)">
+      ${col === 'modulos' ? `<label class="nenhum"><input type="checkbox" data-nenhum> <b>Nenhum</b> — este módulo não atende a nenhum processo por enquanto</label>` : ''}`;
     return `<label class="fi-field" data-campo="${c.k}">${lab}${inp}${help}</label>`;
   };
   modal.innerHTML = `<div class="m-head"><h2>Cadastrar ${col === 'modulos' ? 'módulo' : 'processo'}</h2><button class="rm" data-act="close">✕</button></div>
     <div class="m-body ficha">${CAMPOS[col].map(campo).join('')}
-      <datalist id="fichaPessoas">${ativos.map(x => `<option value="${esc(x.nome)}">${esc(x.cargo)}</option>`).join('')}</datalist>
+      <datalist id="fichaPessoas">${ativos.map(x => `<option value="${esc(x.nome)}">${esc(papel(x))}</option>`).join('')}</datalist>
       <span class="muted" style="font-size:.74rem"><b class="req">*</b> obrigatório</span></div>
     <div class="m-foot"><button class="fi-btn" data-act="close">Cancelar</button><button class="fi-btn fi-btn--primary" data-act="ficha-ok" data-col="${col}">Cadastrar</button></div>`;
   modal.showModal(); const f = modal.querySelector('[data-k="nome"]'); if (f) f.focus();
@@ -1242,22 +1362,29 @@ function fichaOk(col) {
     const ob = c.fixo || f.obrig;
     if (c.tipo === 'vinculo') {
       const ids = [...modal.querySelectorAll('[data-vinc]:checked')].map(x => x.dataset.vinc);
-      const novos = (modal.querySelector('[data-vnovo]').value || '').split(';').map(x => x.trim()).filter(Boolean);
-      val._vinc = { ids, novos }; if (ob && !ids.length && !novos.length) falta.push(f.pergunta || c.pergunta); return;
+      const novos = (modal.querySelector('[data-vnovo]').value || '').split(';').map(x => UP(x.trim())).filter(Boolean);
+      const nen = !!(modal.querySelector('[data-nenhum]') || {}).checked;
+      if (nen && (ids.length || novos.length)) { falta.push('marque “Nenhum” ou escolha processos, não os dois'); return; }
+      val._vinc = { ids, novos, nen }; if (ob && !ids.length && !novos.length && !nen) falta.push(f.pergunta || c.pergunta); return;
+    }
+    if (c.tipo === 'diretor') {
+      const ids = [...modal.querySelectorAll('[data-diretor]:checked')].map(x => '@' + x.dataset.diretor);
+      if (ob && !ids.length) falta.push(f.pergunta || c.pergunta); if (ids.length) val[c.k] = ids; return;
     }
     const el = modal.querySelector(`[data-k="${c.k}"]`), x = (el.value || '').trim();
     if (ob && !x) falta.push(f.pergunta || c.pergunta);
     if (c.tipo === 'pessoa') { if (x) { const m = S.participantes.find(p => norm(p.nome) === norm(x)); val[c.k] = [m ? '@' + m.id : x]; } }
-    else if (x) val[c.k] = x;
+    else if (x) val[c.k] = c.k === 'nome' ? UP(x) : x;
   });
   modal.querySelectorAll('.fi-field.erro').forEach(e => e.classList.remove('erro'));
   if (falta.length) {
     CAMPOS[col].forEach(c => { const f = cfg.campos[c.k] || {}; if (falta.includes(f.pergunta || c.pergunta)) { const e = modal.querySelector(`[data-campo="${c.k}"]`); if (e) e.classList.add('erro'); } });
     notify('Responda: ' + falta.join(' · '), 'warning'); return;
   }
-  const { ids, novos } = val._vinc || { ids: [], novos: [] }; delete val._vinc;
+  const { ids, novos, nen } = val._vinc || { ids: [], novos: [] }; delete val._vinc;
   const it = Object.assign({ id: uid(val.nome) }, NEW[col](), val);
   const criados = novos.map(n => Object.assign({ id: uid(n) }, NEW[v.outro](), { nome: n }));
+  if (col === 'modulos') it.semProcesso = !!nen && !ids.length && !criados.length;
   if (col === 'processos') it.modulos = [...ids, ...criados.map(x => x.id)];
   else criados.forEach(p => { p.modulos = [it.id]; });
   modal.close();
@@ -1275,13 +1402,13 @@ function abrirVinc(col, id) {
   const ops = S[v.outro].filter(o => !ja.includes(o.id));
   modal.innerHTML = `<div class="m-head"><h2>Vincular ${v.um} a “${esc(it.nome)}”</h2><button class="rm" data-act="close">✕</button></div>
     <div class="m-body"><label class="fi-field"><span class="fi-label">${v.rot} cadastrados</span><div class="vbox">${ops.map(o => `<label><input type="checkbox" data-vinc="${esc(o.id)}"> ${esc(o.nome)}</label>`).join('') || '<span class="muted">Todos já vinculados.</span>'}</div></label>
-      ${podeCad(v.outro, 'criar') ? `<label class="fi-field"><span class="fi-label">ou cadastrar ${v.um} novo</span><input class="fi-input" data-vnovo placeholder="Nome (vários separados por ;)"></label>` : ''}</div>
+      ${podeCad(v.outro, 'criar') ? `<label class="fi-field"><span class="fi-label">ou cadastrar ${v.um} novo</span><input class="fi-input up" data-vnovo data-upper placeholder="NOME (VÁRIOS SEPARADOS POR ;)"></label>` : ''}</div>
     <div class="m-foot"><button class="fi-btn" data-act="close">Cancelar</button><button class="fi-btn fi-btn--primary" data-act="vinc-ok" data-col="${col}" data-id="${esc(id)}">Vincular</button></div>`;
   modal.showModal();
 }
 function vincOk(col, id) {
   const v = VINC[col], ids = [...modal.querySelectorAll('[data-vinc]:checked')].map(x => x.dataset.vinc);
-  const nv = modal.querySelector('[data-vnovo]'), novos = nv ? nv.value.split(';').map(x => x.trim()).filter(Boolean) : [];
+  const nv = modal.querySelector('[data-vnovo]'), novos = nv ? nv.value.split(';').map(x => UP(x.trim())).filter(Boolean) : [];
   if (!ids.length && !novos.length) { notify(`Escolha ou digite um ${v.um}.`, 'warning'); return; }
   const criados = novos.map(n => Object.assign({ id: uid(n) }, NEW[v.outro](), { nome: n }));
   modal.close();
@@ -1289,24 +1416,24 @@ function vincOk(col, id) {
 }
 function vincRm(col, id, outro) {
   const v = VINC[col], it = byId(col, id), o = byId(v.outro, outro);
-  const ultimo = (x, c) => vincIds(c, x).length <= 1 && campoCfg(c, '_vinc').obrig;
+  const ultimo = (x, c) => c === 'processos' && vincIds(c, x).length <= 1 && campoCfg(c, '_vinc').obrig;
   if (ultimo(it, col)) { notify(`“${it.nome}” precisa de pelo menos um ${v.um} vinculado (ADM → Cadastro).`, 'warning'); return; }
   if (o && ultimo(o, v.outro)) { notify(`“${o.nome}” ficaria sem ${VINC[v.outro].um} vinculado.`, 'warning'); return; }
   commit(st => setVinc(st, col, id, outro, false), true);
 }
 function openPicker(p, single) {
-  const toks = getP(S, p) || [];
-  const ativos = S.participantes.filter(x => x.status !== 'Inativo' && !toks.includes('@' + x.id)).sort((a, b) => a.nome.localeCompare(b.nome));
+  const toks = getP(S, p) || [], soDir = /\.sponsor$/.test(p);
+  const ativos = (soDir ? diretores() : S.participantes.filter(x => x.status !== 'Inativo')).filter(x => !toks.includes('@' + x.id)).sort((a, b) => a.nome.localeCompare(b.nome));
   modal.innerHTML = `<div class="m-head"><h2>${single ? 'Definir' : 'Adicionar'} pessoa</h2><button class="rm" data-act="close">✕</button></div>
     <div class="m-body">
-      <label class="fi-field"><span class="fi-label">Participante cadastrado</span><select class="fi-select" id="pkSel"><option value="">—</option>${ativos.map(x => `<option value="@${esc(x.id)}">${esc(x.nome)} — ${esc(x.cargo)}</option>`).join('')}</select></label>
-      <label class="fi-field"><span class="fi-label">ou texto livre</span><input class="fi-input" id="pkTxt" placeholder="ex.: Gestor da área, Financeiro, Solicitante"><span class="fi-field__help">Se o texto for o nome de um participante, ele é vinculado ao cadastro.</span></label>
+      <label class="fi-field"><span class="fi-label">Participante cadastrado</span><select class="fi-select" id="pkSel"><option value="">—</option>${ativos.map(x => `<option value="@${esc(x.id)}">${esc(x.nome)}${papel(x) ? ' — ' + esc(papel(x)) : ''}</option>`).join('')}</select></label>
+      ${soDir ? `<span class="fi-field__help">Sponsor: somente participantes da Direção (ADM → Participantes, papel no projeto do grupo Direção).</span>` : `<label class="fi-field"><span class="fi-label">ou texto livre</span><input class="fi-input" id="pkTxt" placeholder="ex.: Gestor da área, Financeiro, Solicitante"><span class="fi-field__help">Se o texto for o nome de um participante, ele é vinculado ao cadastro.</span></label>`}
     </div>
     <div class="m-foot"><button class="fi-btn" data-act="close">Cancelar</button><button class="fi-btn fi-btn--primary" data-act="pk-ok" data-p="${esc(p)}" data-single="${single ? 1 : ''}">${single ? 'Definir' : 'Adicionar'}</button></div>`;
   modal.showModal(); $('#pkSel').focus();
 }
 function pickerOk(p, single) {
-  let tok = $('#pkSel').value || $('#pkTxt').value.trim();
+  let tok = $('#pkSel').value || ($('#pkTxt') ? $('#pkTxt').value.trim() : '');
   if (!tok) { notify('Escolha um participante ou digite um texto.', 'warning'); return; }
   if (tok[0] !== '@') { const m = S.participantes.find(x => norm(x.nome) === norm(tok)); if (m) tok = '@' + m.id; }
   modal.close();
@@ -1316,11 +1443,11 @@ function showPerson(pid) {
   const p = byId('participantes', pid); if (!p) return;
   const u = usage(pid), g = {};
   u.forEach(x => (g[x.col] = g[x.col] || []).push(x));
-  modal.innerHTML = `<div class="m-head"><span class="av lg">${esc(initials(p.nome))}</span><h2>${esc(p.nome)}<div class="muted" style="font-size:.76rem;font-weight:500;margin-top:2px">${esc(p.cargo)}</div></h2><button class="rm" data-act="close">✕</button></div>
+  modal.innerHTML = `<div class="m-head"><span class="av lg">${esc(initials(p.nome))}</span><h2>${esc(p.nome)}<div class="muted" style="font-size:.76rem;font-weight:500;margin-top:2px">${esc(papel(p))}</div></h2><button class="rm" data-act="close">✕</button></div>
     <div class="m-body">
       <div class="kv">
-        <div><div class="k">Área</div>${esc(nome('areas', p.area)) || '—'}</div><div><div class="k">Papel no projeto</div>${esc(nome('tipos', p.tipo)) || '—'}</div>
-        <div><div class="k">Nível de atuação</div>${esc(p.nivel) || '—'}</div><div><div class="k">Status</div>${pill(p.status)}</div>
+        <div><div class="k">Área</div>${esc(nome('areas', p.area)) || '—'}</div><div><div class="k">Papel no projeto</div>${esc(papel(p)) || '—'}</div>
+        <div><div class="k">Status</div>${pill(p.status)}</div>
         ${p.resp ? `<div class="full"><div class="k">Responsabilidades</div>${esc(p.resp)}</div>` : ''}
       </div>
       <div class="usage">${u.length ? Object.entries(g).map(([c, l]) => `<h4>${esc(COL_LABEL[c] || c)} · ${l.length}</h4><ul>${l.map(x => `<li>${esc(x.nome)} <span class="muted">— ${esc(x.papel)}</span></li>`).join('')}</ul>`).join('') : '<p class="muted">Ainda não vinculado a nenhum item.</p>'}</div>
@@ -1364,6 +1491,11 @@ document.addEventListener('click', async e => {
     case 'retry': flush(); break;
     case 'add': addItem(el.dataset.col); break;
     case 'novo': abrirFicha(el.dataset.col); break;
+    case 'et-pedir': etPedir(el.dataset.col, id, +el.dataset.dir); break;
+    case 'et-ok': etDecidir(el.dataset.col, id, true); break;
+    case 'et-no': etDecidir(el.dataset.col, id, false); break;
+    case 'et-cancel': commit(st => { const y = st[el.dataset.col].find(z => z.id === id); if (y) delete y.pedido; }, true); break;
+    case 'converter': converter(el.dataset.col, id); break;
     case 'ficha-ok': fichaOk(el.dataset.col); break;
     case 'vinc-add': abrirVinc(el.dataset.col, id); break;
     case 'vinc-ok': vincOk(el.dataset.col, id); break;
@@ -1379,11 +1511,6 @@ document.addEventListener('click', async e => {
     case 'proc-area': ui.procArea = id; render(); break;
     case 'proc-mod': ui.procMod = id; if (id) { ui.procArea = '*'; ui.procQ = ''; ui.procStatus = ''; } go('processos'); break;
     case 'ideia-st': ui.ideiaStatus = id; render(); break;
-    case 'move': {
-      const col = el.dataset.col, it = byId(col, id), ids = S.etapas.map(x => x.id), n = ids.indexOf(it.etapa) + (+el.dataset.dir);
-      if (n >= 0 && n < ids.length) commit(st => { const x = st[col].find(y => y.id === id); if (x) x.etapa = ids[n]; }, true);
-      break;
-    }
     case 'adm-go': if (modal.open) modal.close(); ui.admSec = id; go('adm'); break;
     case 'export-csv': exportCsv(); break;
     case 'cad-reset': if (await ask('Voltar a ficha de módulos e processos às perguntas e permissões padrão?')) commit(st => { st.cadastro = cadPadrao(); }, true); break;
@@ -1398,7 +1525,9 @@ document.addEventListener('focusout', e => {
   const t = e.target; if (!t.classList || !t.classList.contains('et') || !t.isContentEditable) return;
   const v = t.textContent.replace(/ /g, ' ').trim();
   if (v === (t.dataset.orig || '').trim()) return;
-  const p = t.dataset.p; commit(st => setP(st, p, v), false);
+  const p = t.dataset.p; let v2 = v;
+  if (/^(modulos|processos|sistemas)\.#[^.]+\.nome$/.test(p)) { v2 = UP(v); t.textContent = v2; }
+  commit(st => setP(st, p, v2), false);
   if (t.classList.contains('one') && !v) t.textContent = '';
 });
 document.addEventListener('keydown', e => {
@@ -1411,11 +1540,12 @@ document.addEventListener('keydown', e => {
 });
 document.addEventListener('change', e => {
   const t = e.target;
+  if (t.dataset && t.dataset.upper !== undefined) { const c = t.selectionStart; t.value = UP(t.value); try { t.setSelectionRange(c, c); } catch (err) {} }
   if (t.classList.contains('es')) { const p = t.dataset.p, v = t.value; commit(st => setP(st, p, v), true); return; }
   if (t.dataset.cfg && isAdm) { const p = t.dataset.cfg, v = t.type === 'checkbox' ? t.checked : t.value; commit(st => setP(st, p, v), true); return; }
   if (t.dataset.lista) { const k = t.dataset.lista, v = t.value.split('\n').map(s => s.trim()).filter(Boolean); commit(st => { st.listas[k] = v; }, false); }
 });
-document.addEventListener('input', e => { const k = e.target.dataset && e.target.dataset.ui; if (!k) return; ui[k] = e.target.value; (FILLS[ui.tab] || render)(); });
+document.addEventListener('input', e => { if (e.target.dataset && e.target.dataset.upper !== undefined) { const t = e.target, c = t.selectionStart; t.value = UP(t.value); try { t.setSelectionRange(c, c); } catch (err) {} return; } const k = e.target.dataset && e.target.dataset.ui; if (!k) return; ui[k] = e.target.value; (FILLS[ui.tab] || render)(); });
 modal.addEventListener('click', e => { if (e.target === modal) modal.close(); });
 window.addEventListener('hashchange', () => { const h = location.hash.slice(1); if (h && h !== ui.tab) go(h); });
 
