@@ -186,6 +186,30 @@ input.up::placeholder{text-transform:none}
 .upd{padding:10px 14px;border-left:4px solid transparent}
 .upd.nova{border-left-color:var(--exec)}
 .upd-f{margin-top:6px}
+/* Campo de anotação em destaque (claro e escuro) */
+.nform textarea{background:color-mix(in srgb,var(--doc) 8%,var(--fi-surface,#fff))!important;border:1.5px solid color-mix(in srgb,var(--doc) 45%,var(--fi-line,#dfe3e8))!important;color:var(--fi-text)!important;border-radius:8px}
+.nform textarea::placeholder{color:color-mix(in srgb,var(--doc) 70%,var(--fi-muted,#6b7280))}
+.nform textarea:focus{outline:none;border-color:var(--doc)!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--doc) 22%,transparent)}
+/* Processo com a mesma largura do módulo */
+.gauto .proc .raci{grid-template-columns:repeat(2,minmax(0,1fr))}
+.gauto .proc .raci>div{border-right:0}
+.gauto .proc .raci>div:nth-child(odd){border-right:1px solid var(--fi-line)}
+.gauto .proc .proc-bottom{grid-template-columns:repeat(2,minmax(0,1fr))}
+/* Página inteira */
+.bt-cheio{border:1px solid var(--fi-line,#dfe3e8);background:var(--fi-surface,#fff);color:var(--fi-muted);border-radius:6px;width:28px;height:28px;font-size:15px;line-height:1;cursor:pointer;flex:none}
+.bt-cheio:hover{color:var(--exec);border-color:var(--exec)}
+.cheio-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.cheio{display:block;max-width:1150px}
+.cheio>.fi-card{margin:0}
+.cheio .item h3,.cheio .proc-top h3{font-size:1.25rem}
+/* Ícone de bate-papo acima de "Atualizações" */
+.tab.tab-upd{flex-direction:column;gap:1px;padding-top:4px;padding-bottom:7px;justify-content:flex-end}
+.chat{display:inline-flex;align-items:center;gap:3px;line-height:1}
+.chat svg{width:15px;height:15px}
+.bal{display:inline-block;min-width:16px;padding:1px 5px;border-radius:999px;font-size:.6rem;font-weight:800;text-align:center;color:#fff;border:1px solid transparent}
+.bal.novas{background:#d6182f}
+.bal.mencoes{background:#1f5f8b}
+.bal.off{background:var(--fi-surface,#fff);color:var(--fi-text,#111);border-color:var(--fi-text,#111);filter:grayscale(1)}
 .trilha-w{margin:10px 0 2px}.trilha-w .k b{color:var(--exec)}
 .trilha{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:3px}
 .tr-s{display:flex;flex-direction:column;gap:3px;min-width:0}
@@ -934,7 +958,7 @@ async function converter(col, id) {
     st.modulos.forEach(m => { m.semProcesso = m.semProcesso && !st.processos.some(p => (p.modulos || []).includes(m.id)); });
   }, false);
   if (tgt === 'processos') { ui.procQ = x.nome; ui.procArea = '*'; ui.procStatus = ''; ui.procMod = ''; } else { ui.modQ = x.nome; ui.modPrio = ''; }
-  go(tgt);
+  ui.cheio = null; go(tgt);
   notify(`Convertido em ${VINC[col].um}.`, 'success');
 }
 
@@ -981,6 +1005,12 @@ function todasNotas() {
   ['modulos', 'processos'].forEach(col => (S[col] || []).forEach(x => (x.notas || []).forEach(n => out.push({ n, col, x }))));
   return out.sort((a, b) => String(b.n.em).localeCompare(String(a.n.em)));
 }
+function nMencoes() { try { const m = leituraMapa(); return todasNotas().filter(({ n }) => meMenciona(n) && !lida(n, m)).length; } catch (e) { return 0; } }
+function chatIcone() {
+  const n = nNaoLidas(), m = nMencoes();
+  return `<span class="chat" title="${n} nova(s) · ${m} menção(ões)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    <b class="bal novas${n ? '' : ' off'}">${n}</b><b class="bal mencoes${m ? '' : ' off'}">@${m}</b></span>`;
+}
 function nNaoLidas() { try { const m = leituraMapa(); return todasNotas().filter(({ n }) => !lida(n, m)).length; } catch (e) { return 0; } }
 function mencoesDe(txt) {
   const t = norm(txt), out = [];
@@ -997,7 +1027,7 @@ function novaNota(st, col, id, txt, extra) {
   it.notas = [Object.assign({ id: nid(), txt, por: quemSou(), porTok: meuTok(), em: new Date().toISOString(), men: mencoesDe(txt) }, extra || {}), ...(it.notas || [])];
 }
 function notasBloco(col, x) {
-  const ns = x.notas || [], aberto = ui.notasAbertas && ui.notasAbertas[x.id], vis = aberto ? ns : ns.slice(0, 3), mapa = leituraMapa();
+  const ns = x.notas || [], aberto = (ui.notasAbertas && ui.notasAbertas[x.id]) || (ui.cheio && ui.cheio.id === x.id), vis = aberto ? ns : ns.slice(0, 3), mapa = leituraMapa();
   const pode = canEdit, key = `${col}:${x.id}`;
   return `<div class="notas"><div class="k">Anotações gerais ${ns.length ? `<span class="count">${ns.length}</span>` : ''}${ns.filter(n => !lida(n, mapa)).length ? `<span class="nl-tag">${ns.filter(n => !lida(n, mapa)).length} não lida(s)</span>` : ''}</div>
     ${vis.map(n => `<div class="nota${lida(n, mapa) ? '' : ' nova'}${n.sis ? ' sis' : ''}" data-nota="${esc(n.id)}" tabindex="-1">
@@ -1026,6 +1056,15 @@ function vAtualizacoes() {
         <div class="nt">${notaHtml(n.txt)}</div>
         <div class="upd-f">${minhaNota(n) ? '<span class="muted">Sua anotação</span>' : `<button class="linkbtn" data-act="${li ? 'upd-naolida' : 'upd-lida'}" data-n="${esc(n.id)}">${li ? 'Marcar como não lida' : 'Marcar como lida'}</button>`}</div>
       </div>`; }).join('')}</div>`}`;
+}
+
+/* Visualização de um cartão em página inteira */
+const BT_CHEIO = (col, x) => ui.cheio ? '' : `<button class="bt-cheio" data-act="cheio" data-col="${col}" data-id="${esc(x.id)}" title="Ver em página inteira">⤢</button>`;
+function barraCheio(col) {
+  if (!ui.cheio || ui.cheio.col !== col) return '';
+  const x = byId(col, ui.cheio.id);
+  return `<div class="cheio-bar"><button class="fi-btn" data-act="cheio-sair">▦ Voltar à visualização por cards</button>
+    <span class="muted">${col === 'modulos' ? 'Módulo' : 'Processo'} em página inteira${x ? ` · <b>${esc(x.nome)}</b>` : ''}</span></div>`;
 }
 
 /* Chips do vínculo recíproco módulo ⇄ processo */
@@ -1063,7 +1102,7 @@ const FAM_OF = Object.fromEntries(MENU.flatMap(g => g.tabs.map(([id]) => [id, g]
 function renderMenu() {
   $('#menu').innerHTML = MENU.filter(g => !g.admin || isAdm).map(g => `<div class="fam fam-${g.fam}">
     ${g.label ? `<span class="fam-l">${ICON[g.fam]}${g.label}</span>` : ''}
-    ${g.tabs.map(([id, l]) => `<a href="#${id}" class="tab${ui.tab === id ? ' on' : ''}" data-act="tab" data-id="${id}">${g.label ? '' : ICON[g.fam]}${l}${id === 'atualizacoes' && nNaoLidas() ? `<b class="tab-badge">${nNaoLidas()}</b>` : ''}</a>`).join('')}
+    ${g.tabs.map(([id, l]) => `<a href="#${id}" class="tab${ui.tab === id ? ' on' : ''}${id === 'atualizacoes' ? ' tab-upd' : ''}" data-act="tab" data-id="${id}">${g.label ? '' : ICON[g.fam]}${id === 'atualizacoes' ? chatIcone() + l : l}</a>`).join('')}
   </div>`).join('');
 }
 function go(tab) {
@@ -1114,7 +1153,6 @@ function vModulos() {
       <input class="fi-input search" placeholder="Buscar módulo, pessoa, dependência…" data-ui="modQ" value="${esc(ui.modQ)}">
       <select class="fi-select" data-ui="modPrio">${optList(S.listas.prioridades, ui.modPrio, 'Todas as prioridades')}</select>
       <span style="flex:1"></span>
-      <div class="seg"><button class="${ui.modView === 'cards' ? 'on' : ''}" data-act="view" data-k="modView" data-id="cards">Cartões</button><button class="${ui.modView === 'planilha' ? 'on' : ''}" data-act="view" data-k="modView" data-id="planilha">Planilha</button></div>
     </div>
     <div id="list"></div>`;
   fillModulos();
@@ -1124,24 +1162,14 @@ function fillModulos() {
   const l = S.modulos.filter(m => (!ui.modPrio || m.prioridade === ui.modPrio) &&
     (!q || norm([m.nome, m.dep, m.escopo, m.proximos, m.objetivo, ...procsDoModulo(m.id).map(p => p.nome), ...PEOPLE_FIELDS.modulos.flatMap(([k]) => (m[k] || []).map(tokName))].join(' ')).includes(q)));
   if (!ui.edit) l.sort((a, b) => (ord[a.prioridade] ?? 3) - (ord[b.prioridade] ?? 3));
+  if (ui.cheio && ui.cheio.col === 'modulos') { const x = byId('modulos', ui.cheio.id); l.splice(0, l.length, ...(x ? [x] : [])); }
   if (!l.length) { $('#list').innerHTML = `<div class="fi-card fi-empty">Nenhum módulo encontrado.</div>`; return; }
   const P = (m, k) => `modulos.#${m.id}.${k}`;
-  if (ui.modView === 'planilha') {
-    $('#list').innerHTML = `<div class="fi-table-wrap"><table class="fi-table sheet"><thead><tr>
-      <th>Módulo</th><th>Processos</th><th>Prioridade</th><th>Situação</th><th>Etapa</th><th>Sponsor</th><th>Gestor da área</th><th>Coord. técnico</th><th>Desenvolvimento</th><th>Processos</th><th>Key User</th><th>Dependências</th><th>Próximos passos</th><th></th></tr></thead>
-      <tbody>${l.map(m => `<tr>
-        <td class="wide"><b>${T(P(m, 'nome'), { one: 1 })}</b></td><td>${VINCS('modulos', m)}</td><td class="nw">${SEL(P(m, 'prioridade'), 'prioridades')}</td>
-        <td class="nw">${SEL(P(m, 'status'), 'stModulo')}</td><td class="nw">${esc(nome('etapas', m.etapa))}${m.pedido ? ' ⏳' : ''}</td>
-        ${PEOPLE_FIELDS.modulos.map(([k]) => `<td>${PPL(P(m, k))}</td>`).join('')}
-        <td>${T(P(m, 'dep'))}</td><td class="wide">${T(P(m, 'proximos'))}</td><td class="nw">${RM('modulos', m.id)}</td></tr>`).join('')}
-      </tbody></table></div>`;
-    return;
-  }
-  $('#list').innerHTML = `<div class="gauto">${l.map(m => {
+  $('#list').innerHTML = `${barraCheio('modulos')}<div class="${ui.cheio ? 'cheio' : 'gauto'}">${l.map(m => {
     const np = procsDoModulo(m.id).length, mc = k => campoCfg('modulos', k).mostrar !== false;
-    return `<div class="fi-card item">
+    return `<div class="fi-card item" data-card="${esc(m.id)}">
       <div class="card-top"><div class="grow"><h3>${T(P(m, 'nome'), { one: 1 })}</h3>
-        <div class="sub">Dependências: ${T(P(m, 'dep'), { ph: '—' })}</div></div>${RM('modulos', m.id)}</div>
+        <div class="sub">Dependências: ${T(P(m, 'dep'), { ph: '—' })}</div></div>${BT_CHEIO('modulos', m)}${RM('modulos', m.id)}</div>
       <div class="row">${SEL(P(m, 'prioridade'), 'prioridades', { title: 'Prioridade' })}${SEL(P(m, 'status'), 'stModulo', { title: 'Situação' })}<span class="tag">Etapa: ${esc(nome('etapas', m.etapa))}</span>${CONV('modulos', m)}</div>
       ${trilha(m)}${etapaCtl('modulos', m)}${anterior('modulos', m)}
       <div class="vinc"><div class="k">Processos vinculados</div>${VINCS('modulos', m)}</div>
@@ -1166,17 +1194,19 @@ function vProcessos() {
   $('#view').className = 'fi-page fam-ink-exec';
   $('#view').innerHTML = `
     ${head('processos', `<button class="fi-btn" data-act="export-csv">⭳ CSV (Excel)</button>${ADD('processos', 'Processo')}`)}
-    <div class="subnav">
-      <button class="${ui.procArea === '*' ? 'on' : ''}" data-act="proc-area" data-id="*">Todas<b>${S.processos.length}</b></button>
-      ${areas.map(a => `<button class="${ui.procArea === a.id ? 'on' : ''}" data-act="proc-area" data-id="${esc(a.id)}">${esc(a.nome)}<b>${cnt(a.id)}</b></button>`).join('')}
-      ${semArea ? `<button class="${ui.procArea === '' ? 'on' : ''}" data-act="proc-area" data-id="">Sem área<b>${semArea}</b></button>` : ''}
+    <div class="resumo">
+      <span><b>${S.processos.length}</b> processos · ${S.processos.filter(p => p.status === 'Implantado').length} implantados</span>
+      <span><b>${S.processos.filter(p => !(p.modulos || []).length).length}</b> sem módulo</span>
+      <span><b>${S.processos.filter(p => p.pedido).length}</b> aguardando aprovação de etapa</span>
+      <span>áreas com processo <b>${new Set(S.processos.map(p => p.area).filter(a => byId('areas', a))).size}/${areas.length}</b></span>
+      <a data-act="tab" data-id="atualizacoes"${nNaoLidas() ? ' class="alerta"' : ''}><b>${nNaoLidas()}</b> atualização(ões) não lida(s)</a>
     </div>
     <div class="toolbar">
       <input class="fi-input search" placeholder="Buscar processo ou pessoa…" data-ui="procQ" value="${esc(ui.procQ)}">
+      <select class="fi-select" data-ui="procArea"><option value="*"${ui.procArea === '*' ? ' selected' : ''}>Todas as áreas (${S.processos.length})</option>${areas.map(a => `<option value="${esc(a.id)}"${ui.procArea === a.id ? ' selected' : ''}>${esc(a.nome)} (${cnt(a.id)})</option>`).join('')}${semArea ? `<option value=""${ui.procArea === '' ? ' selected' : ''}>Sem área (${semArea})</option>` : ''}</select>
       <select class="fi-select" data-ui="procStatus">${optList(S.listas.stProcesso, ui.procStatus, 'Todos os status')}</select>
       ${ui.procMod ? `<span class="tag">Módulo: ${esc(nome('modulos', ui.procMod))} <button class="x" data-act="proc-mod" data-id="">×</button></span>` : ''}
       <span style="flex:1"></span>
-      <div class="seg"><button class="${ui.procView === 'cards' ? 'on' : ''}" data-act="view" data-k="procView" data-id="cards">Cartões</button><button class="${ui.procView === 'planilha' ? 'on' : ''}" data-act="view" data-k="procView" data-id="planilha">Planilha</button></div>
     </div>
     <div class="legend"><span><i>R</i>Responsável</span><span><i>E</i>Executor</span><span><i>A</i>Aprovador</span><span><i>C</i>Consultado</span><span><i>I</i>Informado</span><span><i>S</i>Suplente</span></div>
     <div id="list"></div>`;
@@ -1187,26 +1217,16 @@ function fillProcessos() {
   const l = S.processos.filter(p => (ui.procArea === '*' || (ui.procArea === '' ? !byId('areas', p.area) : p.area === ui.procArea)) &&
     (!ui.procStatus || p.status === ui.procStatus) && (!ui.procMod || (p.modulos || []).includes(ui.procMod)) &&
     (!q || norm([p.nome, p.obs, p.integ, p.gatilho, p.entrega, p.passos, ...(p.modulos || []).map(m => nome('modulos', m)), ...PEOPLE_FIELDS.processos.flatMap(([k]) => (p[k] || []).map(tokName))].join(' ')).includes(q)));
+  if (ui.cheio && ui.cheio.col === 'processos') { const x = byId('processos', ui.cheio.id); l.splice(0, l.length, ...(x ? [x] : [])); }
   if (!l.length) { $('#list').innerHTML = `<div class="fi-card fi-empty"><div>Nenhum processo nesta seleção.${canEdit && !ui.edit ? '<br><br>Clique em <b>✎ Editar</b> no topo para cadastrar.' : ''}</div></div>`; return; }
   const P = (p, k) => `processos.#${p.id}.${k}`;
-  if (ui.procView === 'planilha') {
-    $('#list').innerHTML = `<div class="fi-table-wrap"><table class="fi-table sheet"><thead><tr>
-      <th>Processo</th><th>Área</th><th>Módulos</th><th>Responsável</th><th>Executor</th><th>Aprovador</th><th>Consultado</th><th>Informado</th><th>Suplente</th><th>Prazo / SLA</th><th>Escalonamento</th><th>Integração</th><th>Status</th><th>Etapa</th><th>Observações</th><th></th></tr></thead>
-      <tbody>${l.map(p => `<tr>
-        <td class="wide"><b>${T(P(p, 'nome'), { one: 1 })}</b></td><td>${REF(P(p, 'area'), 'areas')}</td><td>${VINCS('processos', p)}</td>
-        ${PEOPLE_FIELDS.processos.map(([k]) => `<td>${PPL(P(p, k), { single: k === 'resp', empty: '—' })}</td>`).join('')}
-        <td>${T(P(p, 'prazo'))}</td><td>${T(P(p, 'escal'))}</td><td>${T(P(p, 'integ'))}</td><td class="nw">${SEL(P(p, 'status'), 'stProcesso')}</td><td class="nw">${esc(nome('etapas', p.etapa))}${p.pedido ? ' ⏳' : ''}</td>
-        <td class="wide">${T(P(p, 'obs'))}</td><td class="nw">${RM('processos', p.id)}</td></tr>`).join('')}
-      </tbody></table></div>`;
-    return;
-  }
   const L = { resp: 'R', exec: 'E', aprov: 'A', cons: 'C', inf: 'I', sup: 'S' };
-  $('#list').innerHTML = `<div class="fi-grid fi-grid--2">${l.map(p => `<div class="fi-card proc">
+  $('#list').innerHTML = `${barraCheio('processos')}<div class="${ui.cheio ? 'cheio' : 'gauto'}">${l.map(p => `<div class="fi-card proc" data-card="${esc(p.id)}">
       <div class="proc-top"><div class="grow" style="flex:1;min-width:0"><h3>${T(P(p, 'nome'), { one: 1 })}</h3>
         <div class="sub row">${REF(P(p, 'area'), 'areas', { tag: 1, empty: 'Sem área' })}${SEL(P(p, 'status'), 'stProcesso')}<span class="tag">Etapa: ${esc(nome('etapas', p.etapa))}</span>${CONV('processos', p)}</div>
         <div class="vinc"><div class="k">Módulos envolvidos</div>${VINCS('processos', p)}</div>
         <div class="vinc"><div class="k">Processos relacionados</div>${RELS('processos', p)}</div>${trilha(p)}${etapaCtl('processos', p)}</div>
-        ${RM('processos', p.id)}</div>
+        ${BT_CHEIO('processos', p)}${RM('processos', p.id)}</div>
       <div class="raci">${PEOPLE_FIELDS.processos.map(([k, lb]) => `<div><div class="k"><i>${L[k]}</i>${lb}</div>${PPL(P(p, k), { single: k === 'resp' })}</div>`).join('')}</div>
       <div class="proc-bottom">
         <div><div class="k">Prazo / SLA</div>${T(P(p, 'prazo'), { ph: 'A definir' })}</div>
@@ -1534,7 +1554,7 @@ function fichaOk(col) {
     rels.forEach(o => setRel(st, col, it.id, o, true));
   }, false);
   if (col === 'processos') { ui.procStatus = ''; ui.procQ = ''; ui.procMod = ''; ui.procArea = '*'; } else { ui.modPrio = ''; ui.modQ = ''; }
-  render();
+  ui.cheio = null; render();
   notify(`${col === 'modulos' ? 'Módulo' : 'Processo'} cadastrado${criados.length ? ` com ${criados.length} ${v.um}(s) novo(s) — complete a ficha deles` : ''}`, 'success');
 }
 /* Vincular / desvincular a partir de qualquer um dos lados */
@@ -1627,7 +1647,9 @@ document.addEventListener('click', async e => {
   const a = el.dataset.act, id = el.dataset.id;
   if (el.tagName === 'A' && a === 'tab') e.preventDefault();
   switch (a) {
-    case 'tab': go(id); scrollTo({ top: 0 }); break;
+    case 'tab': ui.cheio = null; go(id); scrollTo({ top: 0 }); break;
+    case 'cheio': ui.cheio = { col: el.dataset.col, id }; render(); scrollTo({ top: 0 }); break;
+    case 'cheio-sair': ui.cheio = null; render(); break;
     case 'toggle-edit': ui.edit = !ui.edit; try { sessionStorage.setItem('projetoFiorella.edit', ui.edit ? '1' : ''); } catch (err) {} render(); break;
     case 'retry': flush(); break;
     case 'add': addItem(el.dataset.col); break;
@@ -1650,7 +1672,8 @@ document.addEventListener('click', async e => {
       const c = el.dataset.col, x = byId(c, id); if (!x) break;
       setLeitura([el.dataset.n], 1);
       ui.notasAbertas = ui.notasAbertas || {}; ui.notasAbertas[id] = true;
-      if (c === 'processos') { ui.procQ = x.nome; ui.procArea = '*'; ui.procStatus = ''; ui.procMod = ''; ui.procView = 'cards'; } else { ui.modQ = x.nome; ui.modPrio = ''; ui.modView = 'cards'; }
+      if (c === 'processos') { ui.procQ = ''; ui.procArea = '*'; ui.procStatus = ''; ui.procMod = ''; } else { ui.modQ = ''; ui.modPrio = ''; }
+      ui.cheio = { col: c, id };
       ui.focus = `[data-nota="${el.dataset.n}"]`; go(c);
       setTimeout(() => { const e = document.querySelector(`[data-nota="${el.dataset.n}"]`); if (e) { e.classList.add('pisca'); setTimeout(() => e.classList.remove('pisca'), 2200); } }, 50);
       break;
@@ -1664,7 +1687,7 @@ document.addEventListener('click', async e => {
     case 'vinc-add': abrirVinc(el.dataset.col, id); break;
     case 'vinc-ok': vincOk(el.dataset.col, id); break;
     case 'vinc-rm': vincRm(el.dataset.col, id, el.dataset.o); break;
-    case 'vinc-ir': if (modal.open) modal.close(); if (el.dataset.col === 'processos') { ui.procMod = ''; ui.procQ = (byId('processos', id) || {}).nome || ''; ui.procArea = '*'; ui.procStatus = ''; go('processos'); } else { ui.modQ = (byId('modulos', id) || {}).nome || ''; ui.modPrio = ''; go('modulos'); } break;
+    case 'vinc-ir': if (modal.open) modal.close(); ui.cheio = null; if (el.dataset.col === 'processos') { ui.procMod = ''; ui.procQ = (byId('processos', id) || {}).nome || ''; ui.procArea = '*'; ui.procStatus = ''; go('processos'); } else { ui.modQ = (byId('modulos', id) || {}).nome || ''; ui.modPrio = ''; go('modulos'); } break;
     case 'rm': removeItem(el.dataset.col, id); break;
     case 'ppl-add': openPicker(el.dataset.p, !!el.dataset.single); break;
     case 'ppl-rm': commit(st => { const arr = getP(st, el.dataset.p) || []; arr.splice(+el.dataset.i, 1); }, true); break;
@@ -1673,7 +1696,7 @@ document.addEventListener('click', async e => {
     case 'close': modal.close(); break;
     case 'view': ui[el.dataset.k] = id; render(); break;
     case 'proc-area': ui.procArea = id; render(); break;
-    case 'proc-mod': ui.procMod = id; if (id) { ui.procArea = '*'; ui.procQ = ''; ui.procStatus = ''; } go('processos'); break;
+    case 'proc-mod': ui.cheio = null; ui.procMod = id; if (id) { ui.procArea = '*'; ui.procQ = ''; ui.procStatus = ''; } go('processos'); break;
     case 'ideia-st': ui.ideiaStatus = id; render(); break;
     case 'adm-go': if (modal.open) modal.close(); ui.admSec = id; go('adm'); break;
     case 'export-csv': exportCsv(); break;
