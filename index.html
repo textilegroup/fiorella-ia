@@ -246,6 +246,12 @@ input.up::placeholder{text-transform:none}
 button.tri-row{display:flex;align-items:center;gap:8px;width:100%;text-align:left;border:1px solid var(--fi-line,#dfe3e8);background:var(--fi-surface,#fff);color:var(--fi-text);border-radius:7px;padding:7px 10px;margin:4px 0;font:inherit;font-size:.84rem;cursor:pointer}
 button.tri-row:hover{border-color:var(--exec)}
 .tri-go{margin-left:auto;color:var(--exec);font-weight:700;font-size:.76rem}
+.men-pop{position:absolute;z-index:200;background:var(--fi-surface,#fff);color:var(--fi-text);border:1px solid var(--fi-line,#dfe3e8);border-radius:9px;box-shadow:0 10px 28px rgba(0,0,0,.22);padding:4px;max-width:340px}
+.men-tit{font-size:.62rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--fi-muted);padding:4px 8px 2px}
+.men-op{display:flex;align-items:center;gap:8px;width:100%;border:0;background:none;color:var(--fi-text);font:inherit;font-size:.84rem;text-align:left;padding:6px 8px;border-radius:6px;cursor:pointer}
+.men-op .muted{font-size:.72rem;margin-left:auto;padding-left:10px}
+.men-op:hover,.men-op.on{background:color-mix(in srgb,var(--doc) 14%,transparent)}
+.nhint{font-size:.74rem}
 .trilha-w{margin:10px 0 2px}.trilha-w .k b{color:var(--exec)}
 .trilha{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
 .tr-s{display:flex;flex-direction:column;gap:3px;min-width:0}
@@ -1185,7 +1191,7 @@ function notasBloco(col, x) {
       <div class="nt">${notaHtml(n.txt)}</div></div>`).join('') || '<div class="muted" style="font-size:.76rem">Nenhuma anotação ainda.</div>'}
     ${ns.length > 3 ? `<button class="linkbtn" data-act="notas-tog" data-id="${esc(x.id)}">${aberto ? 'Mostrar menos' : `Ver todas (${ns.length})`}</button>` : ''}
     ${pode ? `<div class="nform"><textarea class="fi-input" rows="2" data-nota-txt="${key}" placeholder="Registrar andamento… use @ para mencionar"></textarea>
-      <div class="nform-bt"><select class="fi-select nmen" data-men-for="${key}"><option value="">@ mencionar…</option>${S.participantes.filter(p => p.status !== 'Inativo').map(p => `<option value="${esc(p.nome)}">${esc(p.nome)}</option>`).join('')}</select>
+      <div class="nform-bt"><span class="muted nhint">Digite <b>@</b> para mencionar alguém</span>
       <button class="fi-btn fi-btn--primary bt-s" data-act="nota-add" data-col="${col}" data-id="${esc(x.id)}">Registrar</button></div></div>` : ''}
   </div>`;
 }
@@ -1208,17 +1214,22 @@ function linhaAprov({ col, x }, comBotoes) {
       ${podeCad(col, 'editar') ? `<button class="fi-btn bt-s" data-act="et-cancel" data-col="${col}" data-id="${esc(x.id)}">Cancelar pedido</button>` : ''}</div>
   </div>`;
 }
+function logLink(r) { const [c2, x] = achaItem(r.col, r.item);
+  return x ? `<button class="vchip" data-act="cheio-de" data-col="${c2}" data-id="${esc(r.item)}">${colRot(c2)} · ${esc(rotItem(c2, x))} ↗</button>` : (r.nome ? `<span class="muted">${esc((r.cod ? r.cod + ' · ' : '') + r.nome)} (removido)</span>` : ''); }
 function vLog() {
   const tipos = ['Etapa', 'Cadastro', 'Triagem', 'Condição'], f = ui.logF || '', all = S.log || [];
-  const it = ui.logItem || '', l = all.filter(r => (!f || r.tipo === f) && (!it || r.item === it)).slice(0, 400);
-  const itens = new Map(); all.forEach(r => { const k = r.item; if (r.item && !itens.has(k)) { const [c2, x] = achaItem(r.col, r.item); itens.set(k, `${colRot(c2)} · ${x ? rotItem(c2, x) : `${r.cod ? r.cod + ' · ' : ''}${r.nome || r.item} (removido)`}`); } });
-  const link = r => { const [c2, x] = achaItem(r.col, r.item);
-    return x ? `<button class="vchip" data-act="cheio-de" data-col="${c2}" data-id="${esc(r.item)}">${colRot(c2)} · ${esc(rotItem(c2, x))} ↗</button>` : (r.nome ? `<span class="muted">${esc((r.cod ? r.cod + ' · ' : '') + r.nome)} (removido)</span>` : ''); };
   return `<div class="subnav"><button class="${!f ? 'on' : ''}" data-act="log-f" data-id="">Tudo<b>${all.length}</b></button>${tipos.map(t => `<button class="${f === t ? 'on' : ''}" data-act="log-f" data-id="${t}">${t}<b>${all.filter(r => r.tipo === t).length}</b></button>`).join('')}</div>
-    <div class="toolbar"><select class="fi-select" data-ui="logItem" style="min-width:320px"><option value="">Todos os itens</option>${[...itens].sort((a, b) => a[1].localeCompare(b[1])).map(([k, lb]) => `<option value="${esc(k)}"${it === k ? ' selected' : ''}>${esc(lb)}</option>`).join('')}</select>${it ? `<button class="fi-btn bt-s" data-act="log-item-x">× Limpar filtro</button>` : ''}</div>
+    <div class="toolbar"><input class="fi-input search" data-ui="logQ" value="${esc(ui.logQ || '')}" placeholder="Digite o ID do item (ex.: M201, P300, T104) ou parte do nome…" autocomplete="off" style="max-width:420px"><span class="muted" id="logCnt" style="font-size:.78rem"></span></div>
     <div class="muted" style="font-size:.78rem;margin-bottom:10px">Histórico automático: aprovações, movimentações de etapa, cadastros, conversões, exclusões, condição e triagem. Não entra no bate-papo.</div>
-    ${!l.length ? `<div class="fi-card fi-empty">Nenhuma atividade registrada.</div>` : `<div class="fi-card log"><table class="fi-table"><tbody>${l.map(r => `<tr>
-      <td class="nw muted">${esc(dataBR(r.em))}</td><td class="nw"><span class="log-t log-${esc(norm(r.tipo))}">${esc(r.tipo)}</span></td><td class="nw"><b>${esc(r.por || '')}</b></td><td>${esc(r.txt)}</td><td class="nw">${link(r)}</td></tr>`).join('')}</tbody></table></div>`}`;
+    <div id="logList"></div>`;
+}
+function fillLog() {
+  const f = ui.logF || '', q = norm(ui.logQ || '').replace(/\s+/g, ''), all = S.log || [];
+  const chave = r => { const [c2, x] = achaItem(r.col, r.item); return norm(((x && x.cod) || r.cod || '') + ' ' + ((x && (x.nome || x.titulo)) || r.nome || '') + ' ' + ((x && x.codAnterior) || '') + ' ' + ((x && x.convertido && x.convertido.cod) || '')).replace(/\s+/g, ''); };
+  const l = all.filter(r => (!f || r.tipo === f) && (!q || chave(r).includes(q))), vis = l.slice(0, 400);
+  const c = $('#logCnt'); if (c) c.textContent = q ? `${l.length} registro(s) encontrado(s)` : '';
+  $('#logList').innerHTML = !vis.length ? `<div class="fi-card fi-empty">${q ? 'Nenhum registro para este ID.' : 'Nenhuma atividade registrada.'}</div>` : `<div class="fi-card log"><table class="fi-table"><tbody>${vis.map(r => `<tr>
+      <td class="nw muted">${esc(dataBR(r.em))}</td><td class="nw"><span class="log-t log-${esc(norm(r.tipo))}">${esc(r.tipo)}</span></td><td class="nw"><b>${esc(r.por || '')}</b></td><td>${esc(r.txt)}</td><td class="nw">${logLink(r)}</td></tr>`).join('')}</tbody></table></div>`;
 }
 function vAprovacoes() {
   const k = r => r.col + ':' + r.x.id, mim = paraMim(), mk = new Set(mim.map(k)), meus = meusPedidos().filter(r => !mk.has(k(r))), meusK = new Set(meus.map(k)), todos = pedidosPendentes();
@@ -1240,6 +1251,7 @@ function vAtualizacoes() {
   if (guia === 'log') {
     $('#view').className = 'fi-page fam-ink-exec';
     $('#view').innerHTML = `${head('atualizacoes')}${abas}${vLog()}`;
+    fillLog();
     return;
   }
   if (guia === 'aprovacoes') {
@@ -1736,7 +1748,7 @@ function vAdm() {
 }
 
 const VIEWS = { atualizacoes: vAtualizacoes, modulos: vModulos, processos: vProcessos, implantacao: vImplantacao, backlog: vBacklog, visao: vVisao, equipe: vEquipe, sistemas: vSistemas, adm: vAdm };
-const FILLS = { modulos: fillModulos, processos: fillProcessos };
+const FILLS = { modulos: fillModulos, processos: fillProcessos, atualizacoes: () => (ui.updTab === 'log' && $('#logList') ? fillLog() : render()) };
 
 /* =====================================================================
    9. AÇÕES
@@ -2055,6 +2067,41 @@ document.addEventListener('change', e => {
 document.addEventListener('input', e => { if (e.target.dataset && e.target.dataset.upper !== undefined) { const t = e.target, c = t.selectionStart; t.value = UP(t.value); try { t.setSelectionRange(c, c); } catch (err) {} return; } const k = e.target.dataset && e.target.dataset.ui; if (!k) return; ui[k] = e.target.value; (FILLS[ui.tab] || render)(); });
 modal.addEventListener('click', e => { if (e.target === modal) modal.close(); });
 modal.addEventListener('close', () => { modal.dataset.origem = ''; });
+
+/* ---------- @menção: ao digitar @ abre a lista de pessoas para clicar ---------- */
+const men = { el: null, ta: null, ini: -1, itens: [], sel: 0 };
+function menFechar() { if (men.el) men.el.hidden = true; men.ta = null; men.ini = -1; }
+function menAbrir(ta) {
+  const pos = ta.selectionStart, antes = ta.value.slice(0, pos), m = antes.match(/(^|\s)@([^\s@]*)$/);
+  if (!m) { menFechar(); return; }
+  const q = norm(m[2]);
+  men.itens = S.participantes.filter(p => p.status !== 'Inativo' && (!q || norm(p.nome).startsWith(q) || norm(p.nome).includes(q))).sort((a, b) => (q && norm(b.nome).startsWith(q)) - (q && norm(a.nome).startsWith(q)) || a.nome.localeCompare(b.nome)).slice(0, 8);
+  if (!men.itens.length) { menFechar(); return; }
+  if (!men.el) { men.el = document.createElement('div'); men.el.className = 'men-pop'; document.body.appendChild(men.el);
+    men.el.addEventListener('mousedown', e => { const b = e.target.closest('[data-men-i]'); if (!b) return; e.preventDefault(); menEscolher(+b.dataset.menI); }); }
+  men.ta = ta; men.ini = pos - m[2].length - 1; if (men.sel >= men.itens.length) men.sel = 0;
+  men.el.innerHTML = `<div class="men-tit">Mencionar</div>${men.itens.map((p, i) => `<button type="button" class="men-op${i === men.sel ? ' on' : ''}" data-men-i="${i}"><span class="av">${esc(initials(p.nome))}</span><b>${esc(p.nome)}</b><span class="muted">${esc(papel(p))}</span></button>`).join('')}`;
+  const r = ta.getBoundingClientRect();
+  men.el.style.left = (r.left + scrollX) + 'px'; men.el.style.top = (r.bottom + scrollY + 4) + 'px'; men.el.style.minWidth = Math.min(r.width, 320) + 'px';
+  men.el.hidden = false;
+}
+function menEscolher(i) {
+  const p = men.itens[i], ta = men.ta; if (!p || !ta) return;
+  const pos = ta.selectionStart, txt = '@' + p.nome + ' ';
+  ta.value = ta.value.slice(0, men.ini) + txt + ta.value.slice(pos);
+  const c = men.ini + txt.length; ta.focus(); ta.setSelectionRange(c, c);
+  menFechar();
+}
+document.addEventListener('input', e => { const t = e.target; if (t.dataset && t.dataset.notaTxt !== undefined) { men.sel = 0; menAbrir(t); } });
+document.addEventListener('click', e => { const t = e.target; if (t.dataset && t.dataset.notaTxt !== undefined) menAbrir(t); else if (!e.target.closest('.men-pop')) menFechar(); });
+document.addEventListener('focusout', e => { if (e.target.dataset && e.target.dataset.notaTxt !== undefined) setTimeout(() => { if (document.activeElement !== men.ta) menFechar(); }, 150); });
+document.addEventListener('keydown', e => {
+  const t = e.target; if (!men.ta || t !== men.ta || !men.el || men.el.hidden) return;
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); men.sel = (men.sel + (e.key === 'ArrowDown' ? 1 : -1) + men.itens.length) % men.itens.length; menAbrir(t); }
+  else if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); menEscolher(men.sel); }
+  else if (e.key === 'Escape') { e.preventDefault(); menFechar(); }
+}, true);
+window.addEventListener('scroll', () => { if (men.ta && men.el && !men.el.hidden) menAbrir(men.ta); }, { passive: true });
 window.addEventListener('hashchange', () => { const h = location.hash.slice(1); if (h && h !== ui.tab) go(h); });
 
 /* =====================================================================
