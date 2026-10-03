@@ -145,7 +145,7 @@ dialog .m-body{max-height:calc(100vh - 170px)}
 .nome-cel .av{flex:none}
 .nome-cel b,.nome-cel .et{white-space:nowrap;overflow-wrap:normal;word-break:normal}
 .sheet td.nw .et{overflow-wrap:normal;word-break:normal}
-.et[data-p$=".nome"][data-p^="modulos."],.et[data-p$=".nome"][data-p^="processos."],.et[data-p$=".nome"][data-p^="sistemas."],input.up{text-transform:uppercase}
+.et[data-p$=".titulo"][data-p^="ideias."],.et[data-p$=".nome"][data-p^="modulos."],.et[data-p$=".nome"][data-p^="processos."],.et[data-p$=".nome"][data-p^="sistemas."],input.up{text-transform:uppercase}
 input.up::placeholder{text-transform:none}
 .nenhum{display:flex;gap:6px;align-items:center;font-size:.84rem;margin-top:4px;cursor:pointer}
 .etapa-ctl{margin-top:8px;display:grid;gap:6px}
@@ -643,6 +643,8 @@ const FIM = '__fim';
 /* Código único de cada cartão: Triagem T100+, Módulos M200+, Processos P300+ (atribuído uma vez, nunca reutilizado) */
 const COD_BASE = { ideias: ['T', 100], modulos: ['M', 200], processos: ['P', 300] };
 function garantirCods(st) {
+  ['modulos', 'processos', 'sistemas'].forEach(c => (st[c] || []).forEach(x => { if (x.nome && x.nome !== UP(x.nome)) x.nome = UP(x.nome); }));
+  (st.ideias || []).forEach(x => { if (x.titulo && x.titulo !== UP(x.titulo)) x.titulo = UP(x.titulo); });
   st.seq = st.seq || {};
   for (const col in COD_BASE) {
     const [L, base] = COD_BASE[col], arr = st[col] || [];
@@ -800,6 +802,7 @@ function migrate(d) {
   }
   /* versão 5: nomes em maiúsculas; sem cargo e nível; "dono" → "gestor da área" */
   ['modulos', 'processos', 'sistemas'].forEach(c => (d[c] || []).forEach(x => { if (x.nome) x.nome = UP(x.nome); }));
+  (d.ideias || []).forEach(x => { if (x.titulo) x.titulo = UP(x.titulo); });
   (d.participantes || []).forEach(p => { delete p.cargo; delete p.nivel; });
   delete d.listas.niveis;
   const gestor = t => typeof t === 'string' ? t.replace(/dono funcional|dono da área/gi, m => m[0] === 'D' ? 'Gestor da área' : 'gestor da área').replace(/\(dono\)/gi, '').replace(/área é dona do processo/gi, 'área responde pelo processo') : t;
@@ -1562,7 +1565,8 @@ function vBacklog() {
 function triNova() {
   const cs = triCampos();
   const inp = (c, k) => { const nm = `data-tri="${c.id}"`;
-    if (k === 0 || c.tipo === 'texto') return `<input class="fi-input" ${nm}>`;
+    if (k === 0) return `<input class="fi-input up" ${nm} data-upper>`;
+    if (c.tipo === 'texto') return `<input class="fi-input" ${nm}>`;
     if (c.tipo === 'area') return `<textarea class="fi-input" rows="4" ${nm}></textarea>`;
     if (c.tipo === 'setor') return `<select class="fi-select" ${nm}><option value="">—</option>${S.areas.map(a => `<option value="${esc(a.id)}">${esc(a.nome)}</option>`).join('')}</select>`;
     return `<select class="fi-select" ${nm}><option value="">—</option>${S.listas.prioridades.map(o => `<option>${esc(o)}</option>`).join('')}</select>`; };
@@ -1578,7 +1582,7 @@ function triOk() {
   cs.forEach(c => { const e = modal.querySelector(`[data-tri="${c.id}"]`), x = (e.value || '').trim(); v[c.id] = x; if (!x) { falta.push(c.pergunta); modal.querySelector(`[data-campo="${c.id}"]`).classList.add('erro'); } });
   if (falta.length) { notify('Responda: ' + falta.join(' · '), 'warning'); return; }
   const id = uid(v.f1 || 'demanda'), resp = {}; cs.slice(1).forEach(c => { resp[c.id] = v[c.id]; });
-  const it = { id, titulo: v[cs[0].id], resp, autor: USER_TOK ? [USER_TOK] : [], porNome: quemSou(), porTok: meuTok(), em: new Date().toISOString(), status: 'Em análise', notas: [], area: cs.find(c => c.tipo === 'setor') ? v[cs.find(c => c.tipo === 'setor').id] : '' };
+  const it = { id, titulo: UP(v[cs[0].id]), resp, autor: USER_TOK ? [USER_TOK] : [], porNome: quemSou(), porTok: meuTok(), em: new Date().toISOString(), status: 'Em análise', notas: [], area: cs.find(c => c.tipo === 'setor') ? v[cs.find(c => c.tipo === 'setor').id] : '' };
   modal.close();
   commit(st => { st.ideias.push(clone(it)); registrar(st, 'ideias', id, `Enviou a demanda “${it.titulo}” para a triagem (em análise).`, 'Triagem'); }, true);
   notify('Demanda enviada para a triagem.', 'success');
@@ -2098,7 +2102,7 @@ document.addEventListener('focusout', e => {
   const v = t.textContent.replace(/ /g, ' ').trim();
   if (v === (t.dataset.orig || '').trim()) return;
   const p = t.dataset.p; let v2 = v;
-  if (/^(modulos|processos|sistemas)\.#[^.]+\.nome$/.test(p)) { v2 = UP(v); t.textContent = v2; }
+  if (/^(modulos|processos|sistemas)\.#[^.]+\.nome$/.test(p) || /^ideias\.#[^.]+\.titulo$/.test(p)) { v2 = UP(v); t.textContent = v2; }
   commit(st => setP(st, p, v2), false);
   if (t.classList.contains('one') && !v) t.textContent = '';
 });
