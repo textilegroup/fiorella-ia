@@ -214,6 +214,20 @@ input.up::placeholder{text-transform:none}
 .cond-pausado{color:#a16207;border-color:#a16207;background:color-mix(in srgb,#a16207 10%,transparent)}
 .cond-bloqueado{color:#c2410c;border-color:#c2410c;background:color-mix(in srgb,#c2410c 10%,transparent)}
 .cond-cancelado{color:var(--fi-muted);border-color:var(--fi-muted);text-decoration:line-through}
+.tr-nomes{display:flex;flex-wrap:wrap;align-items:center;gap:1px 4px;margin-top:5px;font-size:.64rem;line-height:1.35;color:var(--fi-muted)}
+.tr-nomes b{font-weight:700;white-space:nowrap}
+.tr-nomes b.feito{color:color-mix(in srgb,var(--exec) 60%,var(--fi-muted,#6b7280))}
+.tr-nomes b.atual{color:var(--exec);font-weight:800;text-decoration:underline;text-underline-offset:2px}
+.tr-nomes .sep{opacity:.5}
+.upd-tabs{display:flex;gap:0;border-bottom:2px solid var(--fi-line,#dfe3e8);margin:0 0 14px}
+.upd-tabs button{border:0;background:none;font:inherit;font-size:.9rem;font-weight:750;color:var(--fi-muted);padding:9px 16px;margin-bottom:-2px;border-bottom:3px solid transparent;cursor:pointer}
+.upd-tabs button.on{color:var(--exec);border-bottom-color:var(--exec)}
+.upd-tabs b{margin-left:6px;font-size:.7rem;background:var(--fi-surface-alt,#eef0f3);color:var(--fi-text);border-radius:999px;padding:1px 7px}
+.upd-tabs b.tem{background:#d6182f;color:#fff}
+.aprov-list{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));margin-bottom:8px}
+.aprov{padding:12px 14px;display:grid;gap:6px;border-left:4px solid var(--fi-warning,#a16207)}
+.aprov-h{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.aprov-m{font-size:.86rem}
 .trilha-w{margin:10px 0 2px}.trilha-w .k b{color:var(--exec)}
 .trilha{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
 .tr-s{display:flex;flex-direction:column;gap:3px;min-width:0}
@@ -901,7 +915,8 @@ function trilha(x) {
   const i = S.etapas.findIndex(e => e.id === x.etapa);
   return `<div class="trilha-w"><div class="k">Roadmap individual · etapa ${i + 1} de ${S.etapas.length}: <b>${esc((S.etapas[i] || {}).nome || '—')}</b></div>
     <div class="trilha">${S.etapas.map((e, k) =>
-    `<span class="tr-s${k < i ? ' feito' : k === i ? ' atual' : ''}" title="${k + 1}. ${esc(e.nome)}"><b>${k + 1}</b></span>`).join('')}</div></div>`;
+    `<span class="tr-s${k < i ? ' feito' : k === i ? ' atual' : ''}" title="${k + 1}. ${esc(e.nome)}"><b>${k + 1}</b></span>`).join('')}</div>
+    <div class="tr-nomes">${S.etapas.map((e, k) => `<b class="${k < i ? 'feito' : k === i ? 'atual' : ''}">${k + 1}. ${esc(e.nome)}</b>`).join('<span class="sep">›</span>')}</div></div>`;
 }
 
 /* Mudança de etapa: pedido + aprovação por botão dentro do cartão */
@@ -1066,13 +1081,52 @@ function notasBloco(col, x) {
       <button class="fi-btn fi-btn--primary bt-s" data-act="nota-add" data-col="${col}" data-id="${esc(x.id)}">Registrar</button></div></div>` : ''}
   </div>`;
 }
+/* Aprovações pendentes (pedidos de mudança de etapa) */
+function pedidosPendentes() {
+  const out = [];
+  ['modulos', 'processos'].forEach(col => (S[col] || []).forEach(x => { if (x.pedido) out.push({ col, x }); }));
+  return out.sort((a, b) => String(a.x.pedido.em).localeCompare(String(b.x.pedido.em)));
+}
+const paraMim = () => pedidosPendentes().filter(({ col }) => podeAprovar(col));
+const meusPedidos = () => pedidosPendentes().filter(({ x }) => x.pedido.por === quemSou());
+function linhaAprov({ col, x }, comBotoes) {
+  const p = x.pedido, nm = id => nome('etapas', id);
+  return `<div class="fi-card aprov">
+    <div class="aprov-h"><button class="vchip" data-act="cheio-de" data-col="${col}" data-id="${esc(x.id)}" title="Abrir o cartão">${col === 'modulos' ? 'Módulo' : 'Processo'} · ${esc(x.nome)} ↗</button>
+      ${(x.cond || 'Normal') !== 'Normal' ? `<span class="cond cond-${esc(norm(x.cond))}">${esc(x.cond)}</span>` : ''}</div>
+    <div class="aprov-m"><b>${esc(nm(x.etapa))} → ${esc(nm(p.para))}</b> <span class="muted">· pedido por ${esc(p.por)} em ${esc(dataBR(p.em))}</span></div>
+    ${trilha(x)}
+    <div class="ped-bt">${comBotoes && podeAprovar(col) ? `<button class="fi-btn fi-btn--primary bt-s" data-act="et-ok" data-col="${col}" data-id="${esc(x.id)}">✓ Aprovar</button><button class="fi-btn bt-s" data-act="et-no" data-col="${col}" data-id="${esc(x.id)}">✕ Recusar</button>` : ''}
+      ${podeCad(col, 'editar') ? `<button class="fi-btn bt-s" data-act="et-cancel" data-col="${col}" data-id="${esc(x.id)}">Cancelar pedido</button>` : ''}</div>
+  </div>`;
+}
+function vAprovacoes() {
+  const k = r => r.col + ':' + r.x.id, mim = paraMim(), mk = new Set(mim.map(k)), meus = meusPedidos().filter(r => !mk.has(k(r))), meusK = new Set(meus.map(k)), todos = pedidosPendentes();
+  const sou = podeAprovar('modulos') || podeAprovar('processos');
+  return `
+    ${sou ? `<div class="sec"><span>Aguardando sua aprovação</span> <span class="count">${mim.length}</span></div>
+      ${mim.length ? `<div class="aprov-list">${mim.map(r => linhaAprov(r, true)).join('')}</div>` : `<div class="fi-card fi-empty">Nenhuma aprovação pendente para você. 👍</div>`}` :
+      `<div class="fi-alert" style="margin-bottom:12px">Somente a Direção (sponsors) ou o admin aprovam mudanças de etapa${USER_TOK ? '' : '. Seu e-mail de login não está em ADM → Participantes, por isso a ferramenta não sabe quem você é'}.</div>`}
+    <div class="sec"><span>Seus pedidos aguardando aprovação</span> <span class="count">${meus.length}</span></div>
+    ${meus.length ? `<div class="aprov-list">${meus.map(r => linhaAprov(r, false)).join('')}</div>` : `<div class="muted" style="font-size:.84rem">Você não tem pedidos pendentes.</div>`}
+    ${!sou && todos.length > meus.length ? `<div class="sec"><span>Outros pedidos pendentes</span> <span class="count">${todos.length - meus.length}</span></div>
+      <div class="aprov-list">${todos.filter(r => !meusK.has(k(r))).map(r => linhaAprov(r, false)).join('')}</div>` : ''}`;
+}
 function vAtualizacoes() {
+  const guia = ui.updTab || 'mensagens', nAprov = paraMim().length;
+  const abas = `<div class="upd-tabs"><button class="${guia === 'mensagens' ? 'on' : ''}" data-act="upd-tab" data-id="mensagens">💬 Mensagens <b>${nNaoLidas()}</b></button><button class="${guia === 'aprovacoes' ? 'on' : ''}" data-act="upd-tab" data-id="aprovacoes">✓ Aprovações <b class="${nAprov ? 'tem' : ''}">${nAprov}</b></button></div>`;
+  if (guia === 'aprovacoes') {
+    $('#view').className = 'fi-page fam-ink-exec';
+    $('#view').innerHTML = `${head('atualizacoes')}${abas}${vAprovacoes()}`;
+    return;
+  }
   const f = ui.updF || 'naolidas', mapa = leituraMapa(), all = todasNotas();
   const l = all.filter(({ n }) => f === 'todas' || (f === 'naolidas' ? !lida(n, mapa) : meMenciona(n)));
   const cnt = { naolidas: all.filter(({ n }) => !lida(n, mapa)).length, mencoes: all.filter(({ n }) => meMenciona(n)).length, todas: all.length };
   $('#view').className = 'fi-page fam-ink-exec';
   $('#view').innerHTML = `
     ${head('atualizacoes', cnt.naolidas ? `<button class="fi-btn" data-act="upd-todas">✓ Marcar todas como lidas</button>` : '')}
+    ${abas}
     <div class="subnav">${[['naolidas', 'Não lidas'], ['mencoes', 'Menções a mim'], ['todas', 'Todas']].map(([k, lb]) => `<button class="${f === k ? 'on' : ''}" data-act="upd-f" data-id="${k}">${lb}<b>${cnt[k]}</b></button>`).join('')}</div>
     ${!USER_TOK ? `<div class="fi-alert" style="margin-bottom:12px">Seu e-mail de login não está em ADM → Participantes: as anotações aparecem com o seu e-mail e as menções com @ não chegam até você.</div>` : ''}
     ${!l.length ? `<div class="fi-card fi-empty">${f === 'naolidas' ? 'Tudo lido. 👍' : 'Nada por aqui.'}</div>` : `<div class="upd-list">${l.map(({ n, col, x }) => { const li = lida(n, mapa); return `
@@ -1700,6 +1754,8 @@ document.addEventListener('click', async e => {
     case 'nota-rm': if (await ask('Apagar esta anotação?', true)) commit(st => { const y = st[el.dataset.col].find(z => z.id === id); if (y) y.notas = (y.notas || []).filter(n => n.id !== el.dataset.n); }, true); renderMenu(); break;
     case 'notas-tog': ui.notasAbertas = ui.notasAbertas || {}; ui.notasAbertas[id] = !ui.notasAbertas[id]; render(); break;
     case 'upd-f': ui.updF = id; render(); break;
+    case 'upd-tab': ui.updTab = id; render(); break;
+    case 'cheio-de': { const c = el.dataset.col; ui.cheio = { col: c, id }; if (c === 'processos') { ui.procQ = ''; ui.procArea = '*'; ui.procStatus = ''; ui.procMod = ''; } else { ui.modQ = ''; ui.modPrio = ''; } go(c); scrollTo({ top: 0 }); break; }
     case 'upd-lida': setLeitura([el.dataset.n], 1); break;
     case 'upd-naolida': setLeitura([el.dataset.n], 0); break;
     case 'upd-todas': { const m = leituraMapa(); setLeitura(todasNotas().filter(({ n }) => !lida(n, m)).map(({ n }) => n.id), 1); break; }
