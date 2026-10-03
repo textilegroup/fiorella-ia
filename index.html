@@ -240,6 +240,12 @@ input.up::placeholder{text-transform:none}
 .log-condicao{background:color-mix(in srgb,#a16207 14%,transparent);color:#a16207}
 .tri .k{margin-top:2px}
 .tri-row{font-size:.84rem;padding:3px 0}
+.cod{font-size:.66rem;font-weight:800;letter-spacing:.04em;color:var(--fi-muted);background:var(--fi-surface-alt,#eef0f3);border:1px solid var(--fi-line,#dfe3e8);border-radius:5px;padding:1px 6px;white-space:nowrap;align-self:flex-start;flex:none}
+.card-top .cod,.proc-top .cod{margin-left:auto}
+.bcard .t .cod{margin-right:6px}
+button.tri-row{display:flex;align-items:center;gap:8px;width:100%;text-align:left;border:1px solid var(--fi-line,#dfe3e8);background:var(--fi-surface,#fff);color:var(--fi-text);border-radius:7px;padding:7px 10px;margin:4px 0;font:inherit;font-size:.84rem;cursor:pointer}
+button.tri-row:hover{border-color:var(--exec)}
+.tri-go{margin-left:auto;color:var(--exec);font-weight:700;font-size:.76rem}
 .trilha-w{margin:10px 0 2px}.trilha-w .k b{color:var(--exec)}
 .trilha{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
 .tr-s{display:flex;flex-direction:column;gap:3px;min-width:0}
@@ -383,7 +389,7 @@ dialog::backdrop{background:rgba(9,12,16,.55)}
    ADM → Dados → Restaurar. Referência a participante = "@id";
    qualquer outro texto é texto livre (ex.: "Gestor da área").
    ===================================================================== */
-const SCHEMA = 10;
+const SCHEMA = 11;
 const SEED = {
   schema: SCHEMA,
   textos: {
@@ -449,7 +455,7 @@ const SEED = {
   listas: {
     prioridades: ['Alta', 'Média', 'Baixa'],
     condicoes: ['Normal', 'Pausado', 'Bloqueado', 'Cancelado'],
-    stIdeia: ['Nova', 'Em análise', 'Aprovada', 'Descartada'],
+    stIdeia: ['Em análise', 'Aprovada', 'Reprovada'],
     stSistema: ['Em uso', 'Em construção', 'A mapear', 'Futura integração'],
     catSistema: ['ERP', 'Plataforma', 'Sistema interno', 'Equipamento / Indústria', 'Externo', 'Camada futura'],
     grupos: ['Direção', 'Técnica', 'Processos', 'Setores'],
@@ -612,6 +618,22 @@ function aplicarPlanilhaIA(d) {
    "direcao" = participantes do grupo Direção; "tipo:<id>" = papel no projeto; "pessoa:<id>" = um participante. */
 const RESP_PADRAO = { levantamento: 'pessoa:wesley', definicao: 'direcao', avaliacao: 'tipo:arquiteto', aprovacao: 'direcao', desenvolvimento: 'tipo:arquiteto', homologacao: 'tipo:coordtec', acompanhamento: 'tipo:coordtec' };
 const FIM = '__fim';
+/* Código único de cada cartão: Triagem T100+, Módulos M200+, Processos P300+ (atribuído uma vez, nunca reutilizado) */
+const COD_BASE = { ideias: ['T', 100], modulos: ['M', 200], processos: ['P', 300] };
+function garantirCods(st) {
+  st.seq = st.seq || {};
+  for (const col in COD_BASE) {
+    const [L, base] = COD_BASE[col], arr = st[col] || [];
+    let n = st.seq[L] || base;
+    arr.forEach(x => { if (x.cod && x.cod[0] === L) { const v = +x.cod.slice(1); if (v >= n) n = v + 1; } });
+    arr.forEach(x => { if (!x.cod || x.cod[0] !== L) { if (x.cod) x.codAnterior = x.cod; x.cod = L + (n++); } });
+    st.seq[L] = n;
+  }
+}
+const COD = x => x && x.cod ? `<span class="cod" title="Código único">${esc(x.cod)}</span>` : '';
+const colRot = c => c === 'modulos' ? 'Módulo' : c === 'processos' ? 'Processo' : 'Triagem';
+const achaItem = (c, id) => { const x = c && S[c] ? byId(c, id) : null; if (x) return [c, x]; for (const k of ['modulos', 'processos', 'ideias']) { const y = byId(k, id); if (y) return [k, y]; } return [c, null]; };
+const rotItem = (c, x) => `${x && x.cod ? x.cod + ' · ' : ''}${x ? (x.nome || x.titulo || '') : ''}`;
 /* Triagem: 3 perguntas obrigatórias (texto, tipo e ajuda editáveis em ADM → Triagem). A 1ª é sempre o nome da demanda. */
 const TRI_TIPOS = [['texto', 'Texto curto'], ['area', 'Texto longo'], ['setor', 'Área / setor'], ['prioridade', 'Prioridade']];
 const TRIAGEM_PADRAO = { aprovar: 'diretores', campos: [
@@ -696,7 +718,7 @@ const NEW = {
   modulos: () => ({ nome: 'NOVO MÓDULO', semProcesso: false, rel: [], notas: [], sponsor: [], dono: [], coord: [], dev: [], proc: [], keyuser: [], prioridade: 'Média', dep: '', cond: 'Normal', etapa: 'levantamento', escopo: '', proximos: '', objetivo: '', sistema: '', indicador: '' }),
   processos: () => ({ nome: 'NOVO PROCESSO', rel: [], notas: [], area: ui.procArea && ui.procArea !== '*' ? ui.procArea : '', modulos: [], gatilho: '', entrega: '', passos: '', frequencia: '', resp: [], exec: [], aprov: [], cons: [], inf: [], sup: [], prazo: '', escal: '', integ: '', cond: 'Normal', etapa: 'levantamento', obs: '' }),
   sistemas: () => ({ nome: 'NOVO SISTEMA', cat: '', desc: '', integ: '', resp: [], status: 'A mapear' }),
-  ideias: () => ({ titulo: 'Nova ideia', area: '', autor: USER_TOK ? [USER_TOK] : [], desc: '', beneficio: '', prioridade: 'Média', status: 'Nova' }),
+  ideias: () => ({ titulo: 'Nova ideia', area: '', autor: USER_TOK ? [USER_TOK] : [], desc: '', beneficio: '', prioridade: 'Média', status: 'Em análise', notas: [] }),
   participantes: () => ({ nome: 'Novo participante', email: '', area: '', tipo: '', resp: '', foco: '', status: 'Ativo' }),
   areas: () => ({ nome: 'Nova área', mapear: 'Sim', referencia: [] }),
   tipos: () => ({ nome: 'Novo tipo', grupo: '', desc: '' }),
@@ -811,12 +833,16 @@ function migrate(d) {
     }
     if (!i.em) i.em = '';
   });
+  /* versão 11: triagem só "Em análise" → Aprovada / Reprovada; códigos únicos */
+  (d.ideias || []).forEach(i => { if (i.status === 'Nova' || !i.status) i.status = 'Em análise'; if (i.status === 'Descartada') i.status = 'Reprovada'; if (!Array.isArray(i.notas)) i.notas = []; });
+  if (!d.listas.stIdeia || d.listas.stIdeia.some(x => x === 'Nova' || x === 'Descartada')) d.listas.stIdeia = ['Em análise', 'Aprovada', 'Reprovada'];
   d.log = Array.isArray(d.log) ? d.log : [];
   ['modulos', 'processos'].forEach(c => (d[c] || []).forEach(x => {
     const sis = (x.notas || []).filter(n => n.sis);
     if (sis.length) { sis.forEach(n => d.log.push({ id: n.id, em: n.em, por: n.por, tipo: /condição/i.test(n.txt) ? 'Condição' : /unificação/i.test(n.txt) ? 'Cadastro' : 'Etapa', col: c, item: x.id, nome: x.nome, txt: n.txt })); x.notas = x.notas.filter(n => !n.sis); }
   }));
   d.log.sort((a, b) => String(b.em).localeCompare(String(a.em)));
+  garantirCods(d);
   if ((d.schema || 0) < 9 && (d.participantes || []).some(p => p.id === 'wesley')) ['modulos', 'processos'].forEach(c => { if (d.responsaveis[c].levantamento === 'tipo:analista') d.responsaveis[c].levantamento = 'pessoa:wesley'; });
   if (!d.listas.condicoes) d.listas.condicoes = clone(SEED.listas.condicoes);
   delete d.tarefas; delete d._savedAt;
@@ -839,8 +865,9 @@ function setP(st, p, v) { const segs = p.split('.'), last = segs.pop(), o = walk
    reaplicadas por cima — ninguém perde o que editou.
    ===================================================================== */
 let ops = [], saving = false, timer = null, syncState = '';
-function commit(fn, rerender) {
+function commit(fn0, rerender) {
   if (!canEdit) return;
+  const fn = st => { fn0(st); garantirCods(st); };
   fn(S); ops.push(fn);
   if (rerender) render();
   clearTimeout(timer); timer = setTimeout(flush, 450); setSync('pendente');
@@ -977,7 +1004,7 @@ function trilha(x) {
 const quemSou = () => { const p = USER_TOK && byId('participantes', USER_TOK.slice(1)); return p ? p.nome : ((window.APP && APP.usuario && APP.usuario.email) || 'usuário'); };
 const souDiretor = () => !!(USER_TOK && diretores().some(p => '@' + p.id === USER_TOK));
 const podeAprovar = col => canEdit && (isAdm || (cfgCad(col).aprovar !== 'admin' && souDiretor()));
-const dataBR = iso => { try { const d = new Date(iso); return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; } };
+const dataBR = iso => { try { if (!iso) return ''; const d = new Date(iso); if (isNaN(d)) return ''; return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; } };
 const respDe = (col, et) => ((S.responsaveis || {})[col] || RESP_PADRAO)[et] || '';
 const respRot = v => v === 'direcao' ? 'Direção (diretoria)' : v && v.startsWith('tipo:') ? (nome('tipos', v.slice(5)) || '—') : v && v.startsWith('pessoa:') ? (nome('participantes', v.slice(7)) || '(participante removido)') : 'Qualquer editor';
 const respGente = v => v === 'direcao' ? diretores() : v && v.startsWith('tipo:') ? S.participantes.filter(p => p.status !== 'Inativo' && p.tipo === v.slice(5)) : v && v.startsWith('pessoa:') ? S.participantes.filter(p => p.id === v.slice(7)) : [];
@@ -1039,7 +1066,7 @@ function anterior(col, x) {
   const val = (k, v) => Array.isArray(v) ? v.map(tokName).filter(Boolean).join(', ') : k === 'area' ? nome('areas', v) : k === 'sistema' ? nome('sistemas', v) : v;
   const linhas = lista.map(([k, l]) => [l, val(k, x[k])]).filter(([, v]) => v && String(v).trim());
   const c = x.convertido;
-  return `<details class="anterior"><summary>⇄ Convertido de ${c.de === 'modulos' ? 'módulo' : 'processo'} em ${esc(dataBR(c.em))} por ${esc(c.por)}${linhas.length ? ` · ${linhas.length} informação(ões) do cadastro anterior` : ''}</summary>
+  return `<details class="anterior"><summary>⇄ Convertido de ${c.de === 'modulos' ? 'módulo' : 'processo'}${c.cod ? ` (${esc(c.cod)})` : ''} em ${esc(dataBR(c.em))} por ${esc(c.por)}${linhas.length ? ` · ${linhas.length} informação(ões) do cadastro anterior` : ''}</summary>
     ${linhas.length ? `<div class="kv">${linhas.map(([l, v]) => `<div class="full"><div class="k">${esc(l)}</div><div class="txt" style="white-space:pre-wrap">${esc(v)}</div></div>`).join('')}</div>` : ''}
     ${c.status ? `<div class="muted" style="font-size:.74rem">Situação registrada antes da unificação: ${esc(c.status)}</div>` : ''}</details>`;
 }
@@ -1063,7 +1090,8 @@ async function converter(col, id) {
       novo.semProcesso = false;
     }
     novo.exVinculos = atuais;
-    novo.convertido = { de: col, em: new Date().toISOString(), por: quemSou() };
+    novo.convertido = { de: col, em: new Date().toISOString(), por: quemSou(), cod: o.cod };
+    delete novo.cod;
     delete novo.pedido;
     arr.forEach(y => { if (y.rel) y.rel = y.rel.filter(r => r !== id); });
     const relAntes = o.exRel || []; novo.exRel = (o.rel || []).slice(); novo.rel = [];
@@ -1117,7 +1145,7 @@ const lida = (n, mapa) => minhaNota(n) || (mapa || leituraMapa())[n.id] === 1;
 const meMenciona = n => (n.men || []).includes(meuTok());
 function todasNotas() {
   const out = [];
-  ['modulos', 'processos'].forEach(col => (S[col] || []).forEach(x => (x.notas || []).filter(n => !n.sis).forEach(n => out.push({ n, col, x }))));
+  ['modulos', 'processos', 'ideias'].forEach(col => (S[col] || []).forEach(x => (x.notas || []).filter(n => !n.sis).forEach(n => out.push({ n, col, x }))));
   return out.sort((a, b) => String(b.n.em).localeCompare(String(a.n.em)));
 }
 function nMencoes() { try { const m = leituraMapa(); return todasNotas().filter(({ n }) => meMenciona(n) && !lida(n, m)).length; } catch (e) { return 0; } }
@@ -1139,7 +1167,8 @@ function notaHtml(txt) {
 }
 function registrar(st, col, id, txt, tipo) {
   const it = col && st[col] ? st[col].find(z => z.id === id) : null;
-  st.log = [{ id: nid(), em: new Date().toISOString(), por: quemSou(), tipo: tipo || 'Etapa', col, item: id, nome: it ? (it.nome || it.titulo) : '', txt }, ...(st.log || [])].slice(0, 1500);
+  if (it && !it.cod) garantirCods(st);
+  st.log = [{ id: nid(), em: new Date().toISOString(), por: quemSou(), tipo: tipo || 'Etapa', col, item: id, cod: it ? it.cod : '', nome: it ? (it.nome || it.titulo) : '', txt }, ...(st.log || [])].slice(0, 1500);
 }
 function novaNota(st, col, id, txt, extra) {
   if (extra && extra.sis) { registrar(st, col, id, txt, extra.tipo); return; }
@@ -1171,7 +1200,7 @@ const meusPedidos = () => pedidosPendentes().filter(({ x }) => x.pedido.por === 
 function linhaAprov({ col, x }, comBotoes) {
   const p = x.pedido, nm = nomeEt;
   return `<div class="fi-card aprov">
-    <div class="aprov-h"><button class="vchip" data-act="cheio-de" data-col="${col}" data-id="${esc(x.id)}" title="Abrir o cartão">${col === 'modulos' ? 'Módulo' : 'Processo'} · ${esc(x.nome)} ↗</button>
+    <div class="aprov-h"><button class="vchip" data-act="cheio-de" data-col="${col}" data-id="${esc(x.id)}" title="Abrir o cartão">${colRot(col)} · ${esc(rotItem(col, x))} ↗</button>
       ${(x.cond || 'Normal') !== 'Normal' ? `<span class="cond cond-${esc(norm(x.cond))}">${esc(x.cond)}</span>` : ''}</div>
     <div class="aprov-m"><b>${esc(nm(x.etapa))} → ${esc(nm(p.para))}</b> <span class="muted">· pedido por ${esc(p.por)} em ${esc(dataBR(p.em))}</span></div>
     ${trilha(x)}
@@ -1181,18 +1210,20 @@ function linhaAprov({ col, x }, comBotoes) {
 }
 function vLog() {
   const tipos = ['Etapa', 'Cadastro', 'Triagem', 'Condição'], f = ui.logF || '', all = S.log || [];
-  const l = all.filter(r => !f || r.tipo === f).slice(0, 400);
-  const link = r => { if (r.col === 'ideias') return byId('ideias', r.item) ? `<button class="vchip" data-act="tab" data-id="backlog">Triagem ↗</button>` : '';
-    return byId(r.col, r.item) ? `<button class="vchip" data-act="cheio-de" data-col="${r.col}" data-id="${esc(r.item)}">${r.col === 'modulos' ? 'Módulo' : 'Processo'} · ${esc(nome(r.col, r.item))} ↗</button>` : (r.nome ? `<span class="muted">${esc(r.nome)} (removido)</span>` : ''); };
+  const it = ui.logItem || '', l = all.filter(r => (!f || r.tipo === f) && (!it || r.item === it)).slice(0, 400);
+  const itens = new Map(); all.forEach(r => { const k = r.item; if (r.item && !itens.has(k)) { const [c2, x] = achaItem(r.col, r.item); itens.set(k, `${colRot(c2)} · ${x ? rotItem(c2, x) : `${r.cod ? r.cod + ' · ' : ''}${r.nome || r.item} (removido)`}`); } });
+  const link = r => { const [c2, x] = achaItem(r.col, r.item);
+    return x ? `<button class="vchip" data-act="cheio-de" data-col="${c2}" data-id="${esc(r.item)}">${colRot(c2)} · ${esc(rotItem(c2, x))} ↗</button>` : (r.nome ? `<span class="muted">${esc((r.cod ? r.cod + ' · ' : '') + r.nome)} (removido)</span>` : ''); };
   return `<div class="subnav"><button class="${!f ? 'on' : ''}" data-act="log-f" data-id="">Tudo<b>${all.length}</b></button>${tipos.map(t => `<button class="${f === t ? 'on' : ''}" data-act="log-f" data-id="${t}">${t}<b>${all.filter(r => r.tipo === t).length}</b></button>`).join('')}</div>
+    <div class="toolbar"><select class="fi-select" data-ui="logItem" style="min-width:320px"><option value="">Todos os itens</option>${[...itens].sort((a, b) => a[1].localeCompare(b[1])).map(([k, lb]) => `<option value="${esc(k)}"${it === k ? ' selected' : ''}>${esc(lb)}</option>`).join('')}</select>${it ? `<button class="fi-btn bt-s" data-act="log-item-x">× Limpar filtro</button>` : ''}</div>
     <div class="muted" style="font-size:.78rem;margin-bottom:10px">Histórico automático: aprovações, movimentações de etapa, cadastros, conversões, exclusões, condição e triagem. Não entra no bate-papo.</div>
     ${!l.length ? `<div class="fi-card fi-empty">Nenhuma atividade registrada.</div>` : `<div class="fi-card log"><table class="fi-table"><tbody>${l.map(r => `<tr>
       <td class="nw muted">${esc(dataBR(r.em))}</td><td class="nw"><span class="log-t log-${esc(norm(r.tipo))}">${esc(r.tipo)}</span></td><td class="nw"><b>${esc(r.por || '')}</b></td><td>${esc(r.txt)}</td><td class="nw">${link(r)}</td></tr>`).join('')}</tbody></table></div>`}`;
 }
 function vAprovacoes() {
   const k = r => r.col + ':' + r.x.id, mim = paraMim(), mk = new Set(mim.map(k)), meus = meusPedidos().filter(r => !mk.has(k(r))), meusK = new Set(meus.map(k)), todos = pedidosPendentes();
-  const sou = podeAprovar('modulos') || podeAprovar('processos'), tri = podeTri() ? S.ideias.filter(i => i.status === 'Nova' || i.status === 'Em análise') : [];
-  return `${tri.length ? `<div class="sec"><span>Demandas aguardando triagem</span> <span class="count">${tri.length}</span></div><div class="fi-card" style="padding:10px 14px;margin-bottom:8px">${tri.map(i => `<div class="tri-row"><b>${esc(i.titulo)}</b> <span class="muted">· ${esc(i.porNome || '')} · ${esc(i.status)}</span></div>`).join('')}<button class="fi-btn bt-s" style="margin-top:8px" data-act="tab" data-id="backlog">Abrir a Triagem ↗</button></div>` : ''}
+  const sou = podeAprovar('modulos') || podeAprovar('processos'), tri = podeTri() ? S.ideias.filter(i => i.status === 'Em análise') : [];
+  return `${tri.length ? `<div class="sec"><span>Demandas aguardando triagem</span> <span class="count">${tri.length}</span></div><div class="fi-card" style="padding:10px 14px;margin-bottom:8px">${tri.map(i => `<button class="tri-row" data-act="cheio-de" data-col="ideias" data-id="${esc(i.id)}" title="Abrir a demanda completa"><span class="cod">${esc(i.cod || '')}</span><b>${esc(i.titulo)}</b> <span class="muted">${esc([i.porNome, dataBR(i.em)].filter(Boolean).map(t => '· ' + t).join(' '))}</span><span class="tri-go">Abrir ↗</span></button>`).join('')}</div>` : ''}
   
     ${sou ? `<div class="sec"><span>Aguardando sua aprovação</span> <span class="count">${mim.length}</span></div>
       ${mim.length ? `<div class="aprov-list">${mim.map(r => linhaAprov(r, true)).join('')}</div>` : `<div class="fi-card fi-empty">Nenhuma aprovação pendente para você. 👍</div>`}` :
@@ -1204,7 +1235,7 @@ function vAprovacoes() {
 }
 function vAtualizacoes() {
   const guia = ui.updTab || 'mensagens', nAprov = paraMim().length;
-  const nTri = podeTri() ? S.ideias.filter(i => i.status === 'Nova' || i.status === 'Em análise').length : 0;
+  const nTri = podeTri() ? S.ideias.filter(i => i.status === 'Em análise').length : 0;
   const abas = `<div class="upd-tabs"><button class="${guia === 'mensagens' ? 'on' : ''}" data-act="upd-tab" data-id="mensagens">💬 Mensagens <b>${nNaoLidas()}</b></button><button class="${guia === 'aprovacoes' ? 'on' : ''}" data-act="upd-tab" data-id="aprovacoes">✓ Aprovações <b class="${nAprov + nTri ? 'tem' : ''}">${nAprov + nTri}</b></button><button class="${guia === 'log' ? 'on' : ''}" data-act="upd-tab" data-id="log">📋 Registro de atividades <b>${(S.log || []).length}</b></button></div>`;
   if (guia === 'log') {
     $('#view').className = 'fi-page fam-ink-exec';
@@ -1228,7 +1259,7 @@ function vAtualizacoes() {
     ${!l.length ? `<div class="fi-card fi-empty">${f === 'naolidas' ? 'Tudo lido. 👍' : 'Nada por aqui.'}</div>` : `<div class="upd-list">${l.map(({ n, col, x }) => { const li = lida(n, mapa); return `
       <div class="fi-card upd${li ? '' : ' nova'}">
         <div class="upd-h"><span class="nmark">${esc(initials(n.por || '?'))}</span><b>${esc(n.por)}</b><span class="muted">${esc(dataBR(n.em))}</span>${meMenciona(n) ? '<span class="nl-tag">mencionou você</span>' : ''}
-          <span style="flex:1"></span><button class="vchip" data-act="nota-abrir" data-col="${col}" data-id="${esc(x.id)}" data-n="${esc(n.id)}" title="Abrir o cartão de origem">${col === 'modulos' ? 'Módulo' : 'Processo'} · ${esc(x.nome)} ↗</button></div>
+          <span style="flex:1"></span><button class="vchip" data-act="nota-abrir" data-col="${col}" data-id="${esc(x.id)}" data-n="${esc(n.id)}" title="Abrir o cartão de origem">${colRot(col)} · ${esc(rotItem(col, x))} ↗</button></div>
         <div class="nt">${notaHtml(n.txt)}</div>
         <div class="upd-f">${minhaNota(n) ? '<span class="muted">Sua anotação</span>' : `<button class="linkbtn" data-act="${li ? 'upd-naolida' : 'upd-lida'}" data-n="${esc(n.id)}">${li ? 'Marcar como não lida' : 'Marcar como lida'}</button>`}</div>
       </div>`; }).join('')}</div>`}`;
@@ -1249,7 +1280,7 @@ function barraCheio(col) {
   if (!ui.cheio || ui.cheio.col !== col) return '';
   const x = byId(col, ui.cheio.id);
   return `<div class="cheio-bar"><button class="fi-btn" data-act="cheio-sair">▦ Voltar à visualização por cards</button>
-    <span class="muted">${col === 'modulos' ? 'Módulo' : 'Processo'} em página inteira${x ? ` · <b>${esc(x.nome)}</b>` : ''}</span></div>`;
+    <span class="muted">${colRot(col)} em página inteira${x ? ` · <b>${esc(rotItem(col, x))}</b>` : ''}</span></div>`;
 }
 
 /* Chips do vínculo recíproco módulo ⇄ processo */
@@ -1279,7 +1310,7 @@ const ICON = {
   adm: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
 };
 const MENU = [
-  { fam: 'exec', label: 'Acompanhamento', tabs: [['modulos', 'Módulos'], ['processos', 'Processos'], ['implantacao', 'Implantação'], ['backlog', 'Triagem'], ['atualizacoes', 'Atualizações']] },
+  { fam: 'exec', label: 'Acompanhamento', tabs: [['backlog', 'Triagem'], ['modulos', 'Módulos'], ['processos', 'Processos'], ['implantacao', 'Implantação'], ['atualizacoes', 'Atualizações']] },
   { fam: 'doc', label: 'Sobre o projeto', tabs: [['visao', 'Visão Geral'], ['equipe', 'Equipe'], ['sistemas', 'Sistemas']] },
   { fam: 'adm', label: '', tabs: [['adm', 'ADM']], admin: true },
 ];
@@ -1331,7 +1362,7 @@ function vModulos() {
       <span><b>${S.modulos.length}</b> módulos · ${S.modulos.filter(m => m.prioridade === 'Alta').length} prioridade alta · ${S.modulos.filter(naUltima).length} entregues${S.modulos.filter(m => (m.cond || 'Normal') !== 'Normal').length ? ` · ${S.modulos.filter(m => (m.cond || 'Normal') !== 'Normal').length} pausado/bloqueado/cancelado` : ''}</span>
       <a data-act="tab" data-id="processos"><b>${S.processos.length}</b> processos · ${S.processos.filter(naUltima).length} entregues</a>
       <a data-act="tab" data-id="equipe">referências <b>${comRef}/${setores.length}</b> setores</a>
-      <a data-act="tab" data-id="backlog"><b>${S.ideias.filter(i => i.status === 'Nova' || i.status === 'Em análise').length}</b> demanda(s) na triagem</a>
+      <a data-act="tab" data-id="backlog"><b>${S.ideias.filter(i => i.status === 'Em análise').length}</b> demanda(s) na triagem</a>
       <a data-act="tab" data-id="atualizacoes"${nNaoLidas() ? ' class="alerta"' : ''}><b>${nNaoLidas()}</b> atualização(ões) não lida(s)</a>
     </div>
     <div class="toolbar">
@@ -1345,7 +1376,7 @@ function vModulos() {
 function fillModulos() {
   const q = norm(ui.modQ), ord = { 'Alta': 0, 'Média': 1, 'Baixa': 2 };
   const l = S.modulos.filter(m => (!ui.modPrio || m.prioridade === ui.modPrio) &&
-    (!q || norm([m.nome, m.dep, m.escopo, m.proximos, m.objetivo, ...procsDoModulo(m.id).map(p => p.nome), ...PEOPLE_FIELDS.modulos.flatMap(([k]) => (m[k] || []).map(tokName))].join(' ')).includes(q)));
+    (!q || norm([m.cod, m.nome, m.dep, m.escopo, m.proximos, m.objetivo, ...procsDoModulo(m.id).map(p => p.nome), ...PEOPLE_FIELDS.modulos.flatMap(([k]) => (m[k] || []).map(tokName))].join(' ')).includes(q)));
   if (!ui.edit) l.sort((a, b) => (ord[a.prioridade] ?? 3) - (ord[b.prioridade] ?? 3));
   if (ui.cheio && ui.cheio.col === 'modulos') { const x = byId('modulos', ui.cheio.id); l.splice(0, l.length, ...(x ? [x] : [])); }
   if (!l.length) { $('#list').innerHTML = `<div class="fi-card fi-empty">Nenhum módulo encontrado.</div>`; return; }
@@ -1354,7 +1385,7 @@ function fillModulos() {
     const np = procsDoModulo(m.id).length, mc = k => campoCfg('modulos', k).mostrar !== false;
     return `<div class="fi-card item" data-card="${esc(m.id)}">
       <div class="card-top"><div class="grow"><h3>${T(P(m, 'nome'), { one: 1 })}</h3>
-        <div class="sub">Dependências: ${T(P(m, 'dep'), { ph: '—' })}</div></div>${BT_CHEIO('modulos', m)}${RM('modulos', m.id)}</div>
+        <div class="sub">Dependências: ${T(P(m, 'dep'), { ph: '—' })}</div></div>${COD(m)}${BT_CHEIO('modulos', m)}${RM('modulos', m.id)}</div>
       <div class="row">${SEL(P(m, 'prioridade'), 'prioridades', { title: 'Prioridade' })}${COND('modulos', m)}<span class="tag">Etapa: ${esc(nome('etapas', m.etapa))}</span>${CONV('modulos', m)}</div>
       ${trilha(m)}${etapaCtl('modulos', m)}${anterior('modulos', m)}${triagemBloco(m)}
       <div class="vinc"><div class="k">Processos vinculados</div>${VINCS('modulos', m)}</div>
@@ -1401,7 +1432,7 @@ function fillProcessos() {
   const q = norm(ui.procQ);
   const l = S.processos.filter(p => (ui.procArea === '*' || (ui.procArea === '' ? !byId('areas', p.area) : p.area === ui.procArea)) &&
     (!ui.procStatus || p.etapa === ui.procStatus) && (!ui.procMod || (p.modulos || []).includes(ui.procMod)) &&
-    (!q || norm([p.nome, p.obs, p.integ, p.gatilho, p.entrega, p.passos, ...(p.modulos || []).map(m => nome('modulos', m)), ...PEOPLE_FIELDS.processos.flatMap(([k]) => (p[k] || []).map(tokName))].join(' ')).includes(q)));
+    (!q || norm([p.cod, p.nome, p.obs, p.integ, p.gatilho, p.entrega, p.passos, ...(p.modulos || []).map(m => nome('modulos', m)), ...PEOPLE_FIELDS.processos.flatMap(([k]) => (p[k] || []).map(tokName))].join(' ')).includes(q)));
   if (ui.cheio && ui.cheio.col === 'processos') { const x = byId('processos', ui.cheio.id); l.splice(0, l.length, ...(x ? [x] : [])); }
   if (!l.length) { $('#list').innerHTML = `<div class="fi-card fi-empty"><div>Nenhum processo nesta seleção.${canEdit && !ui.edit ? '<br><br>Clique em <b>✎ Editar</b> no topo para cadastrar.' : ''}</div></div>`; return; }
   const P = (p, k) => `processos.#${p.id}.${k}`;
@@ -1411,7 +1442,7 @@ function fillProcessos() {
         <div class="sub row">${REF(P(p, 'area'), 'areas', { tag: 1, empty: 'Sem área' })}${COND('processos', p)}<span class="tag">Etapa: ${esc(nome('etapas', p.etapa))}</span>${CONV('processos', p)}</div>
         <div class="vinc"><div class="k">Módulos envolvidos</div>${VINCS('processos', p)}</div>
         <div class="vinc"><div class="k">Processos relacionados</div>${RELS('processos', p)}</div>${trilha(p)}${etapaCtl('processos', p)}</div>
-        ${BT_CHEIO('processos', p)}${RM('processos', p.id)}</div>
+        ${COD(p)}${BT_CHEIO('processos', p)}${RM('processos', p.id)}</div>
       <div class="raci">${PEOPLE_FIELDS.processos.map(([k, lb]) => `<div><div class="k"><i>${L[k]}</i>${lb}</div>${PPL(P(p, k), { single: k === 'resp' })}</div>`).join('')}</div>
       <div class="proc-bottom">
         <div><div class="k">Prazo / SLA</div>${T(P(p, 'prazo'), { ph: 'A definir' })}</div>
@@ -1442,7 +1473,7 @@ function vImplantacao() {
     ${sec('quadro', undefined, `<div class="seg"><button class="${col === 'modulos' ? 'on' : ''}" data-act="view" data-k="implKind" data-id="modulos">Módulos</button><button class="${col === 'processos' ? 'on' : ''}" data-act="view" data-k="implKind" data-id="processos">Processos</button></div>`)}
     <div class="board">${S.etapas.map((e, i) => { const l = S[col].filter(x => x.etapa === e.id); return `<div class="col">
       <div class="col-h"><span>${i + 1}. ${esc(e.nome)}</span><b>${l.length}</b></div>
-      ${l.map(x => `<div class="bcard"><div class="t">${esc(x.nome)}</div>
+      ${l.map(x => `<div class="bcard"><div class="t">${COD(x)}${esc(x.nome)}</div>
         <div class="r"><span>${col === 'modulos' ? pill(x.prioridade) : `<span class="tag">${esc(nome('areas', x.area) || '—')}</span>`}</span></div>${etapaCtl(col, x, true)}</div>`).join('') || '<div class="muted" style="font-size:.76rem;padding:4px">—</div>'}
     </div>`; }).join('')}</div>`;
 }
@@ -1455,11 +1486,12 @@ function triResumo(i) { return triCampos().map((c, k) => ({ pergunta: c.pergunta
 function triagemBloco(x) {
   if (!x.triagem) return '';
   const t = x.triagem;
-  return `<details class="anterior"><summary>⇢ Veio da triagem · solicitado por ${esc(t.solicitante || '—')}${t.em ? ` em ${esc(dataBR(t.em))}` : ''}</summary>
+  return `<details class="anterior"><summary>⇢ Veio da triagem${t.cod ? ` ${esc(t.cod)}` : ''} · solicitado por ${esc(t.solicitante || '—')}${t.em ? ` em ${esc(dataBR(t.em))}` : ''}</summary>
     <div class="kv">${(t.respostas || []).map(r => `<div class="full"><div class="k">${esc(r.pergunta)}</div><div class="txt" style="white-space:pre-wrap">${esc(r.resposta || '—')}</div></div>`).join('')}</div></details>`;
 }
 function vBacklog() {
   const l = S.ideias.filter(i => !ui.ideiaStatus || i.status === ui.ideiaStatus).sort((a, b) => String(b.em || '').localeCompare(String(a.em || '')));
+  if (ui.cheio && ui.cheio.col === 'ideias') { const x = byId('ideias', ui.cheio.id); l.splice(0, l.length, ...(x ? [x] : [])); }
   const P = (i, k) => `ideias.#${i.id}.${k}`, cs = triCampos(), ap = podeTri();
   $('#view').className = 'fi-page fam-ink-exec';
   $('#view').innerHTML = `
@@ -1468,18 +1500,20 @@ function vBacklog() {
       <button class="${!ui.ideiaStatus ? 'on' : ''}" data-act="ideia-st" data-id="">Todas<b>${S.ideias.length}</b></button>
       ${S.listas.stIdeia.map(st => `<button class="${ui.ideiaStatus === st ? 'on' : ''}" data-act="ideia-st" data-id="${esc(st)}">${esc(st)}<b>${S.ideias.filter(i => i.status === st).length}</b></button>`).join('')}
     </div>
-    ${!l.length ? `<div class="fi-card fi-empty">Nenhuma demanda nesta seleção.</div>` : `<div class="gauto">${l.map(i => {
-      const aberta = i.status === 'Nova' || i.status === 'Em análise', meu = (i.autor || []).includes(USER_TOK) || i.porTok === meuTok();
+    ${barraCheio('ideias')}
+    ${!l.length ? `<div class="fi-card fi-empty">Nenhuma demanda nesta seleção.</div>` : `<div class="${ui.cheio ? 'cheio' : 'gauto'}">${l.map(i => {
+      const aberta = i.status === 'Em análise', meu = (i.autor || []).includes(USER_TOK) || i.porTok === meuTok();
       return `<div class="fi-card item tri" data-card="${esc(i.id)}">
-        <div class="card-top"><h3 class="grow">${T(P(i, 'titulo'), { one: 1 })}</h3>${pill(i.status)}${(isAdm || (meu && i.status === 'Nova')) && ui.edit ? `<button class="rm" data-act="rm" data-col="ideias" data-id="${esc(i.id)}" title="Excluir">✕</button>` : ''}</div>
+        <div class="card-top"><h3 class="grow">${T(P(i, 'titulo'), { one: 1 })}</h3>${pill(i.status)}${COD(i)}${BT_CHEIO('ideias', i)}${(isAdm || (meu && aberta)) && ui.edit ? `<button class="rm" data-act="rm" data-col="ideias" data-id="${esc(i.id)}" title="Excluir">✕</button>` : ''}</div>
         <div class="muted" style="font-size:.74rem">Solicitado por ${esc(i.porNome || (i.autor || []).map(tokName).join(', ') || '—')}${i.em ? ` em ${esc(dataBR(i.em))}` : ''}</div>
         ${cs.slice(1).map(c => `<div><div class="k">${esc(c.pergunta)}</div>${c.tipo === 'setor' ? REF(P(i, 'resp.' + c.id), 'areas', { tag: 1, empty: '—' }) : c.tipo === 'prioridade' ? SEL(P(i, 'resp.' + c.id), 'prioridades', { empty: '—' }) : T(P(i, 'resp.' + c.id), { tag: 'div', cls: 'txt', ph: '—' })}</div>`).join('')}
-        ${i.status === 'Aprovada' && i.virou ? `<div class="fim">✔ Aprovada como ${i.virou.col === 'modulos' ? 'módulo' : 'processo'}${i.decisao ? ` por ${esc(i.decisao.por)}` : ''} · <button class="vchip" data-act="cheio-de" data-col="${i.virou.col}" data-id="${esc(i.virou.id)}">${esc(nome(i.virou.col, i.virou.id) || 'abrir')} ↗</button></div>` : ''}
-        ${i.status === 'Descartada' ? `<div class="ped"><span>Descartada${i.decisao ? ` por ${esc(i.decisao.por)} em ${esc(dataBR(i.decisao.em))}` : ''}${i.decisao && i.decisao.motivo ? ` — ${esc(i.decisao.motivo)}` : ''}</span></div>` : ''}
-        ${aberta && ap ? `<div class="ped-bt">${i.status === 'Nova' ? `<button class="fi-btn bt-s" data-act="tri-analise" data-id="${esc(i.id)}">Em análise</button>` : ''}
+        ${i.status === 'Aprovada' && i.virou ? `<div class="fim">✔ Aprovada como ${i.virou.col === 'modulos' ? 'módulo' : 'processo'}${i.decisao ? ` por ${esc(i.decisao.por)}` : ''} · <button class="vchip" data-act="cheio-de" data-col="${i.virou.col}" data-id="${esc(i.virou.id)}">${esc(rotItem(i.virou.col, byId(i.virou.col, i.virou.id)) || 'abrir')} ↗</button></div>` : ''}
+        ${i.status === 'Reprovada' ? `<div class="ped"><span>Reprovada${i.decisao ? ` por ${esc(i.decisao.por)} em ${esc(dataBR(i.decisao.em))}` : ''}${i.decisao && i.decisao.motivo ? ` — ${esc(i.decisao.motivo)}` : ''}</span></div>` : ''}
+        ${aberta && ap ? `<div class="ped-bt">
           <button class="fi-btn fi-btn--primary bt-s" data-act="tri-aprovar" data-col="modulos" data-id="${esc(i.id)}">✓ Aprovar como módulo</button>
           <button class="fi-btn fi-btn--primary bt-s" data-act="tri-aprovar" data-col="processos" data-id="${esc(i.id)}">✓ Aprovar como processo</button>
-          <button class="fi-btn bt-s" data-act="tri-descartar" data-id="${esc(i.id)}">✕ Descartar</button></div>` : aberta ? `<div class="muted" style="font-size:.74rem">Aguardando análise da Direção.</div>` : ''}
+          <button class="fi-btn bt-s" data-act="tri-descartar" data-id="${esc(i.id)}">✕ Reprovar</button></div>` : aberta ? `<div class="muted" style="font-size:.74rem">Em análise pela Direção.</div>` : ''}
+        ${notasBloco('ideias', i)}
       </div>`; }).join('')}</div>`}`;
 }
 function triNova() {
@@ -1501,9 +1535,9 @@ function triOk() {
   cs.forEach(c => { const e = modal.querySelector(`[data-tri="${c.id}"]`), x = (e.value || '').trim(); v[c.id] = x; if (!x) { falta.push(c.pergunta); modal.querySelector(`[data-campo="${c.id}"]`).classList.add('erro'); } });
   if (falta.length) { notify('Responda: ' + falta.join(' · '), 'warning'); return; }
   const id = uid(v.f1 || 'demanda'), resp = {}; cs.slice(1).forEach(c => { resp[c.id] = v[c.id]; });
-  const it = { id, titulo: v[cs[0].id], resp, autor: USER_TOK ? [USER_TOK] : [], porNome: quemSou(), porTok: meuTok(), em: new Date().toISOString(), status: 'Nova', area: cs.find(c => c.tipo === 'setor') ? v[cs.find(c => c.tipo === 'setor').id] : '' };
+  const it = { id, titulo: v[cs[0].id], resp, autor: USER_TOK ? [USER_TOK] : [], porNome: quemSou(), porTok: meuTok(), em: new Date().toISOString(), status: 'Em análise', notas: [], area: cs.find(c => c.tipo === 'setor') ? v[cs.find(c => c.tipo === 'setor').id] : '' };
   modal.close();
-  commit(st => { st.ideias.push(clone(it)); registrar(st, 'ideias', id, `Enviou a demanda “${it.titulo}” para a triagem.`, 'Triagem'); }, true);
+  commit(st => { st.ideias.push(clone(it)); registrar(st, 'ideias', id, `Enviou a demanda “${it.titulo}” para a triagem (em análise).`, 'Triagem'); }, true);
   notify('Demanda enviada para a triagem.', 'success');
 }
 function triAprovar(col, id) {
@@ -1517,9 +1551,9 @@ function triAprovar(col, id) {
 }
 function triDescartar(id) {
   const i = byId('ideias', id); if (!i) return;
-  modal.innerHTML = `<div class="m-head"><h2>Descartar “${esc(i.titulo)}”</h2><button class="rm" data-act="close">✕</button></div>
+  modal.innerHTML = `<div class="m-head"><h2>Reprovar “${esc(i.titulo)}”</h2><button class="rm" data-act="close">✕</button></div>
     <div class="m-body"><label class="fi-field"><span class="fi-label">Motivo <b class="req">*</b></span><textarea class="fi-input" rows="3" id="triMotivo"></textarea></label></div>
-    <div class="m-foot"><button class="fi-btn" data-act="close">Cancelar</button><button class="fi-btn fi-btn--danger" data-act="tri-desc-ok" data-id="${esc(id)}">Descartar</button></div>`;
+    <div class="m-foot"><button class="fi-btn" data-act="close">Cancelar</button><button class="fi-btn fi-btn--danger" data-act="tri-desc-ok" data-id="${esc(id)}">Reprovar</button></div>`;
   modal.showModal(); $('#triMotivo').focus();
 }
 
@@ -1820,7 +1854,7 @@ function fichaOk(col) {
     registrar(st, col, it.id, `Cadastrou ${col === 'modulos' ? 'o módulo' : 'o processo'} ${it.nome}${origem ? ' a partir da triagem' : ''}.`, 'Cadastro');
     criados.forEach(x => registrar(st, v.outro, x.id, `Cadastrou ${v.outro === 'modulos' ? 'o módulo' : 'o processo'} ${x.nome} (pelo vínculo com ${it.nome}).`, 'Cadastro'));
     if (origem) { const ide = st.ideias.find(z => z.id === origem); if (ide) { ide.status = 'Aprovada'; ide.virou = { col, id: it.id }; ide.decisao = { por: quemSou(), em: new Date().toISOString() };
-      const y = st[col].find(z => z.id === it.id); if (y) y.triagem = { id: ide.id, solicitante: ide.porNome || (ide.autor || []).map(tokName).join(', '), em: ide.em, respostas: triResumo(ide) };
+      const y = st[col].find(z => z.id === it.id); if (y) y.triagem = { id: ide.id, solicitante: ide.porNome || (ide.autor || []).map(tokName).join(', '), em: ide.em, respostas: triResumo(ide), cod: ide.cod };
       registrar(st, 'ideias', ide.id, `Aprovou a demanda “${ide.titulo}” como ${col === 'modulos' ? 'módulo' : 'processo'}.`, 'Triagem'); } }
   }, false);
   if (col === 'processos') { ui.procStatus = ''; ui.procQ = ''; ui.procMod = ''; ui.procArea = '*'; } else { ui.modPrio = ''; ui.modQ = ''; }
@@ -1936,7 +1970,7 @@ document.addEventListener('click', async e => {
     case 'notas-tog': ui.notasAbertas = ui.notasAbertas || {}; ui.notasAbertas[id] = !ui.notasAbertas[id]; render(); break;
     case 'upd-f': ui.updF = id; render(); break;
     case 'upd-tab': ui.updTab = id; render(); break;
-    case 'cheio-de': { const c = el.dataset.col; ui.cheio = { col: c, id }; if (c === 'processos') { ui.procQ = ''; ui.procArea = '*'; ui.procStatus = ''; ui.procMod = ''; } else { ui.modQ = ''; ui.modPrio = ''; } go(c); scrollTo({ top: 0 }); break; }
+    case 'cheio-de': { const c = el.dataset.col; ui.cheio = { col: c, id }; ui.ideiaStatus = ''; if (c === 'processos') { ui.procQ = ''; ui.procArea = '*'; ui.procStatus = ''; ui.procMod = ''; } else { ui.modQ = ''; ui.modPrio = ''; } go(c === 'ideias' ? 'backlog' : c); scrollTo({ top: 0 }); break; }
     case 'upd-lida': setLeitura([el.dataset.n], 1); break;
     case 'upd-naolida': setLeitura([el.dataset.n], 0); break;
     case 'upd-todas': { const m = leituraMapa(); setLeitura(todasNotas().filter(({ n }) => !lida(n, m)).map(({ n }) => n.id), 1); break; }
@@ -1946,7 +1980,7 @@ document.addEventListener('click', async e => {
       ui.notasAbertas = ui.notasAbertas || {}; ui.notasAbertas[id] = true;
       if (c === 'processos') { ui.procQ = ''; ui.procArea = '*'; ui.procStatus = ''; ui.procMod = ''; } else { ui.modQ = ''; ui.modPrio = ''; }
       ui.cheio = { col: c, id };
-      ui.focus = `[data-nota="${el.dataset.n}"]`; go(c);
+      ui.focus = `[data-nota="${el.dataset.n}"]`; ui.ideiaStatus = ''; go(c === 'ideias' ? 'backlog' : c);
       setTimeout(() => { const e = document.querySelector(`[data-nota="${el.dataset.n}"]`); if (e) { e.classList.add('pisca'); setTimeout(() => e.classList.remove('pisca'), 2200); } }, 50);
       break;
     }
@@ -1975,9 +2009,10 @@ document.addEventListener('click', async e => {
     case 'tri-aprovar': triAprovar(el.dataset.col, id); break;
     case 'tri-descartar': triDescartar(id); break;
     case 'tri-desc-ok': { const mo = ($('#triMotivo').value || '').trim(); if (!mo) { notify('Informe o motivo.', 'warning'); break; } modal.close();
-      commit(st => { const i = st.ideias.find(z => z.id === id); if (!i) return; i.status = 'Descartada'; i.decisao = { por: quemSou(), em: new Date().toISOString(), motivo: mo }; registrar(st, 'ideias', id, `Descartou a demanda “${i.titulo}”: ${mo}`, 'Triagem'); }, true); break; }
+      commit(st => { const i = st.ideias.find(z => z.id === id); if (!i) return; i.status = 'Reprovada'; i.decisao = { por: quemSou(), em: new Date().toISOString(), motivo: mo }; registrar(st, 'ideias', id, `Reprovou a demanda “${i.titulo}”: ${mo}`, 'Triagem'); }, true); break; }
     case 'tri-analise': commit(st => { const i = st.ideias.find(z => z.id === id); if (!i) return; i.status = 'Em análise'; registrar(st, 'ideias', id, `Colocou em análise a demanda “${i.titulo}”.`, 'Triagem'); }, true); break;
     case 'log-f': ui.logF = id; render(); break;
+    case 'log-item-x': ui.logItem = ''; render(); break;
     case 'adm-go': if (modal.open) modal.close(); ui.admSec = id; go('adm'); break;
     case 'export-csv': exportCsv(); break;
     case 'tri-reset': if (await ask('Voltar as perguntas da triagem ao padrão?')) commit(st => { st.triagem = clone(TRIAGEM_PADRAO); }, true); break;
