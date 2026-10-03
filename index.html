@@ -41,6 +41,7 @@ h1,h2,h3,h4,p{margin:0}
 .proj-name{display:flex;flex-direction:column;border-left:1px solid var(--fi-line);padding-left:18px;min-width:0}
 .proj-name b{font-size:.95rem;font-weight:750;letter-spacing:-.01em}
 .proj-name small{color:var(--fi-muted);font-size:.72rem}
+#docVersao b{font-weight:800;color:var(--fi-text)}
 .sync{font-size:.72rem;color:var(--fi-muted);white-space:nowrap;align-self:center}
 .sync.erro{color:var(--fi-danger);cursor:pointer;font-weight:700}
 .sync.salvando{color:var(--fi-warning)}
@@ -268,6 +269,11 @@ body.tema-claro .menu{box-shadow:0 2px 10px rgba(28,37,46,.08)}
 .atr-lista label .cod{margin-right:4px}
 .tri-rm.rep .tr-s.feito::before{background:color-mix(in srgb,var(--fi-muted,#6b7280) 55%,#dfe3e8)}
 .tri-rm.rep .tr-nomes b.feito{color:var(--fi-muted)}
+/* Cartões: ícones (status, código, página inteira, excluir) em cima, título embaixo na largura total */
+[data-card]>.card-top,[data-card]>.proc-top{flex-wrap:wrap;justify-content:flex-end;align-items:center;row-gap:6px}
+[data-card]>.card-top>.grow,[data-card]>.proc-top>.grow{order:2;flex:1 1 100%!important;min-width:0}
+[data-card]>.card-top .cod,[data-card]>.proc-top .cod{margin-left:0}
+[data-card]>.card-top>h3.grow{margin:0}
 .trilha-w{margin:10px 0 2px}.trilha-w .k b{color:var(--exec)}
 .trilha{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
 .tr-s{display:flex;flex-direction:column;gap:3px;min-width:0}
@@ -385,7 +391,7 @@ dialog::backdrop{background:rgba(9,12,16,.55)}
 
 <header class="fi-topbar">
   <a class="fi-brand" href="#modulos"><img data-fi-logo></a>
-  <div class="proj-name"><b data-fi-page-title>Projeto Plataforma Corporativa</b><small>Protheus + Plataforma Fiorella + IA</small></div>
+  <div class="proj-name"><b data-fi-page-title>Projeto Plataforma Corporativa</b><small id="docVersao" title="Versão deste arquivo HTML. Aumenta a cada atualização entregue.">Versão do documento: <b>v25</b> · 03/10/2026</small></div>
   <div class="fi-topbar__actions">
     <span class="sync" id="sync"></span>
     <button class="fi-btn btn-edit" id="btnEdit" data-act="toggle-edit" hidden>✎ Editar</button>
@@ -411,6 +417,9 @@ dialog::backdrop{background:rgba(9,12,16,.55)}
    ADM → Dados → Restaurar. Referência a participante = "@id";
    qualquer outro texto é texto livre (ex.: "Gestor da área").
    ===================================================================== */
+/* VERSÃO DO DOCUMENTO (HTML): aumentar em 1 a cada atualização entregue. Aparece no topo, abaixo da versão da Fiorella UI. */
+const DOC_VERSAO = 25, DOC_DATA = '03/10/2026';
+console.info('[Projeto Fiorella] versão do documento v' + DOC_VERSAO + ' · ' + DOC_DATA);
 const SCHEMA = 11;
 const SEED = {
   schema: SCHEMA,
