@@ -41,7 +41,7 @@ h1,h2,h3,h4,p{margin:0}
 .proj-name{display:flex;flex-direction:column;border-left:1px solid var(--fi-line);padding-left:18px;min-width:0}
 .proj-name b{font-size:.95rem;font-weight:750;letter-spacing:-.01em}
 .proj-name small{color:var(--fi-muted);font-size:.72rem}
-#docVersao b{font-weight:800;color:var(--fi-text)}
+#docVersao{font-weight:400}
 .sync{font-size:.72rem;color:var(--fi-muted);white-space:nowrap;align-self:center}
 .sync.erro{color:var(--fi-danger);cursor:pointer;font-weight:700}
 .sync.salvando{color:var(--fi-warning)}
@@ -206,10 +206,12 @@ input.up::placeholder{text-transform:none}
 /* Ícone de bate-papo acima de "Atualizações" */
 .tab.tab-upd{flex-direction:column;gap:1px;padding-top:4px;padding-bottom:7px;justify-content:flex-end}
 .chat{display:inline-flex;align-items:center;gap:3px;line-height:1}
-.chat svg{width:15px;height:15px}
-.bal{display:inline-block;min-width:16px;padding:1px 5px;border-radius:999px;font-size:.6rem;font-weight:800;text-align:center;color:#fff;border:1px solid transparent}
+.chat{gap:4px}
+.bal{display:inline-flex;align-items:center;gap:3px;min-width:16px;padding:1px 6px 1px 5px;border-radius:999px;font-size:.6rem;font-weight:800;text-align:center;color:#fff;border:1px solid transparent}
 .bal.novas{background:#d6182f}
 .bal.mencoes{background:#1f5f8b}
+.bal.aprovs{background:#b45309}
+.bal svg{width:10px;height:10px;flex:none}
 .bal.off{background:var(--fi-surface,#fff);color:var(--fi-text,#111);border-color:var(--fi-text,#111);filter:grayscale(1)}
 .cond{display:inline-block;padding:2px 8px;border-radius:5px;font-size:.7rem;font-weight:800;border:1px solid}
 .cond-pausado{color:#a16207;border-color:#a16207;background:color-mix(in srgb,#a16207 10%,transparent)}
@@ -274,6 +276,11 @@ body.tema-claro .menu{box-shadow:0 2px 10px rgba(28,37,46,.08)}
 [data-card]>.card-top>.grow,[data-card]>.proc-top>.grow{order:2;flex:1 1 100%!important;min-width:0}
 [data-card]>.card-top .cod,[data-card]>.proc-top .cod{margin-left:0}
 [data-card]>.card-top>h3.grow{margin:0}
+.ico{display:inline-grid;place-items:center;font-style:normal;margin-right:6px;vertical-align:-2px;color:currentColor}
+.ico svg{width:15px;height:15px}
+.upd-tabs .ico{color:var(--fi-text);opacity:.8}
+.upd-tabs button.on .ico{color:currentColor;opacity:1}
+.bt-s .ico svg{width:12px;height:12px}
 .trilha-w{margin:10px 0 2px}.trilha-w .k b{color:var(--exec)}
 .trilha{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
 .tr-s{display:flex;flex-direction:column;gap:3px;min-width:0}
@@ -391,7 +398,7 @@ dialog::backdrop{background:rgba(9,12,16,.55)}
 
 <header class="fi-topbar">
   <a class="fi-brand" href="#modulos"><img data-fi-logo></a>
-  <div class="proj-name"><b data-fi-page-title>Projeto Plataforma Corporativa</b><small id="docVersao" title="Versão deste arquivo HTML. Aumenta a cada atualização entregue.">Versão do documento: <b>v25</b> · 03/10/2026</small></div>
+  <div class="proj-name"><b data-fi-page-title>Projeto Plataforma Corporativa</b><small id="docVersao" title="Versão deste arquivo HTML (03/10/2026). Aumenta a cada atualização entregue.">Documento V.001</small></div>
   <div class="fi-topbar__actions">
     <span class="sync" id="sync"></span>
     <button class="fi-btn btn-edit" id="btnEdit" data-act="toggle-edit" hidden>✎ Editar</button>
@@ -417,9 +424,9 @@ dialog::backdrop{background:rgba(9,12,16,.55)}
    ADM → Dados → Restaurar. Referência a participante = "@id";
    qualquer outro texto é texto livre (ex.: "Gestor da área").
    ===================================================================== */
-/* VERSÃO DO DOCUMENTO (HTML): aumentar em 1 a cada atualização entregue. Aparece no topo, abaixo da versão da Fiorella UI. */
-const DOC_VERSAO = 25, DOC_DATA = '03/10/2026';
-console.info('[Projeto Fiorella] versão do documento v' + DOC_VERSAO + ' · ' + DOC_DATA);
+/* VERSÃO DO DOCUMENTO (HTML): aumentar em 1 a cada atualização entregue (formato V.001). Aparece no topo, abaixo da versão da Fiorella UI. */
+const DOC_VERSAO = 'V.001', DOC_DATA = '03/10/2026';
+console.info('[Projeto Fiorella] documento ' + DOC_VERSAO + ' · ' + DOC_DATA);
 const SCHEMA = 11;
 const SEED = {
   schema: SCHEMA,
@@ -1056,7 +1063,7 @@ function etapaCtl(col, x, compact) {
     h += `<div class="fim">✔ Entregue e finalizado${compact ? '' : ` — assinado por ${esc(x.concluido.por)} em ${esc(dataBR(x.concluido.em))}`}</div>`;
   } else if (ped) {
     h += `<div class="ped"><span>⏳ Aguardando aprovação: <b>${esc(nomeEt(x.etapa))} → ${esc(nomeEt(ped.para))}</b>${compact ? '' : ` · pedido por ${esc(ped.por)} em ${esc(dataBR(ped.em))}`}</span>
-      <span class="ped-bt">${podeAprovar(col) ? `<button class="fi-btn fi-btn--primary bt-s" data-act="et-ok" data-col="${col}" data-id="${esc(x.id)}">${ped.para === FIM ? '✍ Assinar e finalizar' : '✓ Aprovar'}</button><button class="fi-btn bt-s" data-act="et-no" data-col="${col}" data-id="${esc(x.id)}">✕ Recusar</button>` : ''}
+      <span class="ped-bt">${podeAprovar(col) ? `<button class="fi-btn fi-btn--primary bt-s" data-act="et-ok" data-col="${col}" data-id="${esc(x.id)}">${ped.para === FIM ? 'Assinar e finalizar' : '✓ Aprovar'}</button><button class="fi-btn bt-s" data-act="et-no" data-col="${col}" data-id="${esc(x.id)}">✕ Recusar</button>` : ''}
       ${souResp(col, x) || isAdm ? `<button class="fi-btn bt-s" data-act="et-cancel" data-col="${col}" data-id="${esc(x.id)}">Cancelar pedido</button>` : ''}</span></div>`;
   } else if (souResp(col, x) && podeCad(col, 'editar')) {
     h += `<div class="ped-bt">${ult ? `<button class="fi-btn bt-s" data-act="et-pedir" data-col="${col}" data-id="${esc(x.id)}" data-dir="1">Liberar para entrega → Direção assina</button>` : `<button class="fi-btn bt-s" data-act="et-pedir" data-col="${col}" data-id="${esc(x.id)}" data-dir="1">Solicitar avanço → ${esc(nomeEt(S.etapas[i + 1].id))}</button>`}
@@ -1184,10 +1191,16 @@ function todasNotas() {
   return out.sort((a, b) => String(b.n.em).localeCompare(String(a.n.em)));
 }
 function nMencoes() { try { const m = leituraMapa(); return todasNotas().filter(({ n }) => meMenciona(n) && !lida(n, m)).length; } catch (e) { return 0; } }
+function nAprovMinhas() { try { return paraMim().length + (podeTri() ? S.ideias.filter(i => i.status === 'Em análise').length : 0); } catch (e) { return 0; } }
+const IC_MSG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
+const IC_AT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.9 7.9"/></svg>';
+const IC_LIST = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6h.01M4 12h.01M4 18h.01"/></svg>';
+const IC_LINK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>';
+const IC_PEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
 function chatIcone() {
-  const n = nNaoLidas(), m = nMencoes();
-  return `<span class="chat" title="${n} nova(s) · ${m} menção(ões)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-    <b class="bal novas${n ? '' : ' off'}">${n}</b><b class="bal mencoes${m ? '' : ' off'}">@${m}</b></span>`;
+  const n = nNaoLidas(), m = nMencoes(), a = nAprovMinhas();
+  return `<span class="chat" title="${n} mensagem(ns) nova(s) · ${m} menção(ões) · ${a} aprovação(ões) pendente(s)">
+    <b class="bal novas${n ? '' : ' off'}">${IC_MSG}${n}</b><b class="bal mencoes${m ? '' : ' off'}">${IC_AT}${m}</b><b class="bal aprovs${a ? '' : ' off'}">${IC_PEN}${a}</b></span>`;
 }
 function nNaoLidas() { try { const m = leituraMapa(); return todasNotas().filter(({ n }) => !lida(n, m)).length; } catch (e) { return 0; } }
 function mencoesDe(txt) {
@@ -1239,7 +1252,7 @@ function linhaAprov({ col, x }, comBotoes) {
       ${(x.cond || 'Normal') !== 'Normal' ? `<span class="cond cond-${esc(norm(x.cond))}">${esc(x.cond)}</span>` : ''}</div>
     <div class="aprov-m"><b>${esc(nm(x.etapa))} → ${esc(nm(p.para))}</b> <span class="muted">· pedido por ${esc(p.por)} em ${esc(dataBR(p.em))}</span></div>
     ${trilha(x)}
-    <div class="ped-bt">${comBotoes && podeAprovar(col) ? `<button class="fi-btn fi-btn--primary bt-s" data-act="et-ok" data-col="${col}" data-id="${esc(x.id)}">${p.para === FIM ? '✍ Assinar e finalizar' : '✓ Aprovar'}</button><button class="fi-btn bt-s" data-act="et-no" data-col="${col}" data-id="${esc(x.id)}">✕ Recusar</button>` : ''}
+    <div class="ped-bt">${comBotoes && podeAprovar(col) ? `<button class="fi-btn fi-btn--primary bt-s" data-act="et-ok" data-col="${col}" data-id="${esc(x.id)}">${p.para === FIM ? 'Assinar e finalizar' : '✓ Aprovar'}</button><button class="fi-btn bt-s" data-act="et-no" data-col="${col}" data-id="${esc(x.id)}">✕ Recusar</button>` : ''}
       ${podeCad(col, 'editar') ? `<button class="fi-btn bt-s" data-act="et-cancel" data-col="${col}" data-id="${esc(x.id)}">Cancelar pedido</button>` : ''}</div>
   </div>`;
 }
@@ -1266,7 +1279,7 @@ function vAprovacoes() {
   return `${tri.length ? `<div class="sec"><span>Demandas aguardando triagem</span> <span class="count">${tri.length}</span></div><div class="fi-card" style="padding:10px 14px;margin-bottom:8px">${tri.map(i => `<button class="tri-row" data-act="cheio-de" data-col="ideias" data-id="${esc(i.id)}" title="Abrir a demanda completa"><span class="cod">${esc(i.cod || '')}</span><b>${esc(i.titulo)}</b> <span class="muted">${esc([i.porNome, dataBR(i.em)].filter(Boolean).map(t => '· ' + t).join(' '))}</span><span class="tri-go">Abrir ↗</span></button>`).join('')}</div>` : ''}
   
     ${sou ? `<div class="sec"><span>Aguardando sua aprovação</span> <span class="count">${mim.length}</span></div>
-      ${mim.length ? `<div class="aprov-list">${mim.map(r => linhaAprov(r, true)).join('')}</div>` : `<div class="fi-card fi-empty">Nenhuma aprovação pendente para você. 👍</div>`}` :
+      ${mim.length ? `<div class="aprov-list">${mim.map(r => linhaAprov(r, true)).join('')}</div>` : `<div class="fi-card fi-empty">Nenhuma aprovação pendente para você.</div>`}` :
       `<div class="fi-alert" style="margin-bottom:12px">Somente a Direção (sponsors) ou o admin aprovam mudanças de etapa${USER_TOK ? '' : '. Seu e-mail de login não está em ADM → Participantes, por isso a ferramenta não sabe quem você é'}.</div>`}
     <div class="sec"><span>Seus pedidos aguardando aprovação</span> <span class="count">${meus.length}</span></div>
     ${meus.length ? `<div class="aprov-list">${meus.map(r => linhaAprov(r, false)).join('')}</div>` : `<div class="muted" style="font-size:.84rem">Você não tem pedidos pendentes.</div>`}
@@ -1276,7 +1289,7 @@ function vAprovacoes() {
 function vAtualizacoes() {
   const guia = ui.updTab || 'mensagens', nAprov = paraMim().length;
   const nTri = podeTri() ? S.ideias.filter(i => i.status === 'Em análise').length : 0;
-  const abas = `<div class="upd-tabs"><button class="${guia === 'mensagens' ? 'on' : ''}" data-act="upd-tab" data-id="mensagens">💬 Mensagens <b>${nNaoLidas()}</b></button><button class="${guia === 'aprovacoes' ? 'on' : ''}" data-act="upd-tab" data-id="aprovacoes">✓ Aprovações <b class="${nAprov + nTri ? 'tem' : ''}">${nAprov + nTri}</b></button><button class="${guia === 'log' ? 'on' : ''}" data-act="upd-tab" data-id="log">📋 Registro de atividades <b>${(S.log || []).length}</b></button></div>`;
+  const abas = `<div class="upd-tabs"><button class="${guia === 'mensagens' ? 'on' : ''}" data-act="upd-tab" data-id="mensagens"><i class="ico">${IC_MSG}</i>Mensagens <b>${nNaoLidas()}</b></button><button class="${guia === 'aprovacoes' ? 'on' : ''}" data-act="upd-tab" data-id="aprovacoes"><i class="ico">${IC_PEN}</i>Aprovações <b class="${nAprov + nTri ? 'tem' : ''}">${nAprov + nTri}</b></button><button class="${guia === 'log' ? 'on' : ''}" data-act="upd-tab" data-id="log"><i class="ico">${IC_LIST}</i>Registro de atividades <b>${(S.log || []).length}</b></button></div>`;
   if (guia === 'log') {
     $('#view').className = 'fi-page fam-ink-exec';
     $('#view').innerHTML = `${head('atualizacoes')}${abas}${vLog()}`;
@@ -1297,7 +1310,7 @@ function vAtualizacoes() {
     ${abas}
     <div class="subnav">${[['naolidas', 'Não lidas'], ['mencoes', 'Menções a mim'], ['todas', 'Todas']].map(([k, lb]) => `<button class="${f === k ? 'on' : ''}" data-act="upd-f" data-id="${k}">${lb}<b>${cnt[k]}</b></button>`).join('')}</div>
     ${!USER_TOK ? `<div class="fi-alert" style="margin-bottom:12px">Seu e-mail de login não está em ADM → Participantes: as anotações aparecem com o seu e-mail e as menções com @ não chegam até você.</div>` : ''}
-    ${!l.length ? `<div class="fi-card fi-empty">${f === 'naolidas' ? 'Tudo lido. 👍' : 'Nada por aqui.'}</div>` : `<div class="upd-list">${l.map(({ n, col, x }) => { const li = lida(n, mapa); return `
+    ${!l.length ? `<div class="fi-card fi-empty">${f === 'naolidas' ? 'Tudo lido.' : 'Nada por aqui.'}</div>` : `<div class="upd-list">${l.map(({ n, col, x }) => { const li = lida(n, mapa); return `
       <div class="fi-card upd${li ? '' : ' nova'}">
         <div class="upd-h"><span class="nmark">${esc(initials(n.por || '?'))}</span><b>${esc(n.por)}</b><span class="muted">${esc(dataBR(n.em))}</span>${meMenciona(n) ? '<span class="nl-tag">mencionou você</span>' : ''}
           <span style="flex:1"></span><button class="vchip" data-act="nota-abrir" data-col="${col}" data-id="${esc(x.id)}" data-n="${esc(n.id)}" title="Abrir o cartão de origem">${colRot(col)} · ${esc(rotItem(col, x))} ↗</button></div>
@@ -1565,8 +1578,8 @@ function vBacklog() {
         ${aberta && ap ? `<div class="ped-bt">
           <button class="fi-btn fi-btn--primary bt-s" data-act="tri-aprovar" data-col="modulos" data-id="${esc(i.id)}">✓ Aprovar como módulo</button>
           <button class="fi-btn fi-btn--primary bt-s" data-act="tri-aprovar" data-col="processos" data-id="${esc(i.id)}">✓ Aprovar como processo</button>
-          <button class="fi-btn bt-s" data-act="tri-atrelar" data-col="modulos" data-id="${esc(i.id)}">🔗 Atrelar a módulo existente</button>
-          <button class="fi-btn bt-s" data-act="tri-atrelar" data-col="processos" data-id="${esc(i.id)}">🔗 Atrelar a processo existente</button>
+          <button class="fi-btn bt-s" data-act="tri-atrelar" data-col="modulos" data-id="${esc(i.id)}"><i class="ico">${IC_LINK}</i>Atrelar a módulo existente</button>
+          <button class="fi-btn bt-s" data-act="tri-atrelar" data-col="processos" data-id="${esc(i.id)}"><i class="ico">${IC_LINK}</i>Atrelar a processo existente</button>
           <button class="fi-btn bt-s" data-act="tri-descartar" data-id="${esc(i.id)}">✕ Reprovar</button></div>` : aberta ? `<div class="muted" style="font-size:.74rem">Em análise pela Direção.</div>` : ''}
         ${notasBloco('ideias', i)}
       </div>`; }).join('')}</div>`}`;
@@ -2155,7 +2168,7 @@ function menAbrir(ta) {
   if (!m) { menFechar(); return; }
   const q = norm(m[2]);
   men.itens = S.participantes.filter(p => p.status !== 'Inativo' && (!q || norm(p.nome).startsWith(q) || norm(p.nome).includes(q))).sort((a, b) => (q && norm(b.nome).startsWith(q)) - (q && norm(a.nome).startsWith(q)) || a.nome.localeCompare(b.nome)).slice(0, 8);
-  if (!men.itens.length) { menFechar(); return; }
+  if (!men.itens.length || (men.itens.length === 1 && norm(men.itens[0].nome) === q)) { menFechar(); return; }
   if (!men.el) { men.el = document.createElement('div'); men.el.className = 'men-pop'; document.body.appendChild(men.el);
     men.el.addEventListener('mousedown', e => { const b = e.target.closest('[data-men-i]'); if (!b) return; e.preventDefault(); menEscolher(+b.dataset.menI); }); }
   men.ta = ta; men.ini = pos - m[2].length - 1; if (men.sel >= men.itens.length) men.sel = 0;
