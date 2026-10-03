@@ -228,6 +228,10 @@ input.up::placeholder{text-transform:none}
 .aprov{padding:12px 14px;display:grid;gap:6px;border-left:4px solid var(--fi-warning,#a16207)}
 .aprov-h{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .aprov-m{font-size:.86rem}
+.resp-et{font-size:.74rem;color:var(--fi-text);background:var(--fi-surface-alt,#f3f4f6);border-radius:6px;padding:4px 8px}
+.resp-et b{color:var(--doc)}
+.fim{font-size:.8rem;font-weight:800;color:#15803d;background:color-mix(in srgb,#15803d 10%,transparent);border:1px solid color-mix(in srgb,#15803d 35%,transparent);border-radius:7px;padding:6px 9px}
+.resp-ent{margin-top:4px;padding-top:4px;border-top:1px dashed var(--fi-line,#dfe3e8)}
 .trilha-w{margin:10px 0 2px}.trilha-w .k b{color:var(--exec)}
 .trilha{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
 .tr-s{display:flex;flex-direction:column;gap:3px;min-width:0}
@@ -371,7 +375,7 @@ dialog::backdrop{background:rgba(9,12,16,.55)}
    ADM → Dados → Restaurar. Referência a participante = "@id";
    qualquer outro texto é texto livre (ex.: "Gestor da área").
    ===================================================================== */
-const SCHEMA = 7;
+const SCHEMA = 9;
 const SEED = {
   schema: SCHEMA,
   textos: {
@@ -401,6 +405,7 @@ const SEED = {
       admListas: 'Listas de opções',
       admDados: 'Dados e acessos',
       admCad: 'Cadastro de módulos e processos',
+      admResp: 'Responsáveis por etapa',
     },
   },
   projeto: {
@@ -424,12 +429,12 @@ const SEED = {
   /* Fluxo simples: levantamento → definição → avaliação técnica → aprovação → execução → acompanhamento */
   etapas: [
     { id: 'levantamento', nome: 'Levantamento', desc: 'Documentar a rotina real (AS-IS): quem faz, como faz, documentos, sistemas usados e gargalos.', resp: ['@wesley'], part: 'Referência do setor / Key User', entrega: 'Mapa do processo atual e lista de gargalos' },
-    { id: 'definicao', nome: 'Definição', desc: 'Desenhar o processo futuro (TO-BE): responsável, executor, aprovador, prazo, escalonamento e integrações.', resp: ['@victor', '@flavio'], part: 'Gestor da área + Wesley', entrega: 'Processo futuro definido' },
+    { id: 'definicao', nome: 'Escopo', desc: 'Definir o escopo e o processo futuro (TO-BE): responsável, executor, aprovador, prazo, escalonamento e integrações.', resp: ['@victor', '@flavio'], part: 'Gestor da área + Wesley', entrega: 'Processo futuro definido' },
     { id: 'avaliacao', nome: 'Avaliação técnica', desc: 'Verificar viabilidade, integração com o Protheus, arquitetura, segurança e esforço.', resp: ['@thiago'], part: 'Alexandre', entrega: 'Parecer técnico e solução proposta' },
     { id: 'aprovacao', nome: 'Aprovação', desc: 'Validação dos sponsors antes de iniciar desenvolvimento ou configuração.', resp: ['@flavio', '@victor'], part: 'Gestor da área', entrega: 'Escopo aprovado' },
     { id: 'desenvolvimento', nome: 'Desenvolvimento', desc: 'Desenvolvimento, configuração, integrações e testes internos da solução aprovada.', resp: ['@alexandre'], part: 'Thiago + Dailon', entrega: 'Solução pronta para homologar' },
     { id: 'homologacao', nome: 'Homologação', desc: 'Key user testa e aprova, treinamento dos usuários e entrada em produção.', resp: ['@alexandre'], part: 'Key User + gestor da área', entrega: 'Solução homologada e em produção' },
-    { id: 'acompanhamento', nome: 'Acompanhamento', desc: 'Medir uso, SLA e conformidade. Processo implantado não basta estar documentado.', resp: ['@wesley'], part: 'Gestor da área', entrega: 'Indicadores de adoção' },
+    { id: 'acompanhamento', nome: 'Entrega', desc: 'O coordenador técnico libera para entrega; a Direção assina e finaliza.', resp: ['@alexandre'], part: 'Direção (assina e finaliza)', entrega: 'Entregue e finalizado' },
   ],
 
   listas: {
@@ -594,6 +599,10 @@ function aplicarPlanilhaIA(d) {
    "obrigatório" são parametrizáveis em ADM → Cadastro de módulos e processos.
    "_vinc" = vínculo recíproco módulo ⇄ processo.
    ===================================================================== */
+/* Quem submete à Direção o pedido de mudança de etapa, por etapa (ADM → Responsáveis).
+   "direcao" = participantes do grupo Direção; "tipo:<id>" = papel no projeto; "pessoa:<id>" = um participante. */
+const RESP_PADRAO = { levantamento: 'pessoa:wesley', definicao: 'direcao', avaliacao: 'tipo:arquiteto', aprovacao: 'direcao', desenvolvimento: 'tipo:arquiteto', homologacao: 'tipo:coordtec', acompanhamento: 'tipo:coordtec' };
+const FIM = '__fim';
 const CAMPOS = {
   modulos: [
     { k: 'nome', tipo: 'texto', fixo: 1, pergunta: 'Qual o nome do módulo?', ajuda: 'Nome curto, como vai aparecer na plataforma. Ex.: CRM Comercial, Gestão de NF-e.' },
@@ -665,7 +674,7 @@ const PEOPLE_FIELDS = {
 };
 const COL_LABEL = { modulos: 'Módulos', processos: 'Processos', sistemas: 'Sistemas', areas: 'Áreas', ideias: 'Backlog', etapas: 'Etapas de implantação', fases: 'Fases do projeto' };
 /* Coleções editáveis somente por admin (guia ADM) */
-const ADM_ROOTS = ['participantes', 'areas', 'tipos', 'listas', 'cadastro'];
+const ADM_ROOTS = ['participantes', 'areas', 'tipos', 'listas', 'cadastro', 'responsaveis'];
 
 /* Novos itens */
 const NEW = {
@@ -764,6 +773,14 @@ function migrate(d) {
     if (!x.cond) x.cond = 'Normal';
   }));
   delete d.listas.stModulo; delete d.listas.stProcesso;
+  /* versão 8: responsáveis por etapa; Definição → Escopo; Acompanhamento → Entrega (finalização assinada pela Direção) */
+  (d.etapas || []).forEach(e => {
+    if (e.id === 'definicao' && e.nome === 'Definição') { e.nome = 'Escopo'; }
+    if (e.id === 'acompanhamento' && e.nome === 'Acompanhamento') { const n = SEED.etapas.find(x => x.id === 'acompanhamento'); Object.assign(e, { nome: n.nome, desc: n.desc, part: n.part, entrega: n.entrega }); }
+  });
+  d.responsaveis = d.responsaveis || {};
+  ['modulos', 'processos'].forEach(c => { d.responsaveis[c] = Object.assign({}, RESP_PADRAO, d.responsaveis[c] || {}); });
+  if ((d.schema || 0) < 9 && (d.participantes || []).some(p => p.id === 'wesley')) ['modulos', 'processos'].forEach(c => { if (d.responsaveis[c].levantamento === 'tipo:analista') d.responsaveis[c].levantamento = 'pessoa:wesley'; });
   if (!d.listas.condicoes) d.listas.condicoes = clone(SEED.listas.condicoes);
   delete d.tarefas; delete d._savedAt;
   d.schema = SCHEMA;
@@ -912,8 +929,8 @@ const ADD = (col, label) => (col === 'modulos' || col === 'processos') ? (podeCa
 
 /* Roadmap individual: as 6 etapas em sequência, com a etapa atual destacada */
 function trilha(x) {
-  const i = S.etapas.findIndex(e => e.id === x.etapa);
-  return `<div class="trilha-w"><div class="k">Roadmap individual · etapa ${i + 1} de ${S.etapas.length}: <b>${esc((S.etapas[i] || {}).nome || '—')}</b></div>
+  const i = x.concluido ? S.etapas.length : S.etapas.findIndex(e => e.id === x.etapa);
+  return `<div class="trilha-w"><div class="k">Roadmap individual · ${x.concluido ? '<b>entregue e finalizado</b>' : `etapa ${i + 1} de ${S.etapas.length}: <b>${esc((S.etapas[i] || {}).nome || '—')}</b>`}</div>
     <div class="trilha">${S.etapas.map((e, k) =>
     `<span class="tr-s${k < i ? ' feito' : k === i ? ' atual' : ''}" title="${k + 1}. ${esc(e.nome)}"><b>${k + 1}</b></span>`).join('')}</div>
     <div class="tr-nomes">${S.etapas.map((e, k) => `<b class="${k < i ? 'feito' : k === i ? 'atual' : ''}">${k + 1}. ${esc(e.nome)}</b>`).join('<span class="sep">›</span>')}</div></div>`;
@@ -924,38 +941,57 @@ const quemSou = () => { const p = USER_TOK && byId('participantes', USER_TOK.sli
 const souDiretor = () => !!(USER_TOK && diretores().some(p => '@' + p.id === USER_TOK));
 const podeAprovar = col => canEdit && (isAdm || (cfgCad(col).aprovar !== 'admin' && souDiretor()));
 const dataBR = iso => { try { const d = new Date(iso); return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; } };
+const respDe = (col, et) => ((S.responsaveis || {})[col] || RESP_PADRAO)[et] || '';
+const respRot = v => v === 'direcao' ? 'Direção (diretoria)' : v && v.startsWith('tipo:') ? (nome('tipos', v.slice(5)) || '—') : v && v.startsWith('pessoa:') ? (nome('participantes', v.slice(7)) || '(participante removido)') : 'Qualquer editor';
+const respGente = v => v === 'direcao' ? diretores() : v && v.startsWith('tipo:') ? S.participantes.filter(p => p.status !== 'Inativo' && p.tipo === v.slice(5)) : v && v.startsWith('pessoa:') ? S.participantes.filter(p => p.id === v.slice(7)) : [];
+const souResp = (col, x) => isAdm || (() => { const v = respDe(col, x.etapa); if (!v) return podeCad(col, 'editar'); return !!USER_TOK && respGente(v).some(p => '@' + p.id === USER_TOK); })();
+const nomeEt = id => id === FIM ? 'Finalizado' : nome('etapas', id);
+function respLinha(col, x) {
+  if (x.concluido) return '';
+  const v = respDe(col, x.etapa), g = respGente(v).map(p => p.nome);
+  return `<div class="resp-et">Responsável por pedir a mudança de etapa: <b>${esc(respRot(v))}</b>${g.length && !(v || '').startsWith('pessoa:') ? ` <span class="muted">(${esc(g.join(', '))})</span>` : ''}</div>`;
+}
 function etapaCtl(col, x, compact) {
-  const i = S.etapas.findIndex(e => e.id === x.etapa), ped = x.pedido, nm = id => nome('etapas', id);
+  const i = S.etapas.findIndex(e => e.id === x.etapa), ped = x.pedido, ult = i === S.etapas.length - 1;
   let h = '';
-  if (ped) {
-    h += `<div class="ped"><span>⏳ Aguardando aprovação: <b>${esc(nm(x.etapa))} → ${esc(nm(ped.para))}</b>${compact ? '' : ` · pedido por ${esc(ped.por)} em ${esc(dataBR(ped.em))}`}</span>
-      <span class="ped-bt">${podeAprovar(col) ? `<button class="fi-btn fi-btn--primary bt-s" data-act="et-ok" data-col="${col}" data-id="${esc(x.id)}">✓ Aprovar</button><button class="fi-btn bt-s" data-act="et-no" data-col="${col}" data-id="${esc(x.id)}">✕ Recusar</button>` : ''}
-      ${podeCad(col, 'editar') ? `<button class="fi-btn bt-s" data-act="et-cancel" data-col="${col}" data-id="${esc(x.id)}">Cancelar pedido</button>` : ''}</span></div>`;
-  } else if (podeCad(col, 'editar')) {
-    h += `<div class="ped-bt">${i < S.etapas.length - 1 ? `<button class="fi-btn bt-s" data-act="et-pedir" data-col="${col}" data-id="${esc(x.id)}" data-dir="1">Solicitar avanço → ${esc(nm(S.etapas[i + 1].id))}</button>` : ''}
+  if (x.concluido) {
+    h += `<div class="fim">✔ Entregue e finalizado${compact ? '' : ` — assinado por ${esc(x.concluido.por)} em ${esc(dataBR(x.concluido.em))}`}</div>`;
+  } else if (ped) {
+    h += `<div class="ped"><span>⏳ Aguardando aprovação: <b>${esc(nomeEt(x.etapa))} → ${esc(nomeEt(ped.para))}</b>${compact ? '' : ` · pedido por ${esc(ped.por)} em ${esc(dataBR(ped.em))}`}</span>
+      <span class="ped-bt">${podeAprovar(col) ? `<button class="fi-btn fi-btn--primary bt-s" data-act="et-ok" data-col="${col}" data-id="${esc(x.id)}">${ped.para === FIM ? '✍ Assinar e finalizar' : '✓ Aprovar'}</button><button class="fi-btn bt-s" data-act="et-no" data-col="${col}" data-id="${esc(x.id)}">✕ Recusar</button>` : ''}
+      ${souResp(col, x) || isAdm ? `<button class="fi-btn bt-s" data-act="et-cancel" data-col="${col}" data-id="${esc(x.id)}">Cancelar pedido</button>` : ''}</span></div>`;
+  } else if (souResp(col, x) && podeCad(col, 'editar')) {
+    h += `<div class="ped-bt">${ult ? `<button class="fi-btn bt-s" data-act="et-pedir" data-col="${col}" data-id="${esc(x.id)}" data-dir="1">Liberar para entrega → Direção assina</button>` : `<button class="fi-btn bt-s" data-act="et-pedir" data-col="${col}" data-id="${esc(x.id)}" data-dir="1">Solicitar avanço → ${esc(nomeEt(S.etapas[i + 1].id))}</button>`}
       ${i > 0 && !compact ? `<button class="fi-btn bt-s" data-act="et-pedir" data-col="${col}" data-id="${esc(x.id)}" data-dir="-1">← Solicitar retorno</button>` : ''}</div>`;
   }
+  if (!compact) h = respLinha(col, x) + h;
   const u = (x.hist || [])[0];
-  if (u && !compact) h += `<div class="muted hist">Última decisão: ${esc(nm(u.de))} → ${esc(nm(u.para))} ${u.res === 'aprovado' ? 'aprovada' : 'recusada'} por ${esc(u.aprov)} em ${esc(dataBR(u.em))}</div>`;
+  if (u && !compact) h += `<div class="muted hist">Última decisão: ${esc(nomeEt(u.de))} → ${esc(nomeEt(u.para))} ${u.res === 'aprovado' ? 'aprovada' : 'recusada'} por ${esc(u.aprov)} em ${esc(dataBR(u.em))}</div>`;
   return `<div class="etapa-ctl">${h}</div>`;
 }
 function etPedir(col, id, dir) {
   const x = byId(col, id), ids = S.etapas.map(e => e.id), n = ids.indexOf(x.etapa) + dir;
-  if (n < 0 || n >= ids.length) return;
-  commit(st => { const y = st[col].find(z => z.id === id); if (!y) return; y.pedido = { para: ids[n], por: quemSou(), em: new Date().toISOString() };
-    novaNota(st, col, id, `Pediu mudança de etapa: ${nome('etapas', y.etapa)} → ${nome('etapas', ids[n])}. Aguardando aprovação da Direção.`, { sis: true, men: diretores().map(p => '@' + p.id) }); }, true);
-  notify('Pedido enviado. A etapa muda quando for aprovado.', 'info');
+  if (!souResp(col, x)) { notify(`Quem pede esta mudança é: ${respRot(respDe(col, x.etapa))}.`, 'warning'); return; }
+  if (n < 0 || n > ids.length) return;
+  const para = n === ids.length ? FIM : ids[n];
+  commit(st => { const y = st[col].find(z => z.id === id); if (!y) return; y.pedido = { para, por: quemSou(), em: new Date().toISOString() };
+    novaNota(st, col, id, para === FIM ? `Liberou para entrega. Aguardando a Direção assinar e finalizar.` : `Pediu mudança de etapa: ${nomeEt(y.etapa)} → ${nomeEt(para)}. Aguardando aprovação da Direção.`, { sis: true, men: diretores().map(p => '@' + p.id) }); }, true);
+  notify(para === FIM ? 'Liberado para entrega. Falta a assinatura da Direção.' : 'Pedido enviado. A etapa muda quando for aprovado.', 'info');
 }
 async function etDecidir(col, id, ok) {
   const x = byId(col, id); if (!x || !x.pedido) return;
   if (!podeAprovar(col)) { notify('Somente a Direção (ou admin) aprova mudança de etapa.', 'warning'); return; }
-  if (!(await ask(`${ok ? 'Aprovar' : 'Recusar'} a mudança de “${x.nome}” de ${nome('etapas', x.etapa)} para ${nome('etapas', x.pedido.para)}?`, !ok))) return;
+  const fim = x.pedido.para === FIM;
+  if (!(await ask(fim ? `${ok ? 'Assinar e finalizar' : 'Recusar a entrega de'} “${x.nome}”?` : `${ok ? 'Aprovar' : 'Recusar'} a mudança de “${x.nome}” de ${nomeEt(x.etapa)} para ${nomeEt(x.pedido.para)}?`, !ok))) return;
   commit(st => { const y = st[col].find(z => z.id === id); if (!y || !y.pedido) return;
-    const reg = { de: y.etapa, para: y.pedido.para, por: y.pedido.por, pedidoEm: y.pedido.em, aprov: quemSou(), em: new Date().toISOString(), res: ok ? 'aprovado' : 'recusado' };
-    if (ok) y.etapa = y.pedido.para;
+    const reg = { de: y.etapa, para: y.pedido.para, por: y.pedido.por, pedidoEm: y.pedido.em, aprov: quemSou(), em: reg_em(), res: ok ? 'aprovado' : 'recusado' };
+    if (ok) { if (fim) y.concluido = { por: reg.aprov, em: reg.em }; else y.etapa = y.pedido.para; }
     y.hist = [reg, ...(y.hist || [])].slice(0, 50); delete y.pedido;
-    novaNota(st, col, id, `${ok ? 'Aprovou' : 'Recusou'} a mudança de etapa: ${nome('etapas', reg.de)} → ${nome('etapas', reg.para)} (pedido de ${reg.por}).`, { sis: true }); }, true);
+    const prox = ok && !fim ? respGente(respDe(col, y.etapa)).map(p => '@' + p.id) : [];
+    novaNota(st, col, id, fim ? (ok ? 'Assinou e finalizou a entrega.' : `Recusou a entrega (liberada por ${reg.por}).`) :
+      `${ok ? 'Aprovou' : 'Recusou'} a mudança de etapa: ${nomeEt(reg.de)} → ${nomeEt(reg.para)} (pedido de ${reg.por}).${prox.length ? ` Próximo responsável: ${respRot(respDe(col, y.etapa))}.` : ''}`, { sis: true, men: prox }); }, true);
 }
+const reg_em = () => new Date().toISOString();
 
 /* Converter módulo ⇄ processo sem perder o que foi lançado */
 const SO_MOD = [['escopo', 'Escopo'], ['objetivo', 'Problema que resolve'], ['indicador', 'Indicador de sucesso'], ['proximos', 'Próximos passos'], ['dep', 'Dependências'], ['prioridade', 'Prioridade'], ['sistema', 'Sistema'], ['sponsor', 'Sponsor'], ['dono', 'Gestor da área'], ['coord', 'Coord. técnico'], ['dev', 'Desenvolvimento'], ['proc', 'Processos (analista)'], ['keyuser', 'Key User']];
@@ -1090,13 +1126,13 @@ function pedidosPendentes() {
 const paraMim = () => pedidosPendentes().filter(({ col }) => podeAprovar(col));
 const meusPedidos = () => pedidosPendentes().filter(({ x }) => x.pedido.por === quemSou());
 function linhaAprov({ col, x }, comBotoes) {
-  const p = x.pedido, nm = id => nome('etapas', id);
+  const p = x.pedido, nm = nomeEt;
   return `<div class="fi-card aprov">
     <div class="aprov-h"><button class="vchip" data-act="cheio-de" data-col="${col}" data-id="${esc(x.id)}" title="Abrir o cartão">${col === 'modulos' ? 'Módulo' : 'Processo'} · ${esc(x.nome)} ↗</button>
       ${(x.cond || 'Normal') !== 'Normal' ? `<span class="cond cond-${esc(norm(x.cond))}">${esc(x.cond)}</span>` : ''}</div>
     <div class="aprov-m"><b>${esc(nm(x.etapa))} → ${esc(nm(p.para))}</b> <span class="muted">· pedido por ${esc(p.por)} em ${esc(dataBR(p.em))}</span></div>
     ${trilha(x)}
-    <div class="ped-bt">${comBotoes && podeAprovar(col) ? `<button class="fi-btn fi-btn--primary bt-s" data-act="et-ok" data-col="${col}" data-id="${esc(x.id)}">✓ Aprovar</button><button class="fi-btn bt-s" data-act="et-no" data-col="${col}" data-id="${esc(x.id)}">✕ Recusar</button>` : ''}
+    <div class="ped-bt">${comBotoes && podeAprovar(col) ? `<button class="fi-btn fi-btn--primary bt-s" data-act="et-ok" data-col="${col}" data-id="${esc(x.id)}">${p.para === FIM ? '✍ Assinar e finalizar' : '✓ Aprovar'}</button><button class="fi-btn bt-s" data-act="et-no" data-col="${col}" data-id="${esc(x.id)}">✕ Recusar</button>` : ''}
       ${podeCad(col, 'editar') ? `<button class="fi-btn bt-s" data-act="et-cancel" data-col="${col}" data-id="${esc(x.id)}">Cancelar pedido</button>` : ''}</div>
   </div>`;
 }
@@ -1140,7 +1176,7 @@ function vAtualizacoes() {
 
 /* Condição do item (não é etapa): Normal, Pausado, Bloqueado, Cancelado */
 const UNICA_ETAPA = () => (S.etapas[S.etapas.length - 1] || {}).id;
-const naUltima = x => x.etapa === UNICA_ETAPA();
+const naUltima = x => !!x.concluido;
 function COND(col, x) {
   const v = x.cond || 'Normal', ed = ui.edit && podeCad(col, 'editar');
   if (!ed) return v === 'Normal' ? '' : `<span class="cond cond-${esc(norm(v))}">${esc(v)}</span>`;
@@ -1232,8 +1268,8 @@ function vModulos() {
   $('#view').innerHTML = `
     ${head('modulos', ADD('modulos', 'Módulo'))}
     <div class="resumo">
-      <span><b>${S.modulos.length}</b> módulos · ${S.modulos.filter(m => m.prioridade === 'Alta').length} prioridade alta · ${S.modulos.filter(naUltima).length} em produção${S.modulos.filter(m => (m.cond || 'Normal') !== 'Normal').length ? ` · ${S.modulos.filter(m => (m.cond || 'Normal') !== 'Normal').length} pausado/bloqueado/cancelado` : ''}</span>
-      <a data-act="tab" data-id="processos"><b>${S.processos.length}</b> processos · ${S.processos.filter(naUltima).length} implantados</a>
+      <span><b>${S.modulos.length}</b> módulos · ${S.modulos.filter(m => m.prioridade === 'Alta').length} prioridade alta · ${S.modulos.filter(naUltima).length} entregues${S.modulos.filter(m => (m.cond || 'Normal') !== 'Normal').length ? ` · ${S.modulos.filter(m => (m.cond || 'Normal') !== 'Normal').length} pausado/bloqueado/cancelado` : ''}</span>
+      <a data-act="tab" data-id="processos"><b>${S.processos.length}</b> processos · ${S.processos.filter(naUltima).length} entregues</a>
       <a data-act="tab" data-id="equipe">referências <b>${comRef}/${setores.length}</b> setores</a>
       <a data-act="tab" data-id="backlog"><b>${S.ideias.filter(i => i.status === 'Nova' || i.status === 'Em análise').length}</b> ideias no backlog</a>
       <a data-act="tab" data-id="atualizacoes"${nNaoLidas() ? ' class="alerta"' : ''}><b>${nNaoLidas()}</b> atualização(ões) não lida(s)</a>
@@ -1284,7 +1320,7 @@ function vProcessos() {
   $('#view').innerHTML = `
     ${head('processos', `<button class="fi-btn" data-act="export-csv">⭳ CSV (Excel)</button>${ADD('processos', 'Processo')}`)}
     <div class="resumo">
-      <span><b>${S.processos.length}</b> processos · ${S.processos.filter(naUltima).length} implantados${S.processos.filter(p => (p.cond || 'Normal') !== 'Normal').length ? ` · ${S.processos.filter(p => (p.cond || 'Normal') !== 'Normal').length} pausado/bloqueado/cancelado` : ''}</span>
+      <span><b>${S.processos.length}</b> processos · ${S.processos.filter(naUltima).length} entregues${S.processos.filter(p => (p.cond || 'Normal') !== 'Normal').length ? ` · ${S.processos.filter(p => (p.cond || 'Normal') !== 'Normal').length} pausado/bloqueado/cancelado` : ''}</span>
       <span><b>${S.processos.filter(p => !(p.modulos || []).length).length}</b> sem módulo</span>
       <span><b>${S.processos.filter(p => p.pedido).length}</b> aguardando aprovação de etapa</span>
       <span>áreas com processo <b>${new Set(S.processos.map(p => p.area).filter(a => byId('areas', a))).size}/${areas.length}</b></span>
@@ -1340,7 +1376,7 @@ function vImplantacao() {
     <div class="flow">${S.etapas.map((e, i) => { const P = k => `etapas.#${e.id}.${k}`; return `<div class="fi-card step"><div class="n">${i + 1}</div>
       <h4>${T(P('nome'), { one: 1 })}</h4>${T(P('desc'), { tag: 'div', cls: 'd' })}
       <div>${PPL(P('resp'))}</div>
-      <div class="ent"><b>Participam:</b> ${T(P('part'))}</div><div class="ent"><b>Entrega:</b> ${T(P('entrega'))}</div></div>`; }).join('')}</div>
+      <div class="ent"><b>Participam:</b> ${T(P('part'))}</div><div class="ent"><b>Entrega:</b> ${T(P('entrega'))}</div>${(() => { const a = respDe('modulos', e.id), b = respDe('processos', e.id); return `<div class="ent resp-ent"><b>Pede a mudança:</b> ${a === b ? esc(respRot(a)) : `módulos: ${esc(respRot(a))} · processos: ${esc(respRot(b))}`}<br><b>Aprova:</b> Direção</div>`; })()}</div>`; }).join('')}</div>
 
     ${sec('quadro', undefined, `<div class="seg"><button class="${col === 'modulos' ? 'on' : ''}" data-act="view" data-k="implKind" data-id="modulos">Módulos</button><button class="${col === 'processos' ? 'on' : ''}" data-act="view" data-k="implKind" data-id="processos">Processos</button></div>`)}
     <div class="board">${S.etapas.map((e, i) => { const l = S[col].filter(x => x.etapa === e.id); return `<div class="col">
@@ -1457,7 +1493,7 @@ function vSistemas() {
    ===================================================================== */
 function vAdm() {
   const s = ui.admSec;
-  const nav = [['participantes', 'Participantes', S.participantes.length], ['areas', 'Áreas / Setores', S.areas.length], ['tipos', 'Papéis no projeto', S.tipos.length], ['listas', 'Listas de opções', Object.keys(S.listas).length], ['cadastro', 'Cadastro de módulos e processos', 2]];
+  const nav = [['participantes', 'Participantes', S.participantes.length], ['areas', 'Áreas / Setores', S.areas.length], ['tipos', 'Papéis no projeto', S.tipos.length], ['listas', 'Listas de opções', Object.keys(S.listas).length], ['cadastro', 'Cadastro de módulos e processos', 2], ['responsaveis', 'Responsáveis', S.etapas.length]];
   $('#view').className = 'fi-page fam-ink-adm';
   $('#view').innerHTML = `
     ${head('adm')}
@@ -1500,6 +1536,15 @@ function vAdm() {
     body.innerHTML = `${sec('admListas')}
       <div class="fi-alert" style="margin-bottom:12px">Uma opção por linha. As opções aparecem nas caixas de seleção de todas as guias. Renomear uma opção aqui não altera os itens que já usam o nome antigo.</div>
       <div class="lists">${Object.keys(S.listas).map(k => `<label class="fi-field"><span class="fi-label">${esc(nomes[k] || k)}</span><textarea data-lista="${k}" ${ui.edit ? '' : 'readonly'}>${esc(S.listas[k].join('\n'))}</textarea></label>`).join('')}</div>`;
+  } else if (s === 'responsaveis') {
+    const ed = ui.edit && isAdm, dis = ed ? '' : 'disabled';
+    const opts = v => `<option value="direcao"${v === 'direcao' ? ' selected' : ''}>Direção (diretoria)</option><optgroup label="Papel no projeto">${S.tipos.map(t => `<option value="tipo:${esc(t.id)}"${v === 'tipo:' + t.id ? ' selected' : ''}>${esc(t.nome)}</option>`).join('')}</optgroup><optgroup label="Pessoa">${S.participantes.filter(p => p.status !== 'Inativo' || v === 'pessoa:' + p.id).map(p => `<option value="pessoa:${esc(p.id)}"${v === 'pessoa:' + p.id ? ' selected' : ''}>${esc(p.nome)}</option>`).join('')}</optgroup><option value=""${!v ? ' selected' : ''}>Qualquer editor</option>`;
+    const cel = (col, e) => { const v = respDe(col, e.id), g = respGente(v).map(p => p.nome); return `<select class="fi-select" data-resp="${col}:${esc(e.id)}" ${dis}>${opts(v)}</select><div class="muted" style="font-size:.72rem;margin-top:3px">${g.length ? esc(g.join(', ')) : (v ? 'ninguém com este papel' : 'todos com acesso Editar')}</div>`; };
+    body.innerHTML = `${ed ? '' : `<div class="fi-alert" style="margin-bottom:12px">Clique em <b>✎ Editar</b> no topo para alterar.</div>`}${sec('admResp')}
+      <div class="fi-alert" style="margin-bottom:12px">Em cada etapa, defina quem (um papel no projeto ou uma pessoa específica) é responsável por <b>submeter à Direção</b> o pedido de mudança de etapa do cartão. Só essas pessoas (e o admin) veem o botão “Solicitar avanço” no cartão, e o nome aparece no próprio cartão. Quem aprova é sempre a Direção. Na última etapa, o responsável libera para entrega e a Direção assina e finaliza. O papel de cada pessoa é definido em ADM → Participantes.</div>
+      <div class="fi-table-wrap"><table class="fi-table sheet"><thead><tr><th>Etapa</th><th>Módulos — quem pede a mudança</th><th>Processos — quem pede a mudança</th><th>Quem aprova</th></tr></thead>
+      <tbody>${S.etapas.map((e, i) => `<tr><td class="nw"><b>${i + 1}. ${esc(e.nome)}</b></td><td>${cel('modulos', e)}</td><td>${cel('processos', e)}</td><td class="nw">${i === S.etapas.length - 1 ? 'Direção assina e finaliza' : 'Direção'}</td></tr>`).join('')}</tbody></table></div>
+      ${ed ? `<button class="fi-btn" style="margin-top:12px" data-act="resp-reset">↺ Voltar ao padrão</button>` : ''}`;
   } else if (s === 'cadastro') {
     const ed = ui.edit && isAdm, dis = ed ? '' : 'disabled';
     const perm = (col, a, lb) => `<label class="fi-field"><span class="fi-label">${lb}</span><select class="fi-select" data-cfg="cadastro.${col}.${a}" ${dis}>${[['editores', 'Quem tem acesso Editar'], ['admin', 'Somente admin']].map(([v, l]) => `<option value="${v}"${cfgCad(col)[a] === v ? ' selected' : ''}>${l}</option>`).join('')}</select></label>`;
@@ -1791,6 +1836,7 @@ document.addEventListener('click', async e => {
     case 'ideia-st': ui.ideiaStatus = id; render(); break;
     case 'adm-go': if (modal.open) modal.close(); ui.admSec = id; go('adm'); break;
     case 'export-csv': exportCsv(); break;
+    case 'resp-reset': if (await ask('Voltar os responsáveis por etapa ao padrão?')) commit(st => { st.responsaveis = { modulos: Object.assign({}, RESP_PADRAO), processos: Object.assign({}, RESP_PADRAO) }; }, true); break;
     case 'cad-reset': if (await ask('Voltar a ficha de módulos e processos às perguntas e permissões padrão?')) commit(st => { st.cadastro = cadPadrao(); }, true); break;
     case 'export-json': download(`projeto-fiorella-${today()}.json`, JSON.stringify(S, null, 2), 'application/json'); break;
     case 'import-json': $('#importFile').click(); break;
@@ -1818,6 +1864,7 @@ document.addEventListener('keydown', e => {
 });
 document.addEventListener('change', e => {
   const t = e.target;
+  if (t.dataset && t.dataset.resp && isAdm) { const [c, et] = t.dataset.resp.split(':'), v = t.value; commit(st => { st.responsaveis = st.responsaveis || {}; st.responsaveis[c] = Object.assign({}, RESP_PADRAO, st.responsaveis[c] || {}); st.responsaveis[c][et] = v; }, true); return; }
   if (t.dataset && t.dataset.cond) { const [c, id] = t.dataset.cond.split(':'), v = t.value; commit(st => { const y = st[c].find(z => z.id === id); if (!y || (y.cond || 'Normal') === v) return; y.cond = v; novaNota(st, c, id, `Alterou a condição para: ${v}.`, { sis: true }); }, true); renderMenu(); return; }
   if (t.dataset && t.dataset.menFor) { const ta = document.querySelector(`[data-nota-txt="${t.dataset.menFor}"]`); if (ta && t.value) { ta.value = (ta.value && !/\s$/.test(ta.value) ? ta.value + ' ' : ta.value) + '@' + t.value + ' '; ta.focus(); } t.value = ''; return; }
   if (t.dataset && t.dataset.upper !== undefined) { const c = t.selectionStart; t.value = UP(t.value); try { t.setSelectionRange(c, c); } catch (err) {} }
