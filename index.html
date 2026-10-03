@@ -281,6 +281,11 @@ body.tema-claro .menu{box-shadow:0 2px 10px rgba(28,37,46,.08)}
 .upd-tabs .ico{color:var(--fi-text);opacity:.8}
 .upd-tabs button.on .ico{color:currentColor;opacity:1}
 .bt-s .ico svg{width:12px;height:12px}
+.cx-adm{margin:4px 0 18px}
+.cx-adm .ct-h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0}
+.cx-adm textarea{min-width:160px;font-size:.78rem}
+.cx-bloco .kv{margin-top:4px}
+.cx-bloco .fi-input,.cx-bloco .fi-select{width:100%;font-size:.8rem}
 .trilha-w{margin:10px 0 2px}.trilha-w .k b{color:var(--exec)}
 .trilha{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
 .tr-s{display:flex;flex-direction:column;gap:3px;min-width:0}
@@ -398,7 +403,7 @@ dialog::backdrop{background:rgba(9,12,16,.55)}
 
 <header class="fi-topbar">
   <a class="fi-brand" href="#modulos"><img data-fi-logo></a>
-  <div class="proj-name"><b data-fi-page-title>Projeto Plataforma Corporativa</b><small id="docVersao" title="Versão deste arquivo HTML (03/10/2026). Aumenta a cada atualização entregue.">Documento V.001</small></div>
+  <div class="proj-name"><b data-fi-page-title>Projeto Plataforma Corporativa</b><small id="docVersao" title="Versão deste arquivo HTML (03/10/2026). Aumenta a cada atualização entregue.">Documento V.002</small></div>
   <div class="fi-topbar__actions">
     <span class="sync" id="sync"></span>
     <button class="fi-btn btn-edit" id="btnEdit" data-act="toggle-edit" hidden>✎ Editar</button>
@@ -425,9 +430,9 @@ dialog::backdrop{background:rgba(9,12,16,.55)}
    qualquer outro texto é texto livre (ex.: "Gestor da área").
    ===================================================================== */
 /* VERSÃO DO DOCUMENTO (HTML): aumentar em 1 a cada atualização entregue (formato V.001). Aparece no topo, abaixo da versão da Fiorella UI. */
-const DOC_VERSAO = 'V.001', DOC_DATA = '03/10/2026';
+const DOC_VERSAO = 'V.002', DOC_DATA = '03/10/2026';
 console.info('[Projeto Fiorella] documento ' + DOC_VERSAO + ' · ' + DOC_DATA);
-const SCHEMA = 11;
+const SCHEMA = 12;
 const SEED = {
   schema: SCHEMA,
   textos: {
@@ -656,6 +661,52 @@ function aplicarPlanilhaIA(d) {
    "direcao" = participantes do grupo Direção; "tipo:<id>" = papel no projeto; "pessoa:<id>" = um participante. */
 const RESP_PADRAO = { levantamento: 'pessoa:wesley', definicao: 'direcao', avaliacao: 'tipo:arquiteto', aprovacao: 'direcao', desenvolvimento: 'tipo:arquiteto', homologacao: 'tipo:coordtec', acompanhamento: 'tipo:coordtec' };
 const FIM = '__fim';
+/* Campos adicionais criados pelo admin (ADM → Cadastro / Triagem). Valores ficam em item.extra[id]. */
+const CX_TIPOS = [['texto', 'Texto curto'], ['area', 'Texto longo'], ['numero', 'Número'], ['data', 'Data'], ['lista', 'Lista de opções'], ['simnao', 'Sim / Não'], ['setor', 'Área / setor']];
+const cxDe = col => ((S.camposExtra || {})[col] || []).filter(c => c && c.id);
+const cxVis = col => cxDe(col).filter(c => c.mostrar !== false);
+const cxOpcoes = c => c.tipo === 'simnao' ? ['Sim', 'Não'] : c.tipo === 'setor' ? S.areas.map(a => a.nome) : String(c.opcoes || '').split('\n').map(x => x.trim()).filter(Boolean);
+function cxInput(c, attr, val) {
+  val = val == null ? '' : String(val);
+  if (c.tipo === 'area') return `<textarea class="fi-input" rows="3" ${attr}>${esc(val)}</textarea>`;
+  if (c.tipo === 'numero') return `<input class="fi-input" type="number" ${attr} value="${esc(val)}">`;
+  if (c.tipo === 'data') return `<input class="fi-input" type="date" ${attr} value="${esc(val)}">`;
+  if (c.tipo === 'lista' || c.tipo === 'simnao' || c.tipo === 'setor') return `<select class="fi-select" ${attr}><option value="">—</option>${cxOpcoes(c).map(o => `<option${o === val ? ' selected' : ''}>${esc(o)}</option>`).join('')}</select>`;
+  return `<input class="fi-input" ${attr} value="${esc(val)}">`;
+}
+const cxCampoFicha = c => `<label class="fi-field" data-campo="x_${esc(c.id)}"><span class="fi-label">${esc(c.pergunta)}${c.obrig ? ' <b class="req">*</b>' : ''}</span>${cxInput(c, `data-x="${esc(c.id)}"`)}${c.ajuda ? `<span class="fi-field__help">${esc(c.ajuda)}</span>` : ''}</label>`;
+function cxColetar(col, falta) {
+  const out = {};
+  cxVis(col).forEach(c => { const e = modal.querySelector(`[data-x="${c.id}"]`); if (!e) return; const v = (e.value || '').trim();
+    if (c.obrig && !v) { falta.push(c.pergunta); const f = modal.querySelector(`[data-campo="x_${c.id}"]`); if (f) f.classList.add('erro'); }
+    if (v) out[c.id] = v; });
+  return out;
+}
+const dataFmt = v => /^\d{4}-\d{2}-\d{2}$/.test(v || '') ? v.split('-').reverse().join('/') : (v || '');
+function cxBloco(col, x) {
+  const cs = cxVis(col); if (!cs.length) return '';
+  const ed = ui.edit && (col === 'ideias' ? (isAdm || podeTri()) : podeCad(col, 'editar'));
+  const base = `${col}.#${x.id}.extra.`;
+  return `<div class="cx-bloco"><div class="k">Informações adicionais</div><div class="kv">${cs.map(c => { const v = (x.extra || {})[c.id];
+    let h;
+    if (!ed) h = v ? `<div class="txt" style="white-space:pre-wrap">${esc(c.tipo === 'data' ? dataFmt(v) : v)}</div>` : '<span class="muted">—</span>';
+    else if (c.tipo === 'texto' || c.tipo === 'area') h = T(base + c.id, { tag: 'div', cls: 'txt', ph: '—' });
+    else h = cxInput(c, `data-cxp="${esc(base + c.id)}"`, v);
+    return `<div class="${c.tipo === 'area' ? 'full' : ''}"><div class="k">${esc(c.pergunta)}</div>${h}</div>`; }).join('')}</div></div>`;
+}
+function cxTabelaAdm(col, ed) {
+  const dis = ed ? '' : 'disabled', cs = cxDe(col), b = i => `camposExtra.${col}.${i}`;
+  return `<div class="cx-adm"><div class="ct-h"><b>Campos adicionais</b>${ed ? `<button class="fi-btn fi-btn--primary bt-s" data-act="cx-add" data-col="${col}">＋ Novo campo</button>` : ''}</div>
+    ${cs.length ? `<div class="fi-table-wrap"><table class="fi-table sheet"><thead><tr><th>Pergunta</th><th>Ajuda (exemplo)</th><th>Tipo</th><th>Opções (uma por linha)</th><th>Mostrar</th><th>Obrigatório</th><th></th></tr></thead><tbody>
+      ${(S.camposExtra[col] || []).map((c, i) => `<tr>
+        <td class="wide"><input class="fi-input" data-cfg="${b(i)}.pergunta" value="${esc(c.pergunta)}" ${dis}></td>
+        <td class="wide"><input class="fi-input" data-cfg="${b(i)}.ajuda" value="${esc(c.ajuda || '')}" ${dis}></td>
+        <td class="nw"><select class="fi-select" data-cfg="${b(i)}.tipo" ${dis}>${CX_TIPOS.map(([v, l]) => `<option value="${v}"${c.tipo === v ? ' selected' : ''}>${l}</option>`).join('')}</select></td>
+        <td>${c.tipo === 'lista' ? `<textarea class="fi-input" rows="2" data-cfg="${b(i)}.opcoes" ${dis}>${esc(c.opcoes || '')}</textarea>` : '<span class="muted">—</span>'}</td>
+        <td class="nw"><input type="checkbox" data-cfg="${b(i)}.mostrar" ${c.mostrar !== false ? 'checked' : ''} ${dis}></td>
+        <td class="nw"><input type="checkbox" data-cfg="${b(i)}.obrig" ${c.obrig ? 'checked' : ''} ${dis}></td>
+        <td class="nw">${ed ? `<button class="rm" data-act="cx-rm" data-col="${col}" data-i="${i}" title="Excluir campo">✕</button>` : ''}</td></tr>`).join('')}</tbody></table></div>` : `<div class="muted" style="font-size:.8rem">Nenhum campo adicional. ${ed ? 'Use “＋ Novo campo”.' : ''}</div>`}</div>`;
+}
 /* Código único de cada cartão: Triagem T100+, Módulos M200+, Processos P300+ (atribuído uma vez, nunca reutilizado) */
 const COD_BASE = { ideias: ['T', 100], modulos: ['M', 200], processos: ['P', 300] };
 function garantirCods(st) {
@@ -751,7 +802,7 @@ const PEOPLE_FIELDS = {
 };
 const COL_LABEL = { modulos: 'Módulos', processos: 'Processos', sistemas: 'Sistemas', areas: 'Áreas', ideias: 'Triagem', etapas: 'Etapas de implantação', fases: 'Fases do projeto' };
 /* Coleções editáveis somente por admin (guia ADM) */
-const ADM_ROOTS = ['participantes', 'areas', 'tipos', 'listas', 'cadastro', 'responsaveis', 'triagem'];
+const ADM_ROOTS = ['participantes', 'areas', 'tipos', 'listas', 'cadastro', 'responsaveis', 'triagem', 'camposExtra'];
 
 /* Novos itens */
 const NEW = {
@@ -877,6 +928,7 @@ function migrate(d) {
   /* versão 11: triagem só "Em análise" → Aprovada / Reprovada; códigos únicos */
   (d.ideias || []).forEach(i => { if (i.status === 'Nova' || !i.status) i.status = 'Em análise'; if (i.status === 'Descartada') i.status = 'Reprovada'; if (!Array.isArray(i.notas)) i.notas = []; });
   if (!d.listas.stIdeia || d.listas.stIdeia.some(x => x === 'Nova' || x === 'Descartada')) d.listas.stIdeia = ['Em análise', 'Aprovada', 'Reprovada'];
+  d.camposExtra = Object.assign({ modulos: [], processos: [], ideias: [] }, d.camposExtra || {});
   d.log = Array.isArray(d.log) ? d.log : [];
   ['modulos', 'processos'].forEach(c => (d[c] || []).forEach(x => {
     const sis = (x.notas || []).filter(n => n.sis);
@@ -1451,6 +1503,7 @@ function fillModulos() {
         ${mc('indicador') ? `<div><div class="k">Indicador de sucesso</div>${T(P(m, 'indicador'), { tag: 'div', ph: '—' })}</div>` : ''}</div>` : ''}
       <div class="kv">${PEOPLE_FIELDS.modulos.map(([k, lb]) => `<div><div class="k">${lb}</div>${PPL(P(m, k))}</div>`).join('')}</div>
       <div class="next"><div class="k">Próximos passos</div>${T(P(m, 'proximos'), { tag: 'div', ph: 'A definir' })}</div>
+      ${cxBloco('modulos', m)}
       ${notasBloco('modulos', m)}
       <div class="foot"><span>${np} processo(s) vinculado(s)</span>${np ? `<button class="fi-btn" style="min-height:28px;padding:3px 10px" data-act="proc-mod" data-id="${esc(m.id)}">Ver processos</button>` : ''}</div>
     </div>`; }).join('')}</div>`;
@@ -1508,6 +1561,7 @@ function fillProcessos() {
       <div class="proc-obs">${T(P(p, 'obs'), { tag: 'div', phEdit: 'Observações' })}</div>
       ${anterior('processos', p)}
       <div style="padding:0 18px">${triagemBloco(p)}</div>
+      <div style="padding:0 18px">${cxBloco('processos', p)}</div>
       <div class="proc-notas">${notasBloco('processos', p)}</div>
     </div>`).join('')}</div>`;
 }
@@ -1581,6 +1635,7 @@ function vBacklog() {
           <button class="fi-btn bt-s" data-act="tri-atrelar" data-col="modulos" data-id="${esc(i.id)}"><i class="ico">${IC_LINK}</i>Atrelar a módulo existente</button>
           <button class="fi-btn bt-s" data-act="tri-atrelar" data-col="processos" data-id="${esc(i.id)}"><i class="ico">${IC_LINK}</i>Atrelar a processo existente</button>
           <button class="fi-btn bt-s" data-act="tri-descartar" data-id="${esc(i.id)}">✕ Reprovar</button></div>` : aberta ? `<div class="muted" style="font-size:.74rem">Em análise pela Direção.</div>` : ''}
+        ${cxBloco('ideias', i)}
         ${notasBloco('ideias', i)}
       </div>`; }).join('')}</div>`}`;
 }
@@ -1593,8 +1648,8 @@ function triNova() {
     if (c.tipo === 'setor') return `<select class="fi-select" ${nm}><option value="">—</option>${S.areas.map(a => `<option value="${esc(a.id)}">${esc(a.nome)}</option>`).join('')}</select>`;
     return `<select class="fi-select" ${nm}><option value="">—</option>${S.listas.prioridades.map(o => `<option>${esc(o)}</option>`).join('')}</select>`; };
   modal.innerHTML = `<div class="m-head"><h2>Nova demanda para triagem</h2><button class="rm" data-act="close">✕</button></div>
-    <div class="m-body ficha">${cs.map((c, k) => `<label class="fi-field" data-campo="${c.id}"><span class="fi-label">${esc(c.pergunta)} <b class="req">*</b></span>${inp(c, k)}${c.ajuda ? `<span class="fi-field__help">${esc(c.ajuda)}</span>` : ''}</label>`).join('')}
-      <span class="muted" style="font-size:.74rem">As 3 perguntas são obrigatórias. O restante do cadastro é feito por quem aprovar a triagem.</span></div>
+    <div class="m-body ficha">${cs.map((c, k) => `<label class="fi-field" data-campo="${c.id}"><span class="fi-label">${esc(c.pergunta)} <b class="req">*</b></span>${inp(c, k)}${c.ajuda ? `<span class="fi-field__help">${esc(c.ajuda)}</span>` : ''}</label>`).join('')}${cxVis('ideias').map(cxCampoFicha).join('')}
+      <span class="muted" style="font-size:.74rem">As perguntas com * são obrigatórias. O restante do cadastro é feito por quem aprovar a triagem.</span></div>
     <div class="m-foot"><button class="fi-btn" data-act="close">Cancelar</button><button class="fi-btn fi-btn--primary" data-act="tri-ok">Enviar para triagem</button></div>`;
   modal.showModal(); const f = modal.querySelector('[data-tri]'); if (f) f.focus();
 }
@@ -1602,9 +1657,10 @@ function triOk() {
   const cs = triCampos(), v = {}, falta = [];
   modal.querySelectorAll('.fi-field.erro').forEach(e => e.classList.remove('erro'));
   cs.forEach(c => { const e = modal.querySelector(`[data-tri="${c.id}"]`), x = (e.value || '').trim(); v[c.id] = x; if (!x) { falta.push(c.pergunta); modal.querySelector(`[data-campo="${c.id}"]`).classList.add('erro'); } });
+  const extra = cxColetar('ideias', falta);
   if (falta.length) { notify('Responda: ' + falta.join(' · '), 'warning'); return; }
   const id = uid(v.f1 || 'demanda'), resp = {}; cs.slice(1).forEach(c => { resp[c.id] = v[c.id]; });
-  const it = { id, titulo: UP(v[cs[0].id]), resp, autor: USER_TOK ? [USER_TOK] : [], porNome: quemSou(), porTok: meuTok(), em: new Date().toISOString(), status: 'Em análise', notas: [], area: cs.find(c => c.tipo === 'setor') ? v[cs.find(c => c.tipo === 'setor').id] : '' };
+  const it = { id, titulo: UP(v[cs[0].id]), resp, autor: USER_TOK ? [USER_TOK] : [], porNome: quemSou(), porTok: meuTok(), em: new Date().toISOString(), status: 'Em análise', notas: [], extra, area: cs.find(c => c.tipo === 'setor') ? v[cs.find(c => c.tipo === 'setor').id] : '' };
   modal.close();
   commit(st => { st.ideias.push(clone(it)); registrar(st, 'ideias', id, `Enviou a demanda “${it.titulo}” para a triagem (em análise).`, 'Triagem'); }, true);
   notify('Demanda enviada para a triagem.', 'success');
@@ -1731,8 +1787,8 @@ function vSistemas() {
    8. ADM (somente admin)
    ===================================================================== */
 function vAdm() {
-  const s = ui.admSec;
-  const nav = [['participantes', 'Participantes', S.participantes.length], ['areas', 'Áreas / Setores', S.areas.length], ['tipos', 'Papéis no projeto', S.tipos.length], ['listas', 'Listas de opções', Object.keys(S.listas).length], ['cadastro', 'Cadastro de módulos e processos', 2], ['responsaveis', 'Responsáveis', S.etapas.length], ['triagem', 'Triagem', 3]];
+  const s = ui.admSec === 'cadastro' ? 'cad-modulos' : ui.admSec;
+  const nav = [['participantes', 'Participantes', S.participantes.length], ['areas', 'Áreas / Setores', S.areas.length], ['tipos', 'Papéis no projeto', S.tipos.length], ['listas', 'Listas de opções', Object.keys(S.listas).length], ['triagem', 'Triagem', 3 + cxDe('ideias').length], ['cad-modulos', 'Módulos', CAMPOS.modulos.length + cxDe('modulos').length], ['cad-processos', 'Processos', CAMPOS.processos.length + cxDe('processos').length], ['responsaveis', 'Responsáveis', S.etapas.length]];
   $('#view').className = 'fi-page fam-ink-adm';
   $('#view').innerHTML = `
     ${head('adm')}
@@ -1786,6 +1842,7 @@ function vAdm() {
         <td class="nw">${k === 0 ? 'Texto curto (nome)' : `<select class="fi-select" data-cfg="triagem.campos.${k}.tipo" ${dis}>${TRI_TIPOS.map(([v, l]) => `<option value="${v}"${c.tipo === v ? ' selected' : ''}>${l}</option>`).join('')}</select>`}</td>
         <td class="nw">Sim</td></tr>`).join('')}</tbody></table></div>
       <label class="fi-field" style="max-width:320px;margin-top:12px"><span class="fi-label">Quem aprova a triagem</span><select class="fi-select" data-cfg="triagem.aprovar" ${dis}>${[['diretores', 'Direção (sponsors) e admin'], ['admin', 'Somente admin']].map(([v, l]) => `<option value="${v}"${(S.triagem || {}).aprovar === v ? ' selected' : ''}>${l}</option>`).join('')}</select></label>
+      <div style="margin-top:14px">${cxTabelaAdm('ideias', ed)}</div>
       ${ed ? `<button class="fi-btn" style="margin-top:12px" data-act="tri-reset">↺ Voltar ao padrão</button>` : ''}`;
   } else if (s === 'responsaveis') {
     const ed = ui.edit && isAdm, dis = ed ? '' : 'disabled';
@@ -1796,7 +1853,8 @@ function vAdm() {
       <div class="fi-table-wrap"><table class="fi-table sheet"><thead><tr><th>Etapa</th><th>Módulos — quem pede a mudança</th><th>Processos — quem pede a mudança</th><th>Quem aprova</th></tr></thead>
       <tbody>${S.etapas.map((e, i) => `<tr><td class="nw"><b>${i + 1}. ${esc(e.nome)}</b></td><td>${cel('modulos', e)}</td><td>${cel('processos', e)}</td><td class="nw">${i === S.etapas.length - 1 ? 'Direção assina e finaliza' : 'Direção'}</td></tr>`).join('')}</tbody></table></div>
       ${ed ? `<button class="fi-btn" style="margin-top:12px" data-act="resp-reset">↺ Voltar ao padrão</button>` : ''}`;
-  } else if (s === 'cadastro') {
+  } else if (s === 'cad-modulos' || s === 'cad-processos') {
+    const colSel = s === 'cad-processos' ? 'processos' : 'modulos';
     const ed = ui.edit && isAdm, dis = ed ? '' : 'disabled';
     const perm = (col, a, lb) => `<label class="fi-field"><span class="fi-label">${lb}</span><select class="fi-select" data-cfg="cadastro.${col}.${a}" ${dis}>${[['editores', 'Quem tem acesso Editar'], ['admin', 'Somente admin']].map(([v, l]) => `<option value="${v}"${cfgCad(col)[a] === v ? ' selected' : ''}>${l}</option>`).join('')}</select></label>`;
     const tabela = col => `<div class="fi-card card-pad" style="margin-bottom:16px">
@@ -1809,9 +1867,9 @@ function vAdm() {
           <td class="wide"><input class="fi-input" data-cfg="${b}.ajuda" value="${esc(f.ajuda)}" ${dis}></td>
           <td class="nw"><input type="checkbox" data-cfg="${b}.mostrar" ${f.mostrar !== false ? 'checked' : ''} ${c.fixo ? 'disabled' : dis}></td>
           <td class="nw"><input type="checkbox" data-cfg="${b}.obrig" ${c.fixo || f.obrig ? 'checked' : ''} ${c.fixo ? 'disabled' : dis}></td></tr>`; }).join('')}</tbody></table></div></div>`;
-    body.innerHTML = `${ed ? '' : `<div class="fi-alert" style="margin-bottom:12px">Clique em <b>✎ Editar</b> no topo para alterar.</div>`}${sec('admCad')}
-      <div class="fi-alert" style="margin-bottom:12px">Define a ficha que aparece ao clicar em <b>＋ Módulo</b> e <b>＋ Processo</b>: o texto de cada pergunta, se ela aparece e se é obrigatória, e quem pode cadastrar, editar e excluir. Com o vínculo obrigatório, todo processo precisa de pelo menos um módulo e todo módulo precisa de processos ou da opção “Nenhum”; na ficha dá para criar o outro lado na hora, digitando o nome. Mudança de etapa: qualquer editor pede pelo botão no cartão; a Direção (identificada pelo e-mail cadastrado em Participantes) ou o admin aprova.</div>
-      ${tabela('modulos')}${tabela('processos')}
+    body.innerHTML = `${ed ? '' : `<div class="fi-alert" style="margin-bottom:12px">Clique em <b>✎ Editar</b> no topo para alterar.</div>`}<div class="sec"><span>Cadastro de ${colSel === 'modulos' ? 'módulos' : 'processos'}</span></div>
+      <div class="fi-alert" style="margin-bottom:12px">Define a ficha que aparece ao clicar em <b>＋ ${colSel === 'modulos' ? 'Módulo' : 'Processo'}</b>: o texto de cada pergunta, se ela aparece e se é obrigatória, e quem pode cadastrar, editar e excluir. Com o vínculo obrigatório, todo processo precisa de pelo menos um módulo e todo módulo precisa de processos ou da opção “Nenhum”; na ficha dá para criar o outro lado na hora, digitando o nome. Mudança de etapa: qualquer editor pede pelo botão no cartão; a Direção (identificada pelo e-mail cadastrado em Participantes) ou o admin aprova.</div>
+      ${tabela(colSel)}${cxTabelaAdm(colSel, ed)}
       ${ed ? `<button class="fi-btn" data-act="cad-reset">↺ Voltar às perguntas padrão</button>` : ''}`;
   } else {
     body.innerHTML = `${sec('admDados')}
@@ -1891,7 +1949,7 @@ function abrirFicha(col, pre) {
     return `<label class="fi-field" data-campo="${c.k}">${lab}${inp}${help}</label>`;
   };
   modal.innerHTML = `<div class="m-head"><h2>Cadastrar ${col === 'modulos' ? 'módulo' : 'processo'}</h2><button class="rm" data-act="close">✕</button></div>
-    <div class="m-body ficha">${pre && pre.de ? `<div class="fi-alert">Criando a partir de <b>${esc(pre.de)}</b>: o vínculo já está marcado; complete o restante.</div>` : ''}${pre && pre.origem ? `<div class="fi-alert">Aprovando a demanda da triagem <b>${esc(pre.titulo || '')}</b>. As respostas da triagem já foram copiadas; complete o restante.</div>` : ''}${CAMPOS[col].map(campo).join('')}
+    <div class="m-body ficha">${pre && pre.de ? `<div class="fi-alert">Criando a partir de <b>${esc(pre.de)}</b>: o vínculo já está marcado; complete o restante.</div>` : ''}${pre && pre.origem ? `<div class="fi-alert">Aprovando a demanda da triagem <b>${esc(pre.titulo || '')}</b>. As respostas da triagem já foram copiadas; complete o restante.</div>` : ''}${CAMPOS[col].map(campo).join('')}${cxVis(col).map(cxCampoFicha).join('')}
       <datalist id="fichaPessoas">${ativos.map(x => `<option value="${esc(x.nome)}">${esc(papel(x))}</option>`).join('')}</datalist>
       <span class="muted" style="font-size:.74rem"><b class="req">*</b> obrigatório</span></div>
     <div class="m-foot"><button class="fi-btn" data-act="close">Cancelar</button><button class="fi-btn fi-btn--primary" data-act="ficha-ok" data-col="${col}">Cadastrar</button></div>`;
@@ -1926,6 +1984,7 @@ function fichaOk(col) {
     else if (x) val[c.k] = c.k === 'nome' ? UP(x) : x;
   });
   modal.querySelectorAll('.fi-field.erro').forEach(e => e.classList.remove('erro'));
+  val.extra = cxColetar(col, falta);
   if (falta.length) {
     CAMPOS[col].forEach(c => { const f = cfg.campos[c.k] || {}; if (falta.includes(f.pergunta || c.pergunta)) { const e = modal.querySelector(`[data-campo="${c.k}"]`); if (e) e.classList.add('erro'); } });
     notify('Responda: ' + falta.join(' · '), 'warning'); return;
@@ -2109,9 +2168,12 @@ document.addEventListener('click', async e => {
     case 'log-item-x': ui.logItem = ''; render(); break;
     case 'adm-go': if (modal.open) modal.close(); ui.admSec = id; go('adm'); break;
     case 'export-csv': exportCsv(); break;
+    case 'cx-add': if (isAdm) commit(st => { const c = el.dataset.col; st.camposExtra = st.camposExtra || {}; (st.camposExtra[c] = st.camposExtra[c] || []).push({ id: 'cx' + Date.now().toString(36), pergunta: 'Nova pergunta', ajuda: '', tipo: 'texto', opcoes: '', mostrar: true, obrig: false }); }, true); break;
+    case 'cx-rm': { if (!isAdm) break; const c = el.dataset.col, i = +el.dataset.i, f = (S.camposExtra[c] || [])[i]; if (!f) break;
+      if (await ask(`Excluir o campo “${f.pergunta}”? Ele deixa de aparecer nas fichas e cartões. As respostas já gravadas ficam guardadas no histórico do banco, mas não serão mais exibidas.`, true)) commit(st => { st.camposExtra[c].splice(i, 1); }, true); break; }
     case 'tri-reset': if (await ask('Voltar as perguntas da triagem ao padrão?')) commit(st => { st.triagem = clone(TRIAGEM_PADRAO); }, true); break;
     case 'resp-reset': if (await ask('Voltar os responsáveis por etapa ao padrão?')) commit(st => { st.responsaveis = { modulos: Object.assign({}, RESP_PADRAO), processos: Object.assign({}, RESP_PADRAO) }; }, true); break;
-    case 'cad-reset': if (await ask('Voltar a ficha de módulos e processos às perguntas e permissões padrão?')) commit(st => { st.cadastro = cadPadrao(); }, true); break;
+    case 'cad-reset': if (await ask('Voltar a ficha de módulos e processos às perguntas e permissões padrão? Os campos adicionais não são apagados.')) commit(st => { st.cadastro = cadPadrao(); }, true); break;
     case 'export-json': download(`projeto-fiorella-${today()}.json`, JSON.stringify(S, null, 2), 'application/json'); break;
     case 'import-json': $('#importFile').click(); break;
     case 'reset': if (await ask('Restaurar o conteúdo original da planilha para todos os usuários? As alterações feitas serão substituídas (continuam no histórico do banco).', true)) replaceAll(migrate(clone(SEED))); break;
@@ -2139,6 +2201,7 @@ document.addEventListener('keydown', e => {
 document.addEventListener('change', e => {
   const t = e.target;
   if (t.dataset && t.dataset.resp && isAdm) { const [c, et] = t.dataset.resp.split(':'), v = t.value; commit(st => { st.responsaveis = st.responsaveis || {}; st.responsaveis[c] = Object.assign({}, RESP_PADRAO, st.responsaveis[c] || {}); st.responsaveis[c][et] = v; }, true); return; }
+  if (t.dataset && t.dataset.cxp) { const p = t.dataset.cxp, v = t.value; commit(st => { const parts = p.split('.'), it = st[parts[0]].find(z => z.id === parts[1].slice(1)); if (!it) return; it.extra = it.extra || {}; it.extra[parts[3]] = v; }, false); return; }
   if (t.dataset && t.dataset.cond) { const [c, id] = t.dataset.cond.split(':'), v = t.value; commit(st => { const y = st[c].find(z => z.id === id); if (!y || (y.cond || 'Normal') === v) return; y.cond = v; novaNota(st, c, id, `Alterou a condição para: ${v}.`, { sis: true, tipo: 'Condição' }); }, true); renderMenu(); return; }
   if (t.dataset && t.dataset.menFor) { const ta = document.querySelector(`[data-nota-txt="${t.dataset.menFor}"]`); if (ta && t.value) { ta.value = (ta.value && !/\s$/.test(ta.value) ? ta.value + ' ' : ta.value) + '@' + t.value + ' '; ta.focus(); } t.value = ''; return; }
   if (t.dataset && t.dataset.upper !== undefined) { const c = t.selectionStart; t.value = UP(t.value); try { t.setSelectionRange(c, c); } catch (err) {} }
