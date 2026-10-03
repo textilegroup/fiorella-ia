@@ -264,6 +264,10 @@ body.tema-claro .menu{box-shadow:0 2px 10px rgba(28,37,46,.08)}
 .proc .proc-obs+.proc-obs,.proc .proc-obs{border-top:1px solid var(--fi-line,#dfe3e8)}
 .proc .proc-notas{border-top:1px solid var(--fi-line,#dfe3e8);padding-top:4px}
 .proc .proc-notas .notas{border-top:0}
+.atr-lista{grid-template-columns:1fr;max-height:300px;margin-top:8px}
+.atr-lista label .cod{margin-right:4px}
+.tri-rm.rep .tr-s.feito::before{background:color-mix(in srgb,var(--fi-muted,#6b7280) 55%,#dfe3e8)}
+.tri-rm.rep .tr-nomes b.feito{color:var(--fi-muted)}
 .trilha-w{margin:10px 0 2px}.trilha-w .k b{color:var(--exec)}
 .trilha{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
 .tr-s{display:flex;flex-direction:column;gap:3px;min-width:0}
@@ -1006,7 +1010,7 @@ function PPL(p, o = {}) {
   if (ed) h += `<button class="padd" data-act="ppl-add" data-p="${esc(p)}"${o.single ? ' data-single="1"' : ''} title="Adicionar pessoa">＋</button>`;
   return `<span class="ppl">${h}</span>`;
 }
-const RM = (col, id) => (col === 'modulos' || col === 'processos' ? ui.edit && podeCad(col, 'excluir') : edCol(col.split('.')[0])) ? `<button class="rm" data-act="rm" data-col="${esc(col)}" data-id="${esc(id)}" title="Excluir">✕</button>` : '';
+const RM = (col, id) => ((isAdm && (col === 'modulos' || col === 'processos' || col === 'ideias')) || (col === 'modulos' || col === 'processos' ? ui.edit && podeCad(col, 'excluir') : edCol(col.split('.')[0]))) ? `<button class="rm" data-act="rm" data-col="${esc(col)}" data-id="${esc(id)}" title="Excluir">✕</button>` : '';
 const ADD = (col, label) => (col === 'modulos' || col === 'processos') ? (podeCad(col, 'criar') ? `<button class="fi-btn fi-btn--primary" data-act="novo" data-col="${esc(col)}">＋ ${esc(label)}</button>` : '') : edCol(col.split('.')[0]) ? `<button class="fi-btn fi-btn--primary" data-act="add" data-col="${esc(col)}">＋ ${esc(label)}</button>` : '';
 
 /* Roadmap individual: as 6 etapas em sequência, com a etapa atual destacada */
@@ -1088,6 +1092,7 @@ function anterior(col, x) {
     ${linhas.length ? `<div class="kv">${linhas.map(([l, v]) => `<div class="full"><div class="k">${esc(l)}</div><div class="txt" style="white-space:pre-wrap">${esc(v)}</div></div>`).join('')}</div>` : ''}
     ${c.status ? `<div class="muted" style="font-size:.74rem">Situação registrada antes da unificação: ${esc(c.status)}</div>` : ''}</details>`;
 }
+const CRIAR_REL = (col, x) => ui.edit && podeCad(VINC[col].outro, 'criar') ? `<button class="fi-btn bt-s" data-act="criar-rel" data-col="${col}" data-id="${esc(x.id)}" title="Abre a ficha já vinculada a este ${col === 'modulos' ? 'módulo' : 'processo'}">＋ Criar ${VINC[col].um} relacionado</button>` : '';
 const CONV = (col, x) => ui.edit && podeCad(col, 'excluir') && podeCad(VINC[col].outro, 'criar') ? `<button class="fi-btn bt-s" data-act="converter" data-col="${col}" data-id="${esc(x.id)}" title="Reclassificar sem perder informações">⇄ Converter em ${VINC[col].um}</button>` : '';
 async function converter(col, id) {
   const x = byId(col, id); if (!x) return;
@@ -1334,8 +1339,8 @@ const ICON = {
   adm: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
 };
 const MENU = [
-  { fam: 'exec', label: 'Acompanhamento', tabs: [['backlog', 'Triagem'], ['modulos', 'Módulos'], ['processos', 'Processos'], ['implantacao', 'Implantação'], ['atualizacoes', 'Atualizações']] },
-  { fam: 'doc', label: 'Sobre o projeto', tabs: [['visao', 'Visão Geral'], ['equipe', 'Equipe'], ['sistemas', 'Sistemas']] },
+  { fam: 'exec', label: 'Acompanhamento', tabs: [['backlog', 'Triagem'], ['modulos', 'Módulos'], ['processos', 'Processos'], ['atualizacoes', 'Atualizações']] },
+  { fam: 'doc', label: 'Sobre o projeto', tabs: [['visao', 'Visão Geral'], ['implantacao', 'Implantação'], ['equipe', 'Equipe'], ['sistemas', 'Sistemas']] },
   { fam: 'adm', label: '', tabs: [['adm', 'ADM']], admin: true },
 ];
 const FAM_OF = Object.fromEntries(MENU.flatMap(g => g.tabs.map(([id]) => [id, g])));
@@ -1410,7 +1415,7 @@ function fillModulos() {
     return `<div class="fi-card item" data-card="${esc(m.id)}">
       <div class="card-top"><div class="grow"><h3>${T(P(m, 'nome'), { one: 1 })}</h3>
         <div class="sub">Dependências: ${T(P(m, 'dep'), { ph: '—' })}</div></div>${COD(m)}${BT_CHEIO('modulos', m)}${RM('modulos', m.id)}</div>
-      <div class="row">${SEL(P(m, 'prioridade'), 'prioridades', { title: 'Prioridade' })}${COND('modulos', m)}<span class="tag">Etapa: ${esc(nome('etapas', m.etapa))}</span>${CONV('modulos', m)}</div>
+      <div class="row">${SEL(P(m, 'prioridade'), 'prioridades', { title: 'Prioridade' })}${COND('modulos', m)}<span class="tag">Etapa: ${esc(nome('etapas', m.etapa))}</span>${CONV('modulos', m)}${CRIAR_REL('modulos', m)}</div>
       ${trilha(m)}${etapaCtl('modulos', m)}${anterior('modulos', m)}${triagemBloco(m)}
       <div class="vinc"><div class="k">Processos vinculados</div>${VINCS('modulos', m)}</div>
       <div class="vinc"><div class="k">Módulos relacionados</div>${RELS('modulos', m)}</div>
@@ -1463,7 +1468,7 @@ function fillProcessos() {
   const L = { resp: 'R', exec: 'E', aprov: 'A', cons: 'C', inf: 'I', sup: 'S' };
   $('#list').innerHTML = `${barraCheio('processos')}<div class="${ui.cheio ? 'cheio' : 'gauto'}">${l.map(p => `<div class="fi-card proc" data-card="${esc(p.id)}">
       <div class="proc-top"><div class="grow" style="flex:1;min-width:0"><h3>${T(P(p, 'nome'), { one: 1 })}</h3>
-        <div class="sub row">${REF(P(p, 'area'), 'areas', { tag: 1, empty: 'Sem área' })}${COND('processos', p)}<span class="tag">Etapa: ${esc(nome('etapas', p.etapa))}</span>${CONV('processos', p)}</div>
+        <div class="sub row">${REF(P(p, 'area'), 'areas', { tag: 1, empty: 'Sem área' })}${COND('processos', p)}<span class="tag">Etapa: ${esc(nome('etapas', p.etapa))}</span>${CONV('processos', p)}${CRIAR_REL('processos', p)}</div>
         <div class="vinc"><div class="k">Módulos envolvidos</div>${VINCS('processos', p)}</div>
         <div class="vinc"><div class="k">Processos relacionados</div>${RELS('processos', p)}</div>${trilha(p)}${etapaCtl('processos', p)}</div>
         ${COD(p)}${BT_CHEIO('processos', p)}${RM('processos', p.id)}</div>
@@ -1485,7 +1490,7 @@ function fillProcessos() {
 /* ---------- Implantação ---------- */
 function vImplantacao() {
   const col = ui.implKind;
-  $('#view').className = 'fi-page fam-ink-exec';
+  $('#view').className = 'fi-page fam-ink-doc';
   $('#view').innerHTML = `
     ${head('implantacao')}
     ${sec('fluxo')}
@@ -1507,9 +1512,20 @@ const triCampos = () => (S.triagem && S.triagem.campos) || TRIAGEM_PADRAO.campos
 const podeTri = () => canEdit && (isAdm || ((S.triagem || {}).aprovar !== 'admin' && souDiretor()));
 function triValor(c, v) { return c.tipo === 'setor' ? (nome('areas', v) || v || '') : (v || ''); }
 function triResumo(i) { return triCampos().map((c, k) => ({ pergunta: c.pergunta, resposta: k === 0 ? i.titulo : triValor(c, (i.resp || {})[c.id]) })); }
+/* Roadmap da triagem: 1 Solicitação → 2 Em análise → 3 Decisão (aprovada, atrelada ou reprovada) */
+function trilhaTri(i) {
+  const fim = i.status === 'Aprovada' || i.status === 'Reprovada';
+  const dec = i.status === 'Reprovada' ? 'Reprovada' : i.virou && i.virou.atrelado ? 'Atrelada' : i.status === 'Aprovada' ? 'Aprovada' : 'Decisão';
+  const et = ['Solicitação', 'Em análise', dec], at = fim ? 3 : 1;
+  return `<div class="trilha-w tri-rm${i.status === 'Reprovada' ? ' rep' : ''}"><div class="k">Roadmap da triagem · ${fim ? `<b>decidida: ${esc(dec.toLowerCase())}</b>` : `etapa 2 de 3: <b>Em análise</b>`}</div>
+    <div class="trilha" style="grid-template-columns:repeat(3,minmax(0,1fr))">${et.map((e, k) => `<span class="tr-s${k < at ? ' feito' : k === at ? ' atual' : ''}" title="${k + 1}. ${esc(e)}"><b>${k + 1}</b></span>`).join('')}</div>
+    <div class="tr-nomes">${et.map((e, k) => `<b class="${k < at ? 'feito' : k === at ? 'atual' : ''}">${k + 1}. ${esc(e)}</b>`).join('<span class="sep">›</span>')}</div></div>`;
+}
 function triagemBloco(x) {
-  if (!x.triagem) return '';
-  const t = x.triagem;
+  const lista = [...(x.triagem ? [x.triagem] : []), ...(x.triagens || [])];
+  return lista.map(t => triagemUm(t)).join('');
+}
+function triagemUm(t) {
   return `<details class="anterior"><summary>⇢ Veio da triagem${t.cod ? ` ${esc(t.cod)}` : ''} · solicitado por ${esc(t.solicitante || '—')}${t.em ? ` em ${esc(dataBR(t.em))}` : ''}</summary>
     <div class="kv">${(t.respostas || []).map(r => `<div class="full"><div class="k">${esc(r.pergunta)}</div><div class="txt" style="white-space:pre-wrap">${esc(r.resposta || '—')}</div></div>`).join('')}</div></details>`;
 }
@@ -1528,14 +1544,17 @@ function vBacklog() {
     ${!l.length ? `<div class="fi-card fi-empty">Nenhuma demanda nesta seleção.</div>` : `<div class="${ui.cheio ? 'cheio' : 'gauto'}">${l.map(i => {
       const aberta = i.status === 'Em análise', meu = (i.autor || []).includes(USER_TOK) || i.porTok === meuTok();
       return `<div class="fi-card item tri" data-card="${esc(i.id)}">
-        <div class="card-top"><h3 class="grow">${T(P(i, 'titulo'), { one: 1 })}</h3>${pill(i.status)}${COD(i)}${BT_CHEIO('ideias', i)}${(isAdm || (meu && aberta)) && ui.edit ? `<button class="rm" data-act="rm" data-col="ideias" data-id="${esc(i.id)}" title="Excluir">✕</button>` : ''}</div>
+        <div class="card-top"><h3 class="grow">${T(P(i, 'titulo'), { one: 1 })}</h3>${pill(i.status)}${COD(i)}${BT_CHEIO('ideias', i)}${(isAdm || (meu && aberta && ui.edit)) ? `<button class="rm" data-act="rm" data-col="ideias" data-id="${esc(i.id)}" title="Excluir">✕</button>` : ''}</div>
         <div class="muted" style="font-size:.74rem">Solicitado por ${esc(i.porNome || (i.autor || []).map(tokName).join(', ') || '—')}${i.em ? ` em ${esc(dataBR(i.em))}` : ''}</div>
+        ${trilhaTri(i)}
         ${cs.slice(1).map(c => `<div><div class="k">${esc(c.pergunta)}</div>${c.tipo === 'setor' ? REF(P(i, 'resp.' + c.id), 'areas', { tag: 1, empty: '—' }) : c.tipo === 'prioridade' ? SEL(P(i, 'resp.' + c.id), 'prioridades', { empty: '—' }) : T(P(i, 'resp.' + c.id), { tag: 'div', cls: 'txt', ph: '—' })}</div>`).join('')}
-        ${i.status === 'Aprovada' && i.virou ? `<div class="fim">✔ Aprovada como ${i.virou.col === 'modulos' ? 'módulo' : 'processo'}${i.decisao ? ` por ${esc(i.decisao.por)}` : ''} · <button class="vchip" data-act="cheio-de" data-col="${i.virou.col}" data-id="${esc(i.virou.id)}">${esc(rotItem(i.virou.col, byId(i.virou.col, i.virou.id)) || 'abrir')} ↗</button></div>` : ''}
+        ${i.status === 'Aprovada' && i.virou ? `<div class="fim">✔ ${i.virou.atrelado ? 'Atrelada ao' : 'Aprovada como'} ${i.virou.col === 'modulos' ? 'módulo' : 'processo'}${i.decisao ? ` por ${esc(i.decisao.por)}` : ''} · <button class="vchip" data-act="cheio-de" data-col="${i.virou.col}" data-id="${esc(i.virou.id)}">${esc(rotItem(i.virou.col, byId(i.virou.col, i.virou.id)) || 'abrir')} ↗</button></div>` : ''}
         ${i.status === 'Reprovada' ? `<div class="ped"><span>Reprovada${i.decisao ? ` por ${esc(i.decisao.por)} em ${esc(dataBR(i.decisao.em))}` : ''}${i.decisao && i.decisao.motivo ? ` — ${esc(i.decisao.motivo)}` : ''}</span></div>` : ''}
         ${aberta && ap ? `<div class="ped-bt">
           <button class="fi-btn fi-btn--primary bt-s" data-act="tri-aprovar" data-col="modulos" data-id="${esc(i.id)}">✓ Aprovar como módulo</button>
           <button class="fi-btn fi-btn--primary bt-s" data-act="tri-aprovar" data-col="processos" data-id="${esc(i.id)}">✓ Aprovar como processo</button>
+          <button class="fi-btn bt-s" data-act="tri-atrelar" data-col="modulos" data-id="${esc(i.id)}">🔗 Atrelar a módulo existente</button>
+          <button class="fi-btn bt-s" data-act="tri-atrelar" data-col="processos" data-id="${esc(i.id)}">🔗 Atrelar a processo existente</button>
           <button class="fi-btn bt-s" data-act="tri-descartar" data-id="${esc(i.id)}">✕ Reprovar</button></div>` : aberta ? `<div class="muted" style="font-size:.74rem">Em análise pela Direção.</div>` : ''}
         ${notasBloco('ideias', i)}
       </div>`; }).join('')}</div>`}`;
@@ -1572,6 +1591,26 @@ function triAprovar(col, id) {
   const setor = (cs.find(c => c.tipo === 'setor') || {}).id, prio = (cs.find(c => c.tipo === 'prioridade') || {}).id;
   if (col === 'modulos') { vals.objetivo = longo; if (prio) vals.prioridade = (i.resp || {})[prio]; } else { vals.obs = longo; if (setor) vals.area = (i.resp || {})[setor]; }
   abrirFicha(col, { origem: id, titulo: i.titulo, vals });
+}
+function triAtrelar(col, id) {
+  const i = byId('ideias', id); if (!i) return;
+  if (!podeTri()) { notify('Somente a Direção (ou admin) decide a triagem.', 'warning'); return; }
+  const ops = [...S[col]].sort((a, b) => String(a.cod).localeCompare(String(b.cod)));
+  modal.innerHTML = `<div class="m-head"><h2>Atrelar “${esc(i.titulo)}” a ${col === 'modulos' ? 'um módulo' : 'um processo'} existente</h2><button class="rm" data-act="close">✕</button></div>
+    <div class="m-body"><input class="fi-input" id="atrQ" placeholder="Filtrar por ID ou nome…" autocomplete="off">
+      <div class="vbox atr-lista" id="atrLista">${ops.map(o => `<label data-k="${esc(norm((o.cod || '') + ' ' + o.nome))}"><input type="radio" name="atr" value="${esc(o.id)}"> <span class="cod">${esc(o.cod || '')}</span> ${esc(o.nome)}</label>`).join('') || '<span class="muted">Nenhum cadastrado.</span>'}</div>
+      <span class="fi-field__help">A demanda é dada como aprovada e fica registrada no cartão escolhido; nenhum cartão novo é criado.</span></div>
+    <div class="m-foot"><button class="fi-btn" data-act="close">Cancelar</button><button class="fi-btn fi-btn--primary" data-act="tri-atr-ok" data-col="${col}" data-id="${esc(id)}">Atrelar</button></div>`;
+  modal.showModal(); $('#atrQ').focus();
+}
+function triAtrOk(col, id) {
+  const r = modal.querySelector('input[name="atr"]:checked'); if (!r) { notify('Escolha um item.', 'warning'); return; }
+  const alvo = r.value; modal.close();
+  commit(st => { const ide = st.ideias.find(z => z.id === id), y = st[col].find(z => z.id === alvo); if (!ide || !y) return;
+    ide.status = 'Aprovada'; ide.virou = { col, id: alvo, atrelado: true }; ide.decisao = { por: quemSou(), em: new Date().toISOString() };
+    y.triagens = [...(y.triagens || []), { id: ide.id, cod: ide.cod, solicitante: ide.porNome || (ide.autor || []).map(tokName).join(', '), em: ide.em, respostas: triResumo(ide) }];
+    registrar(st, 'ideias', id, `Atrelou a demanda “${ide.titulo}” ${col === 'modulos' ? 'ao módulo' : 'ao processo'} ${y.cod || ''} ${y.nome}.`, 'Triagem'); }, true);
+  notify('Demanda atrelada.', 'success');
 }
 function triDescartar(id) {
   const i = byId('ideias', id); if (!i) return;
@@ -1779,7 +1818,8 @@ function addItem(col) {
 async function removeItem(col, id) {
   const it = (arrOf(S, col) || []).find(x => x.id === id); if (!it) return;
   const label = it.nome || it.titulo || it.t || 'item';
-  let msg = `Excluir “${label}”?`;
+  let msg = `Excluir definitivamente ${col === 'modulos' ? 'o módulo' : col === 'processos' ? 'o processo' : col === 'ideias' ? 'a demanda' : ''} ${it.cod ? it.cod + ' · ' : ''}“${label}”? Esta ação não pode ser desfeita (fica no Registro de atividades).`;
+  if (col === 'ideias' && it.virou) msg += ' O cartão gerado ou atrelado a partir dela não é apagado.';
   if (col === 'modulos') { const n = procsDoModulo(id), orf = n.filter(p => p.modulos.length === 1).length; if (n.length) msg += ` ${n.length} processo(s) vinculado(s) perdem este vínculo${orf ? `; ${orf} ficará(ão) sem módulo` : ''}.`; }
   if (col === 'processos' && it.modulos && it.modulos.length) msg += ` O vínculo com ${it.modulos.length} módulo(s) será removido.`;
   if (col === 'participantes') { const u = usage(id).length; if (u) msg += ` ${label} aparece em ${u} lugar(es); o nome será mantido como texto. Se a pessoa apenas saiu do projeto, prefira o status Inativo.`; }
@@ -1825,11 +1865,12 @@ function abrirFicha(col, pre) {
     return `<label class="fi-field" data-campo="${c.k}">${lab}${inp}${help}</label>`;
   };
   modal.innerHTML = `<div class="m-head"><h2>Cadastrar ${col === 'modulos' ? 'módulo' : 'processo'}</h2><button class="rm" data-act="close">✕</button></div>
-    <div class="m-body ficha">${pre && pre.origem ? `<div class="fi-alert">Aprovando a demanda da triagem <b>${esc(pre.titulo || '')}</b>. As respostas da triagem já foram copiadas; complete o restante.</div>` : ''}${CAMPOS[col].map(campo).join('')}
+    <div class="m-body ficha">${pre && pre.de ? `<div class="fi-alert">Criando a partir de <b>${esc(pre.de)}</b>: o vínculo já está marcado; complete o restante.</div>` : ''}${pre && pre.origem ? `<div class="fi-alert">Aprovando a demanda da triagem <b>${esc(pre.titulo || '')}</b>. As respostas da triagem já foram copiadas; complete o restante.</div>` : ''}${CAMPOS[col].map(campo).join('')}
       <datalist id="fichaPessoas">${ativos.map(x => `<option value="${esc(x.nome)}">${esc(papel(x))}</option>`).join('')}</datalist>
       <span class="muted" style="font-size:.74rem"><b class="req">*</b> obrigatório</span></div>
     <div class="m-foot"><button class="fi-btn" data-act="close">Cancelar</button><button class="fi-btn fi-btn--primary" data-act="ficha-ok" data-col="${col}">Cadastrar</button></div>`;
   modal.dataset.origem = (pre && pre.origem) || '';
+  if (pre && pre.vinc) pre.vinc.forEach(id => { const e = modal.querySelector(`[data-vinc="${id}"]`); if (e) e.checked = true; });
   if (pre && pre.vals) for (const k in pre.vals) { const e = modal.querySelector(`[data-k="${k}"]`); if (e && pre.vals[k]) e.value = pre.vals[k]; }
   modal.showModal(); const f = modal.querySelector('[data-k="nome"]'); if (f) f.focus();
 }
@@ -2031,6 +2072,9 @@ document.addEventListener('click', async e => {
     case 'tri-nova': triNova(); break;
     case 'tri-ok': triOk(); break;
     case 'tri-aprovar': triAprovar(el.dataset.col, id); break;
+    case 'tri-atrelar': triAtrelar(el.dataset.col, id); break;
+    case 'tri-atr-ok': triAtrOk(el.dataset.col, id); break;
+    case 'criar-rel': { const c = el.dataset.col, x = byId(c, id); if (x) abrirFicha(VINC[c].outro, { vinc: [id], de: `${x.cod || ''} · ${x.nome}` }); break; }
     case 'tri-descartar': triDescartar(id); break;
     case 'tri-desc-ok': { const mo = ($('#triMotivo').value || '').trim(); if (!mo) { notify('Informe o motivo.', 'warning'); break; } modal.close();
       commit(st => { const i = st.ideias.find(z => z.id === id); if (!i) return; i.status = 'Reprovada'; i.decisao = { por: quemSou(), em: new Date().toISOString(), motivo: mo }; registrar(st, 'ideias', id, `Reprovou a demanda “${i.titulo}”: ${mo}`, 'Triagem'); }, true); break; }
@@ -2114,7 +2158,7 @@ function menEscolher(i) {
   const c = men.ini + txt.length; ta.focus(); ta.setSelectionRange(c, c);
   menFechar();
 }
-document.addEventListener('input', e => { const t = e.target; if (t.dataset && t.dataset.notaTxt !== undefined) { men.sel = 0; menAbrir(t); } });
+document.addEventListener('input', e => { const t = e.target; if (t.dataset && t.dataset.notaTxt !== undefined) { men.sel = 0; menAbrir(t); } if (t.id === 'atrQ') { const q = norm(t.value); modal.querySelectorAll('#atrLista label').forEach(l => { l.hidden = q && !l.dataset.k.includes(q); }); } });
 document.addEventListener('click', e => { const t = e.target; if (t.dataset && t.dataset.notaTxt !== undefined) menAbrir(t); else if (!e.target.closest('.men-pop')) menFechar(); });
 document.addEventListener('focusout', e => { if (e.target.dataset && e.target.dataset.notaTxt !== undefined) setTimeout(() => { if (document.activeElement !== men.ta) menFechar(); }, 150); });
 document.addEventListener('keydown', e => {
