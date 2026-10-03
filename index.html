@@ -256,10 +256,11 @@ button.tri-row:hover{border-color:var(--exec)}
 .men-op:hover,.men-op.on{background:color-mix(in srgb,var(--doc) 14%,transparent)}
 .nhint{font-size:.74rem}
 /* Modo claro: fundo da tela mais escuro e cartões brancos em destaque */
-body.tema-claro{background:#e4e8ee!important}
-body.tema-claro .fi-page{background:transparent}
-body.tema-claro .fi-card{background:#fff!important;border-color:#d3d9e1!important;box-shadow:0 1px 2px rgba(16,24,40,.06),0 2px 8px rgba(16,24,40,.06)}
-body.tema-claro .menu{box-shadow:0 2px 10px rgba(28,37,46,.08)}
+/* Fundo da tela um pouco mais escuro que o tema e cartões na cor de superfície do tema (claro e escuro) */
+body{background:color-mix(in srgb,var(--fi-bg,#f4f6f8) 91%,#000)!important}
+.fi-page{background:transparent}
+.fi-page .fi-card{background:var(--fi-surface,#fff);border-color:color-mix(in srgb,var(--fi-line,#dfe3e8) 85%,var(--fi-text,#20242a))}
+.fi-page .fi-card.item,.fi-page .fi-card.proc,.fi-page .fi-card.upd,.fi-page .fi-card.aprov{box-shadow:0 1px 2px rgba(0,0,0,.08),0 3px 10px rgba(0,0,0,.07)}
 /* Divisões entre as seções do cartão */
 .item>*:not(:first-child):not(.row):not(.muted):not(.foot){border-top:1px solid var(--fi-line,#dfe3e8);padding-top:10px}
 .item>.notas{margin-top:0}
@@ -403,7 +404,7 @@ dialog::backdrop{background:rgba(9,12,16,.55)}
 
 <header class="fi-topbar">
   <a class="fi-brand" href="#modulos"><img data-fi-logo></a>
-  <div class="proj-name"><b data-fi-page-title>Projeto Plataforma Corporativa</b><small id="docVersao" title="Versão deste arquivo HTML (03/10/2026). Aumenta a cada atualização entregue.">Documento V.002</small></div>
+  <div class="proj-name"><b data-fi-page-title>Projeto Plataforma Corporativa</b><small id="docVersao" title="Versão deste arquivo HTML (03/10/2026). Aumenta a cada atualização entregue.">Documento V.003</small></div>
   <div class="fi-topbar__actions">
     <span class="sync" id="sync"></span>
     <button class="fi-btn btn-edit" id="btnEdit" data-act="toggle-edit" hidden>✎ Editar</button>
@@ -430,7 +431,7 @@ dialog::backdrop{background:rgba(9,12,16,.55)}
    qualquer outro texto é texto livre (ex.: "Gestor da área").
    ===================================================================== */
 /* VERSÃO DO DOCUMENTO (HTML): aumentar em 1 a cada atualização entregue (formato V.001). Aparece no topo, abaixo da versão da Fiorella UI. */
-const DOC_VERSAO = 'V.002', DOC_DATA = '03/10/2026';
+const DOC_VERSAO = 'V.003', DOC_DATA = '03/10/2026';
 console.info('[Projeto Fiorella] documento ' + DOC_VERSAO + ' · ' + DOC_DATA);
 const SCHEMA = 12;
 const SEED = {
@@ -2212,16 +2213,6 @@ document.addEventListener('change', e => {
 document.addEventListener('input', e => { if (e.target.dataset && e.target.dataset.upper !== undefined) { const t = e.target, c = t.selectionStart; t.value = UP(t.value); try { t.setSelectionRange(c, c); } catch (err) {} return; } const k = e.target.dataset && e.target.dataset.ui; if (!k) return; ui[k] = e.target.value; (FILLS[ui.tab] || render)(); });
 modal.addEventListener('click', e => { if (e.target === modal) modal.close(); });
 modal.addEventListener('close', () => { modal.dataset.origem = ''; });
-/* Detecta o tema (claro/escuro) pela cor de fundo real e marca o body */
-function detectaTema() {
-  document.body.classList.remove('tema-claro');
-  const c = getComputedStyle(document.body).backgroundColor.match(/\d+(\.\d+)?/g) || [255, 255, 255];
-  const [r, g, b] = c.map(Number), lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
-  document.body.classList.toggle('tema-claro', lum > 0.6);
-}
-new MutationObserver(() => requestAnimationFrame(detectaTema)).observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'data-theme', 'data-fi-theme', 'style'] });
-try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', detectaTema); } catch (e) {}
-window.addEventListener('load', detectaTema); setTimeout(detectaTema, 300); detectaTema();
 
 /* ---------- @menção: ao digitar @ abre a lista de pessoas para clicar ---------- */
 const men = { el: null, ta: null, ini: -1, itens: [], sel: 0 };
