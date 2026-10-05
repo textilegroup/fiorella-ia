@@ -287,6 +287,12 @@ body{background:color-mix(in srgb,var(--fi-bg,#f4f6f8) 91%,#000)!important}
 .cx-adm textarea{min-width:160px;font-size:.78rem}
 .cx-bloco .kv{margin-top:4px}
 .cx-bloco .fi-input,.cx-bloco .fi-select{width:100%;font-size:.8rem}
+/* Botão flutuante de edição (somente admin) */
+.fab-edit{position:fixed;right:18px;bottom:18px;z-index:60;border:1px solid var(--fi-line,#dfe3e8);background:color-mix(in srgb,var(--fi-surface,#fff) 88%,transparent);color:var(--fi-muted,#6b7280);font:inherit;font-size:.78rem;font-weight:700;padding:7px 14px;border-radius:999px;cursor:pointer;opacity:.72;box-shadow:0 2px 8px rgba(0,0,0,.12);backdrop-filter:blur(4px);transition:opacity .15s,transform .15s}
+.fab-edit:hover{opacity:1;color:var(--fi-text)}
+.fab-edit.on{background:var(--exec,#b5121b);border-color:var(--exec,#b5121b);color:#fff;opacity:1;font-size:.86rem;padding:9px 18px;box-shadow:0 4px 16px color-mix(in srgb,var(--exec,#b5121b) 45%,transparent)}
+.fab-edit[hidden]{display:none}
+@media print{.fab-edit{display:none!important}}
 .trilha-w{margin:10px 0 2px}.trilha-w .k b{color:var(--exec)}
 .trilha{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
 .tr-s{display:flex;flex-direction:column;gap:3px;min-width:0}
@@ -404,7 +410,7 @@ dialog::backdrop{background:rgba(9,12,16,.55)}
 
 <header class="fi-topbar">
   <a class="fi-brand" href="#modulos"><img data-fi-logo></a>
-  <div class="proj-name"><b data-fi-page-title>Projeto Plataforma Corporativa</b><small id="docVersao" title="Versão deste arquivo HTML (03/10/2026). Aumenta a cada atualização entregue.">Documento V.004</small></div>
+  <div class="proj-name"><b data-fi-page-title>Projeto Plataforma Corporativa</b><small id="docVersao" title="Versão deste arquivo HTML (03/10/2026). Aumenta a cada atualização entregue.">Documento V.005</small></div>
   <div class="fi-topbar__actions">
     <span class="sync" id="sync"></span>
     <button class="fi-btn btn-edit" id="btnEdit" data-act="toggle-edit" hidden>✎ Editar</button>
@@ -431,7 +437,7 @@ dialog::backdrop{background:rgba(9,12,16,.55)}
    qualquer outro texto é texto livre (ex.: "Gestor da área").
    ===================================================================== */
 /* VERSÃO DO DOCUMENTO (HTML): aumentar em 1 a cada atualização entregue (formato V.001). Aparece no topo, abaixo da versão da Fiorella UI. */
-const DOC_VERSAO = 'V.004', DOC_DATA = '03/10/2026';
+const DOC_VERSAO = 'V.005', DOC_DATA = '03/10/2026';
 console.info('[Projeto Fiorella] documento ' + DOC_VERSAO + ' · ' + DOC_DATA);
 const SCHEMA = 12;
 const SEED = {
@@ -1479,7 +1485,12 @@ function go(tab) {
 function render() {
   document.body.classList.toggle('editing', ui.edit);
   $('#editBar').hidden = !ui.edit;
-  const b = $('#btnEdit'); b.hidden = !canEdit; b.classList.toggle('on', ui.edit); b.textContent = ui.edit ? '✓ Editando' : '✎ Editar';
+  if (!isAdm) ui.edit = false;
+  const b = $('#btnEdit'); b.hidden = !isAdm; b.classList.toggle('on', ui.edit); b.textContent = ui.edit ? '✓ Aplicar' : '✎ Editar';
+  let fab = document.getElementById('fabEdit');
+  if (!fab) { fab = document.createElement('button'); fab.id = 'fabEdit'; fab.className = 'fab-edit'; fab.dataset.act = 'toggle-edit'; document.body.appendChild(fab); }
+  fab.hidden = !isAdm; fab.classList.toggle('on', ui.edit); fab.textContent = ui.edit ? '✓ Aplicar' : '✎ Editar';
+  fab.title = ui.edit ? 'Aplicar e sair do modo edição' : 'Entrar no modo edição (admin)';
   VIEWS[ui.tab]();
   if (ui.focus) { const el = document.querySelector(ui.focus); ui.focus = ''; if (el) { el.scrollIntoView({ block: 'center' }); el.focus(); if (el.isContentEditable) document.getSelection().selectAllChildren(el); } }
 }
@@ -2158,7 +2169,7 @@ document.addEventListener('click', async e => {
     case 'tab': ui.cheio = null; go(id); scrollTo({ top: 0 }); break;
     case 'cheio': ui.cheio = { col: el.dataset.col, id }; render(); scrollTo({ top: 0 }); break;
     case 'cheio-sair': ui.cheio = null; render(); break;
-    case 'toggle-edit': ui.edit = !ui.edit; try { sessionStorage.setItem('projetoFiorella.edit', ui.edit ? '1' : ''); } catch (err) {} render(); break;
+    case 'toggle-edit': if (!isAdm) break; if (ui.edit) flush(); ui.edit = !ui.edit; try { sessionStorage.setItem('projetoFiorella.edit', ui.edit ? '1' : ''); } catch (err) {} render(); break;
     case 'retry': flush(); break;
     case 'add': addItem(el.dataset.col); break;
     case 'novo': abrirFicha(el.dataset.col); break;
@@ -2314,7 +2325,7 @@ function fatal(msg) { $('#view').innerHTML = `<div class="fi-card fi-empty"><div
   if (!window.APP || !APP.pronto) { fatal('A Central de Acesso Fiorella não carregou. Confira a conexão e recarregue a página.'); return; }
   try { await APP.pronto; } catch (e) { return; } /* o guard já mostrou login / aviso */
   sb = APP.sb; canEdit = APP.podeEditar(); isAdm = APP.eAdmin();
-  try { ui.edit = canEdit && sessionStorage.getItem('projetoFiorella.edit') === '1'; } catch (e) {}
+  try { ui.edit = isAdm && sessionStorage.getItem('projetoFiorella.edit') === '1'; } catch (e) {}
   try {
     const rem = await fetchRemote();
     if (rem) { S = migrate(rem.dados); VER = rem.versao; META = { em: rem.atualizado_em, por: rem.atualizado_por }; }
