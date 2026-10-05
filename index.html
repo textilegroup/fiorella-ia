@@ -410,7 +410,7 @@ dialog::backdrop{background:rgba(9,12,16,.55)}
 
 <header class="fi-topbar">
   <a class="fi-brand" href="#modulos"><img data-fi-logo></a>
-  <div class="proj-name"><b data-fi-page-title>Projeto Plataforma Corporativa</b><small id="docVersao" title="Versão deste arquivo HTML (03/10/2026). Aumenta a cada atualização entregue.">Documento V.005</small></div>
+  <div class="proj-name"><b data-fi-page-title>Projeto Plataforma Corporativa</b><small id="docVersao" title="Versão deste arquivo HTML (03/10/2026). Aumenta a cada atualização entregue.">Documento V.006</small></div>
   <div class="fi-topbar__actions">
     <span class="sync" id="sync"></span>
     <button class="fi-btn btn-edit" id="btnEdit" data-act="toggle-edit" hidden>✎ Editar</button>
@@ -437,7 +437,7 @@ dialog::backdrop{background:rgba(9,12,16,.55)}
    qualquer outro texto é texto livre (ex.: "Gestor da área").
    ===================================================================== */
 /* VERSÃO DO DOCUMENTO (HTML): aumentar em 1 a cada atualização entregue (formato V.001). Aparece no topo, abaixo da versão da Fiorella UI. */
-const DOC_VERSAO = 'V.005', DOC_DATA = '03/10/2026';
+const DOC_VERSAO = 'V.006', DOC_DATA = '03/10/2026';
 console.info('[Projeto Fiorella] documento ' + DOC_VERSAO + ' · ' + DOC_DATA);
 const SCHEMA = 12;
 const SEED = {
@@ -996,7 +996,17 @@ function walk(o, segs) {
   return o;
 }
 const getP = (st, p) => walk(st, p.split('.'));
-function setP(st, p, v) { const segs = p.split('.'), last = segs.pop(), o = walk(st, segs); if (o && typeof o === 'object') o[last] = v; }
+/* Grava num caminho; cria os objetos intermediários que faltarem (ex.: item.extra ainda inexistente) */
+function setP(st, p, v) {
+  const segs = p.split('.'), last = segs.pop(); let o = st;
+  for (const sg of segs) {
+    if (o == null) return;
+    if (sg[0] === '#') { o = Array.isArray(o) ? o.find(x => x.id === sg.slice(1)) : undefined; continue; }
+    if (o[sg] == null || typeof o[sg] !== 'object') o[sg] = {};
+    o = o[sg];
+  }
+  if (o && typeof o === 'object') o[last] = v;
+}
 
 /* =====================================================================
    3. SALVAMENTO COMPARTILHADO (com versão)
