@@ -355,6 +355,11 @@ body{background:color-mix(in srgb,var(--fi-bg,#f4f6f8) 91%,#000)!important}
 .subnav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
 .assin{font-size:.76rem;margin:4px 0 2px;color:var(--fi-text)}.assin b{color:var(--exec)}
 details.crit{margin:6px 0;font-size:.78rem;border:1px dashed var(--fi-line);border-radius:6px;padding:4px 8px}details.crit summary{cursor:pointer;font-weight:700;color:var(--fi-muted)}
+.excl-in{display:flex;justify-content:flex-end;margin-top:10px;padding-top:8px;border-top:1px dashed var(--fi-line,#dfe3e8)}
+.excl-fora{display:flex;justify-content:flex-end;margin:10px 2px 0}
+.bt-excl{display:inline-flex;align-items:center;gap:5px;border:1px solid transparent;background:none;color:var(--fi-muted);font:inherit;font-size:.74rem;font-weight:600;padding:4px 10px;border-radius:6px;cursor:pointer}
+.bt-excl:hover{color:#dc2626;border-color:color-mix(in srgb,#dc2626 45%,transparent);background:color-mix(in srgb,#dc2626 8%,transparent)}
+.excl-fora .bt-excl{border-color:var(--fi-line,#dfe3e8)}
 .filtros{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-bottom:12px}
 .filtros .subnav{margin-bottom:0}
 .filtros .vsep{width:1px;align-self:stretch;max-height:28px;min-height:22px;margin:auto 0;background:var(--fi-line,#dfe3e8)}
@@ -434,7 +439,7 @@ dialog::backdrop{background:rgba(9,12,16,.55)}
 
 <header class="fi-topbar">
   <a class="fi-brand" href="#modulos"><img data-fi-logo></a>
-  <div class="proj-name"><b data-fi-page-title>Projeto Plataforma Corporativa</b><small id="docVersao" title="Versão deste arquivo HTML (03/10/2026). Aumenta a cada atualização entregue.">Documento V.020</small></div>
+  <div class="proj-name"><b data-fi-page-title>Projeto Plataforma Corporativa</b><small id="docVersao" title="Versão deste arquivo HTML (03/10/2026). Aumenta a cada atualização entregue.">Documento V.021</small></div>
   <div class="fi-topbar__actions">
     <span class="sync" id="sync"></span>
     <button class="fi-btn btn-edit" id="btnEdit" data-act="toggle-edit" hidden>✎ Editar</button>
@@ -461,7 +466,7 @@ dialog::backdrop{background:rgba(9,12,16,.55)}
    qualquer outro texto é texto livre (ex.: "Gestor da área").
    ===================================================================== */
 /* VERSÃO DO DOCUMENTO (HTML): aumentar em 1 a cada atualização entregue (formato V.001). Aparece no topo, abaixo da versão da Fiorella UI. */
-const DOC_VERSAO = 'V.020', DOC_DATA = '03/10/2026';
+const DOC_VERSAO = 'V.021', DOC_DATA = '03/10/2026';
 console.info('[Projeto Fiorella] documento ' + DOC_VERSAO + ' · ' + DOC_DATA);
 const SCHEMA = 12;
 const SEED = {
@@ -1554,7 +1559,12 @@ function COND(col, x) {
 }
 
 /* Visualização de um cartão em página inteira */
-const BT_CHEIO = (col, x) => ui.cheio ? '' : `<button class="bt-cheio" data-act="cheio" data-col="${col}" data-id="${esc(x.id)}" title="Ver em página inteira">⤢</button>`;
+const BT_CHEIO = (col, x) => ui.cheio ? `<button class="rm bt-fechar" data-act="cheio-sair" title="Fechar a visualização">✕</button>` : `<button class="bt-cheio" data-act="cheio" data-col="${col}" data-id="${esc(x.id)}" title="Ver em página inteira">⤢</button>`;
+/* Excluir cartão: somente admin, na parte de baixo (dentro do cartão na grade; abaixo do cartão em página inteira) */
+const IC_LIXO = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v6M14 11v6"/></svg>';
+const BT_EXCL = (col, x) => `<button class="bt-excl" data-act="rm" data-col="${col}" data-id="${esc(x.id)}" title="Excluir este cartão definitivamente">${IC_LIXO} Excluir card</button>`;
+const EXCL_IN = (col, x) => isAdm && !ui.cheio ? `<div class="excl-in">${BT_EXCL(col, x)}</div>` : '';
+const EXCL_FORA = (col, l) => isAdm && ui.cheio && ui.cheio.col === col && l.length ? `<div class="excl-fora">${BT_EXCL(col, l[0])}</div>` : '';
 function barraCheio(col) {
   if (!ui.cheio || ui.cheio.col !== col) return '';
   const x = byId(col, ui.cheio.id);
@@ -1668,7 +1678,7 @@ function fillModulos() {
     const np = procsDoModulo(m.id).length, mc = k => campoCfg('modulos', k).mostrar !== false;
     return `<div class="fi-card item" data-card="${esc(m.id)}">
       <div class="card-top"><div class="grow"><h3>${T(P(m, 'nome'), { one: 1 })}</h3>
-        <div class="sub">Dependências: ${T(P(m, 'dep'), { ph: '—' })}</div></div>${COD(m)}${BT_CHEIO('modulos', m)}${RM('modulos', m.id)}</div>
+        <div class="sub">Dependências: ${T(P(m, 'dep'), { ph: '—' })}</div></div>${COD(m)}${BT_CHEIO('modulos', m)}</div>
       <div class="row">${SEL(P(m, 'prioridade'), 'prioridades', { title: 'Prioridade' })}${COND('modulos', m)}<span class="tag">Etapa: ${esc(nome('etapas', m.etapa))}</span>${CONV('modulos', m)}${CRIAR_REL('modulos', m)}</div>
       ${trilha(m)}${etapaCtl('modulos', m)}${anterior('modulos', m)}${triagemBloco(m)}
       <div class="vinc"><div class="k">Processos vinculados</div>${VINCS('modulos', m)}</div>
@@ -1683,7 +1693,8 @@ function fillModulos() {
       ${cxBloco('modulos', m)}
       ${notasBloco('modulos', m)}
       <div class="foot"><span>${np} processo(s) vinculado(s)</span>${np ? `<button class="fi-btn" style="min-height:28px;padding:3px 10px" data-act="proc-mod" data-id="${esc(m.id)}">Ver processos</button>` : ''}</div>
-    </div>`; }).join('')}</div>`;
+      ${EXCL_IN('modulos', m)}
+    </div>`; }).join('')}</div>${EXCL_FORA('modulos', l)}`;
 }
 
 /* Busca por palavra-chave: procura em todo o texto do cartão (campos, pessoas, áreas, vínculos, campos extras, anotações).
@@ -1788,7 +1799,7 @@ function fillProcessos() {
         <div class="sub row">${REF(P(p, 'area'), 'areas', { tag: 1, empty: 'Sem área' })}${COND('processos', p)}<span class="tag">Etapa: ${esc(nome('etapas', p.etapa))}</span>${CONV('processos', p)}${CRIAR_REL('processos', p)}</div>
         <div class="vinc"><div class="k">Módulos envolvidos</div>${VINCS('processos', p)}</div>
         <div class="vinc"><div class="k">Processos relacionados</div>${RELS('processos', p)}</div>${trilha(p)}${etapaCtl('processos', p)}</div>
-        ${COD(p)}${BT_CHEIO('processos', p)}${RM('processos', p.id)}</div>
+        ${COD(p)}${BT_CHEIO('processos', p)}</div>
       <div class="raci">${PEOPLE_FIELDS.processos.map(([k, lb]) => `<div><div class="k"><i>${L[k]}</i>${lb}</div>${PPL(P(p, k), { single: k === 'resp' })}</div>`).join('')}</div>
       <div class="proc-bottom">
         <div><div class="k">Prazo / SLA</div>${T(P(p, 'prazo'), { ph: 'A definir' })}</div>
@@ -1802,7 +1813,8 @@ function fillProcessos() {
       <div style="padding:0 18px">${triagemBloco(p)}</div>
       <div style="padding:0 18px">${cxBloco('processos', p)}</div>
       <div class="proc-notas">${notasBloco('processos', p)}</div>
-    </div>`).join('')}</div>`;
+      ${EXCL_IN('processos', p) ? `<div style="padding:0 18px 12px">${EXCL_IN('processos', p)}</div>` : ''}
+    </div>`).join('')}</div>${EXCL_FORA('processos', l)}`;
 }
 
 /* ---------- Implantação ---------- */
@@ -1871,7 +1883,7 @@ function vBacklog() {
     ${!l.length ? `<div class="fi-card fi-empty">Nenhuma demanda nesta seleção${ui.ideiaQ ? ` para “${esc(ui.ideiaQ)}”` : ''}.</div>` : `<div class="${ui.cheio ? 'cheio' : 'gauto'}">${l.map(i => {
       const aberta = i.status === 'Em análise', meu = (i.autor || []).includes(USER_TOK) || i.porTok === meuTok();
       return `<div class="fi-card item tri" data-card="${esc(i.id)}">
-        <div class="card-top"><h3 class="grow">${T(P(i, 'titulo'), { one: 1 })}</h3>${pill(i.status)}${COD(i)}${BT_CHEIO('ideias', i)}${(isAdm || (meu && aberta && ui.edit)) ? `<button class="rm" data-act="rm" data-col="ideias" data-id="${esc(i.id)}" title="Excluir">✕</button>` : ''}</div>
+        <div class="card-top"><h3 class="grow">${T(P(i, 'titulo'), { one: 1 })}</h3>${pill(i.status)}${COD(i)}${BT_CHEIO('ideias', i)}</div>
         <div class="muted" style="font-size:.74rem">Cadastrado${i.em ? ` em ${esc(dataBR(i.em))}` : ''}${(i.cadPor || i.porNome) ? ` por ${esc(i.cadPor || i.porNome)}` : ''}</div>
         ${trilhaTri(i)}
         ${cs.slice(1).map((c, k) => `${k + 1 === solAntes(cs) ? SOLIC(i, ui.edit && canEdit) : ''}<div><div class="k">${esc(c.pergunta)}</div>${c.tipo === 'setor' ? REF(P(i, 'resp.' + c.id), 'areas', { tag: 1, empty: '—' }) : c.tipo === 'prioridade' ? SEL(P(i, 'resp.' + c.id), 'prioridades', { empty: '—' }) : T(P(i, 'resp.' + c.id), { tag: 'div', cls: 'txt', ph: '—' })}</div>`).join('')}${solAntes(cs) === cs.length ? SOLIC(i, ui.edit && canEdit) : ''}
@@ -1886,7 +1898,8 @@ function vBacklog() {
           <button class="fi-btn bt-s" data-act="tri-descartar" data-id="${esc(i.id)}">✕ Reprovar</button></div>` : aberta ? `<div class="muted" style="font-size:.74rem">${ap ? 'Você já assinou · aguardando a outra assinatura.' : `Em análise · aprova: ${esc(aprovRot(apI.quem))}${necI > 1 ? ` (${necI} assinaturas)` : ''}.`}</div>` : ''}
         ${cxBloco('ideias', i)}
         ${notasBloco('ideias', i)}
-      </div>`; }).join('')}</div>`}`;
+        ${EXCL_IN('ideias', i)}
+      </div>`; }).join('')}</div>${EXCL_FORA('ideias', l)}`}`;
 }
 /* "Solicitado por": pessoa que pediu a nova demanda (editável). Fica logo acima do campo de área. */
 const SOL_PERG = 'Solicitado por';
@@ -2515,7 +2528,7 @@ document.addEventListener('click', async e => {
     case 'vinc-ok': vincOk(el.dataset.col, id); break;
     case 'vinc-rm': vincRm(el.dataset.col, id, el.dataset.o); break;
     case 'vinc-ir': if (modal.open) modal.close(); ui.cheio = null; if (el.dataset.col === 'processos') { ui.procMod = ''; ui.procQ = (byId('processos', id) || {}).nome || ''; ui.procArea = '*'; ui.procSol = ''; ui.procStatus = ''; go('processos'); } else { ui.modQ = (byId('modulos', id) || {}).nome || ''; ui.modPrio = ''; go('modulos'); } break;
-    case 'rm': removeItem(el.dataset.col, id); break;
+    case 'rm': if (['modulos', 'processos', 'ideias'].includes(el.dataset.col) && !isAdm) { notify('Somente o admin exclui cartões.', 'warning'); break; } await removeItem(el.dataset.col, id); if (ui.cheio && ui.cheio.id === id && !byId(ui.cheio.col, id)) { ui.cheio = null; render(); } break;
     case 'ppl-add': openPicker(el.dataset.p, !!el.dataset.single); break;
     case 'ppl-rm': commit(st => { const arr = getP(st, el.dataset.p) || []; arr.splice(+el.dataset.i, 1); }, true); break;
     case 'pk-ok': pickerOk(el.dataset.p, !!el.dataset.single); break;
