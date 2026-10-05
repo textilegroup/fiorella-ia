@@ -353,6 +353,13 @@ body{background:color-mix(in srgb,var(--fi-bg,#f4f6f8) 91%,#000)!important}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.76rem;color:var(--fi-muted);margin-bottom:14px}
 .legend span{display:inline-flex;gap:5px;align-items:center}
 .subnav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.filtros{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-bottom:12px}
+.filtros .subnav{margin-bottom:0}
+.filtros .vsep{width:1px;align-self:stretch;max-height:28px;min-height:22px;margin:auto 0;background:var(--fi-line,#dfe3e8)}
+.filtros .busca{display:flex;align-items:center;gap:6px;border:1px solid var(--fi-line);background:var(--fi-surface);border-radius:999px;padding:0 12px;height:28px;flex:0 1 260px;min-width:180px;color:var(--fi-muted)}
+.filtros .busca:focus-within{border-color:var(--exec);color:var(--exec)}
+.filtros .busca input{border:0;outline:0;background:none;font:inherit;font-size:.78rem;color:var(--fi-text);width:100%;min-width:0;padding:0}
+.filtros .busca input::-webkit-search-cancel-button{cursor:pointer}
 .subnav button{border:1px solid var(--fi-line);background:var(--fi-surface);border-radius:999px;padding:5px 12px;font:inherit;font-size:.76rem;font-weight:650;cursor:pointer;color:var(--fi-muted)}
 .subnav button b{margin-left:4px;opacity:.7}
 .subnav button.on{background:var(--exec);border-color:var(--exec);color:#fff}
@@ -417,7 +424,7 @@ dialog::backdrop{background:rgba(9,12,16,.55)}
 
 <header class="fi-topbar">
   <a class="fi-brand" href="#modulos"><img data-fi-logo></a>
-  <div class="proj-name"><b data-fi-page-title>Projeto Plataforma Corporativa</b><small id="docVersao" title="Versão deste arquivo HTML (03/10/2026). Aumenta a cada atualização entregue.">Documento V.012</small></div>
+  <div class="proj-name"><b data-fi-page-title>Projeto Plataforma Corporativa</b><small id="docVersao" title="Versão deste arquivo HTML (03/10/2026). Aumenta a cada atualização entregue.">Documento V.015</small></div>
   <div class="fi-topbar__actions">
     <span class="sync" id="sync"></span>
     <button class="fi-btn btn-edit" id="btnEdit" data-act="toggle-edit" hidden>✎ Editar</button>
@@ -444,7 +451,7 @@ dialog::backdrop{background:rgba(9,12,16,.55)}
    qualquer outro texto é texto livre (ex.: "Gestor da área").
    ===================================================================== */
 /* VERSÃO DO DOCUMENTO (HTML): aumentar em 1 a cada atualização entregue (formato V.001). Aparece no topo, abaixo da versão da Fiorella UI. */
-const DOC_VERSAO = 'V.012', DOC_DATA = '03/10/2026';
+const DOC_VERSAO = 'V.015', DOC_DATA = '03/10/2026';
 console.info('[Projeto Fiorella] documento ' + DOC_VERSAO + ' · ' + DOC_DATA);
 const SCHEMA = 12;
 const SEED = {
@@ -456,7 +463,7 @@ const SEED = {
     modulos: { t: 'Módulos e Projetos', d: 'Situação, responsáveis e próximos passos de cada frente do projeto.' },
     processos: { t: 'Processos', d: 'Cadastro de processos: área, responsável, executor, aprovador, consultado, informado, suplente, prazo, escalonamento, integração e status.' },
     implantacao: { t: 'Implantação', d: 'Roadmap individual: cada módulo e cada processo percorre as mesmas 7 etapas, em sequência. Os itens andam em paralelo, cada um no seu ritmo.' },
-    backlog: { t: 'Novos Projetos', d: 'Entrada de novas demandas: quem solicita responde 3 perguntas obrigatórias. A Direção analisa e aprova como módulo ou processo, completando o restante do cadastro no padrão da plataforma.' },
+    backlog: { t: 'Novas Demandas', d: 'Entrada de novas demandas: quem solicita responde 3 perguntas obrigatórias. A Direção analisa e aprova como módulo ou processo, completando o restante do cadastro no padrão da plataforma.' },
     atualizacoes: { t: 'Atualizações', d: 'Anotações registradas nos cartões de módulos e processos. Marque como lida ou não lida, veja onde foi mencionado com @ e clique para ir ao cartão de origem.' },
     adm: { t: 'Administração', d: 'Cadastros-base que alimentam as demais guias. Um participante cadastrado uma única vez pode aparecer como sponsor, responsável, executor, aprovador, consultado, informado ou suplente em qualquer item.' },
     sec: {
@@ -477,7 +484,7 @@ const SEED = {
       admDados: 'Dados e acessos',
       admCad: 'Cadastro de módulos e processos',
       admResp: 'Responsáveis por etapa',
-      admTri: 'Perguntas de Novos Projetos',
+      admTri: 'Perguntas de Novas Demandas',
     },
   },
   projeto: {
@@ -760,7 +767,7 @@ function cxTabelaAdm(col, ed) {
         <td class="nw"><input type="checkbox" data-cfg="${b(i)}.obrig" ${c.obrig ? 'checked' : ''} ${dis}></td>
         <td class="nw">${ed ? `<button class="rm" data-act="cx-rm" data-col="${col}" data-i="${i}" title="Excluir campo">✕</button>` : ''}</td></tr>`).join('')}</tbody></table></div>` : `<div class="muted" style="font-size:.8rem">Nenhum campo adicional. ${ed ? 'Use “＋ Novo campo”.' : ''}</div>`}</div>`;
 }
-/* Código único de cada cartão: Novos Projetos N100+, Módulos M200+, Processos P300+ (atribuído uma vez, nunca reutilizado) */
+/* Código único de cada cartão: Novas Demandas N100+, Módulos M200+, Processos P300+ (atribuído uma vez, nunca reutilizado) */
 const COD_BASE = { ideias: ['N', 100], modulos: ['M', 200], processos: ['P', 300] };
 function garantirCods(st) {
   ['modulos', 'processos', 'sistemas'].forEach(c => (st[c] || []).forEach(x => { if (x.nome && x.nome !== UP(x.nome)) x.nome = UP(x.nome); }));
@@ -775,7 +782,7 @@ function garantirCods(st) {
   }
 }
 const COD = x => x && x.cod ? `<span class="cod" title="Código único">${esc(x.cod)}</span>` : '';
-const colRot = c => c === 'modulos' ? 'Módulo' : c === 'processos' ? 'Processo' : 'Novo projeto';
+const colRot = c => c === 'modulos' ? 'Módulo' : c === 'processos' ? 'Processo' : 'Nova demanda';
 const achaItem = (c, id) => { const x = c && S[c] ? byId(c, id) : null; if (x) return [c, x]; for (const k of ['modulos', 'processos', 'ideias']) { const y = byId(k, id); if (y) return [k, y]; } return [c, null]; };
 const rotItem = (c, x) => `${x && x.cod ? x.cod + ' · ' : ''}${x ? (x.nome || x.titulo || '') : ''}`;
 /* Triagem: 3 perguntas obrigatórias (texto, tipo e ajuda editáveis em ADM → Triagem). A 1ª é sempre o nome da demanda. */
@@ -853,7 +860,7 @@ const PEOPLE_FIELDS = {
   ideias: [['autor', 'Solicitado por']],
   etapas: [['resp', 'Responsável pela etapa']],
 };
-const COL_LABEL = { modulos: 'Módulos', processos: 'Processos', sistemas: 'Sistemas', areas: 'Áreas', ideias: 'Novos Projetos', etapas: 'Etapas de implantação', fases: 'Fases do projeto' };
+const COL_LABEL = { modulos: 'Módulos', processos: 'Processos', sistemas: 'Sistemas', areas: 'Áreas', ideias: 'Novas Demandas', etapas: 'Etapas de implantação', fases: 'Fases do projeto' };
 /* Coleções editáveis somente por admin (guia ADM) */
 const ADM_ROOTS = ['participantes', 'areas', 'tipos', 'listas', 'cadastro', 'responsaveis', 'triagem', 'camposExtra', 'cadastroSis', 'sistemas'];
 
@@ -877,7 +884,7 @@ const clone = o => JSON.parse(JSON.stringify(o));
 let S = clone(SEED);
 let sb = null, canEdit = false, isAdm = false, USER_TOK = '';
 let VER = 0, META = { em: null, por: null };
-const ui = { tab: 'modulos', edit: false, procArea: '*', procStatus: '', procQ: '', procMod: '', procView: 'cards', modPrio: '', modQ: '', modView: 'cards', implKind: 'modulos', ideiaStatus: '', admSec: 'participantes', focus: '' };
+const ui = { tab: 'modulos', edit: false, procArea: '*', procStatus: '', procQ: '', procMod: '', procView: 'cards', modPrio: '', modQ: '', modEt: '', ideiaQ: '', modView: 'cards', implKind: 'modulos', ideiaStatus: '', admSec: 'participantes', focus: '' };
 
 /* Garante o formato atual (dados antigos / importados) */
 function migrate(d) {
@@ -984,15 +991,20 @@ function migrate(d) {
   if (!d.listas.stIdeia || d.listas.stIdeia.some(x => x === 'Nova' || x === 'Descartada')) d.listas.stIdeia = ['Em análise', 'Aprovada', 'Reprovada'];
   d.camposExtra = Object.assign({ modulos: [], processos: [], ideias: [], sistemas: [] }, d.camposExtra || {});
   d.cadastroSis = d.cadastroSis || { campos: {} };
-  if (d.textos.backlog && d.textos.backlog.t === 'Triagem') d.textos.backlog.t = 'Novos Projetos';
-  if (d.textos.sec && d.textos.sec.admTri === 'Perguntas da triagem') d.textos.sec.admTri = 'Perguntas de Novos Projetos';
+  if (d.textos.backlog && d.textos.backlog.t === 'Triagem') d.textos.backlog.t = 'Novas Demandas';
+  if (d.textos.sec && d.textos.sec.admTri === 'Perguntas da triagem') d.textos.sec.admTri = 'Perguntas de Novas Demandas';
   d.log = Array.isArray(d.log) ? d.log : [];
+  if (d.textos.backlog && d.textos.backlog.t === 'Novos Projetos') d.textos.backlog.t = 'Novas Demandas';
+  if (d.textos.sec && d.textos.sec.admTri === 'Perguntas de Novos Projetos') d.textos.sec.admTri = 'Perguntas de Novas Demandas';
+  const ndTxt = t => typeof t !== 'string' ? t : t.replace(/Novos Projetos/g, 'Novas Demandas').replace(/novo projeto/gi, m => m[0] === 'N' ? 'Nova demanda' : 'nova demanda');
+  d.log.forEach(r => { r.txt = ndTxt(r.txt); });
+  ['modulos', 'processos', 'ideias'].forEach(c => (d[c] || []).forEach(x => (x.notas || []).forEach(n => { if (n.sis) n.txt = ndTxt(n.txt); })));
   ['modulos', 'processos'].forEach(c => (d[c] || []).forEach(x => {
     const sis = (x.notas || []).filter(n => n.sis);
     if (sis.length) { sis.forEach(n => d.log.push({ id: n.id, em: n.em, por: n.por, tipo: /condição/i.test(n.txt) ? 'Condição' : /unificação/i.test(n.txt) ? 'Cadastro' : 'Etapa', col: c, item: x.id, nome: x.nome, txt: n.txt })); x.notas = x.notas.filter(n => !n.sis); }
   }));
   d.log.sort((a, b) => String(b.em).localeCompare(String(a.em)));
-  /* Novos Projetos: códigos T### viram N### (mesmo número) e textos antigos de "triagem" passam ao nome novo */
+  /* Novas Demandas: códigos T### viram N### (mesmo número) e textos antigos de "triagem" passam ao nome novo */
   const tN = c => (typeof c === 'string' && /^T\d+$/.test(c)) ? 'N' + c.slice(1) : c, velhos = new Set();
   (d.ideias || []).forEach(x => { if (x.cod && /^T\d+$/.test(x.cod)) { velhos.add(x.cod); x.cod = tN(x.cod); } });
   d.seq = d.seq || {};
@@ -1004,11 +1016,11 @@ function migrate(d) {
   d.log.forEach(r => { if (r.col === 'ideias' && r.cod && /^T\d+$/.test(r.cod)) { velhos.add(r.cod); r.cod = tN(r.cod); } });
   const novoTxt = t => typeof t !== 'string' ? t : t
     .replace(/\bT\d+\b/g, m => velhos.has(m) ? tN(m) : m)
-    .replace(/para a triagem/gi, 'para Novos Projetos').replace(/aguardando triagem/gi, 'aguardando decisão em Novos Projetos')
-    .replace(/(a partir|veio|vinda|vindo) da triagem/gi, (m, a) => a + ' de Novos Projetos')
-    .replace(/\bda triagem/gi, 'de Novos Projetos').replace(/\bna triagem/gi, 'em Novos Projetos')
-    .replace(/\bà triagem/gi, 'a Novos Projetos').replace(/\ba triagem/gi, 'Novos Projetos')
-    .replace(/triagem/gi, 'Novos Projetos');
+    .replace(/para a triagem/gi, 'para Novas Demandas').replace(/aguardando triagem/gi, 'aguardando decisão em Novas Demandas')
+    .replace(/(a partir|veio|vinda|vindo) da triagem/gi, (m, a) => a + ' de Novas Demandas')
+    .replace(/\bda triagem/gi, 'de Novas Demandas').replace(/\bna triagem/gi, 'em Novas Demandas')
+    .replace(/\bà triagem/gi, 'a Novas Demandas').replace(/\ba triagem/gi, 'Novas Demandas')
+    .replace(/triagem/gi, 'Novas Demandas');
   d.log.forEach(r => { r.txt = novoTxt(r.txt); });
   ['modulos', 'processos', 'ideias'].forEach(c => (d[c] || []).forEach(x => (x.notas || []).forEach(n => { if (n.sis) n.txt = novoTxt(n.txt); })));
   garantirCods(d);
@@ -1298,7 +1310,7 @@ async function converter(col, id) {
     relAntes.forEach(r => setRel(st, tgt, id, r, true));
     st.modulos.forEach(m => { m.semProcesso = m.semProcesso && !st.processos.some(p => (p.modulos || []).includes(m.id)); });
   }, false);
-  if (tgt === 'processos') { ui.procQ = x.nome; ui.procArea = '*'; ui.procStatus = ''; ui.procMod = ''; } else { ui.modQ = x.nome; ui.modPrio = ''; }
+  if (tgt === 'processos') { ui.procQ = x.nome; ui.procArea = '*'; ui.procStatus = ''; ui.procMod = ''; } else { ui.modQ = x.nome; ui.modPrio = ''; ui.modEt = ''; }
   ui.cheio = null; go(tgt);
   notify(`Convertido em ${VINC[col].um}.`, 'success');
 }
@@ -1416,9 +1428,9 @@ function logLink(r) { const [c2, x] = achaItem(r.col, r.item);
   return x ? `<button class="vchip" data-act="cheio-de" data-col="${c2}" data-id="${esc(r.item)}">${colRot(c2)} · ${esc(rotItem(c2, x))} ↗</button>` : (r.nome ? `<span class="muted">${esc((r.cod ? r.cod + ' · ' : '') + r.nome)} (removido)</span>` : ''); }
 function vLog() {
   const tipos = ['Etapa', 'Cadastro', 'Triagem', 'Condição'], f = ui.logF || '', all = S.log || [];
-  return `<div class="subnav"><button class="${!f ? 'on' : ''}" data-act="log-f" data-id="">Tudo<b>${all.length}</b></button>${tipos.map(t => `<button class="${f === t ? 'on' : ''}" data-act="log-f" data-id="${t}">${t === 'Triagem' ? 'Novos Projetos' : t}<b>${all.filter(r => r.tipo === t).length}</b></button>`).join('')}</div>
+  return `<div class="subnav"><button class="${!f ? 'on' : ''}" data-act="log-f" data-id="">Tudo<b>${all.length}</b></button>${tipos.map(t => `<button class="${f === t ? 'on' : ''}" data-act="log-f" data-id="${t}">${t === 'Triagem' ? 'Novas Demandas' : t}<b>${all.filter(r => r.tipo === t).length}</b></button>`).join('')}</div>
     <div class="toolbar"><input class="fi-input search" data-ui="logQ" value="${esc(ui.logQ || '')}" placeholder="Digite o ID do item (ex.: M201, P300, T104) ou parte do nome…" autocomplete="off" style="max-width:420px"><span class="muted" id="logCnt" style="font-size:.78rem"></span></div>
-    <div class="muted" style="font-size:.78rem;margin-bottom:10px">Histórico automático: aprovações, movimentações de etapa, cadastros, conversões, exclusões, condição e novos projetos. Não entra no bate-papo.</div>
+    <div class="muted" style="font-size:.78rem;margin-bottom:10px">Histórico automático: aprovações, movimentações de etapa, cadastros, conversões, exclusões, condição e novas demandas. Não entra no bate-papo.</div>
     <div id="logList"></div>`;
 }
 function fillLog() {
@@ -1427,12 +1439,12 @@ function fillLog() {
   const l = all.filter(r => (!f || r.tipo === f) && (!q || chave(r).includes(q))), vis = l.slice(0, 400);
   const c = $('#logCnt'); if (c) c.textContent = q ? `${l.length} registro(s) encontrado(s)` : '';
   $('#logList').innerHTML = !vis.length ? `<div class="fi-card fi-empty">${q ? 'Nenhum registro para este ID.' : 'Nenhuma atividade registrada.'}</div>` : `<div class="fi-card log"><table class="fi-table"><tbody>${vis.map(r => `<tr>
-      <td class="nw muted">${esc(dataBR(r.em))}</td><td class="nw"><span class="log-t log-${esc(norm(r.tipo))}">${esc(r.tipo === 'Triagem' ? 'Novos Projetos' : r.tipo)}</span></td><td class="nw"><b>${esc(r.por || '')}</b></td><td>${esc(r.txt)}</td><td class="nw">${logLink(r)}</td></tr>`).join('')}</tbody></table></div>`;
+      <td class="nw muted">${esc(dataBR(r.em))}</td><td class="nw"><span class="log-t log-${esc(norm(r.tipo))}">${esc(r.tipo === 'Triagem' ? 'Novas Demandas' : r.tipo)}</span></td><td class="nw"><b>${esc(r.por || '')}</b></td><td>${esc(r.txt)}</td><td class="nw">${logLink(r)}</td></tr>`).join('')}</tbody></table></div>`;
 }
 function vAprovacoes() {
   const k = r => r.col + ':' + r.x.id, mim = paraMim(), mk = new Set(mim.map(k)), meus = meusPedidos().filter(r => !mk.has(k(r))), meusK = new Set(meus.map(k)), todos = pedidosPendentes();
   const sou = podeAprovar('modulos') || podeAprovar('processos'), tri = podeTri() ? S.ideias.filter(i => i.status === 'Em análise') : [];
-  return `${tri.length ? `<div class="sec"><span>Novos projetos aguardando decisão</span> <span class="count">${tri.length}</span></div><div class="fi-card" style="padding:10px 14px;margin-bottom:8px">${tri.map(i => `<button class="tri-row" data-act="cheio-de" data-col="ideias" data-id="${esc(i.id)}" title="Abrir a demanda completa"><span class="cod">${esc(i.cod || '')}</span><b>${esc(i.titulo)}</b> <span class="muted">${esc([i.porNome, dataBR(i.em)].filter(Boolean).map(t => '· ' + t).join(' '))}</span><span class="tri-go">Abrir ↗</span></button>`).join('')}</div>` : ''}
+  return `${tri.length ? `<div class="sec"><span>Novas demandas aguardando decisão</span> <span class="count">${tri.length}</span></div><div class="fi-card" style="padding:10px 14px;margin-bottom:8px">${tri.map(i => `<button class="tri-row" data-act="cheio-de" data-col="ideias" data-id="${esc(i.id)}" title="Abrir a demanda completa"><span class="cod">${esc(i.cod || '')}</span><b>${esc(i.titulo)}</b> <span class="muted">${esc([i.porNome, dataBR(i.em)].filter(Boolean).map(t => '· ' + t).join(' '))}</span><span class="tri-go">Abrir ↗</span></button>`).join('')}</div>` : ''}
   
     ${sou ? `<div class="sec"><span>Aguardando sua aprovação</span> <span class="count">${mim.length}</span></div>
       ${mim.length ? `<div class="aprov-list">${mim.map(r => linhaAprov(r, true)).join('')}</div>` : `<div class="fi-card fi-empty">Nenhuma aprovação pendente para você.</div>`}` :
@@ -1520,7 +1532,7 @@ const ICON = {
   adm: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
 };
 const MENU = [
-  { fam: 'exec', label: 'Acompanhamento', tabs: [['backlog', 'Novos Projetos'], ['modulos', 'Módulos'], ['processos', 'Processos'], ['atualizacoes', 'Atualizações']] },
+  { fam: 'exec', label: 'Acompanhamento', tabs: [['backlog', 'Novas Demandas'], ['modulos', 'Módulos'], ['processos', 'Processos'], ['atualizacoes', 'Atualizações']] },
   { fam: 'doc', label: 'Sobre o projeto', tabs: [['visao', 'Visão Geral'], ['implantacao', 'Implantação'], ['equipe', 'Equipe'], ['sistemas', 'Sistemas']] },
   { fam: 'adm', label: '', tabs: [['adm', 'ADM']], admin: true },
 ];
@@ -1572,16 +1584,16 @@ function vModulos() {
   const setores = S.areas.filter(a => a.mapear === 'Sim'), comRef = setores.filter(a => (a.referencia || []).length).length;
   $('#view').className = 'fi-page fam-ink-exec';
   $('#view').innerHTML = `
-    ${head('modulos', ADD('modulos', 'Módulo'))}
+    ${head('modulos', `<button class="fi-btn" data-act="export-xlsx" data-col="modulos" title="Baixar a lista em Excel (.xlsx)">⭳ Excel</button>${ADD('modulos', 'Módulo')}`)}
     <div class="resumo">
       <span><b>${S.modulos.length}</b> módulos · ${S.modulos.filter(m => m.prioridade === 'Alta').length} prioridade alta · ${S.modulos.filter(naUltima).length} entregues${S.modulos.filter(m => (m.cond || 'Normal') !== 'Normal').length ? ` · ${S.modulos.filter(m => (m.cond || 'Normal') !== 'Normal').length} pausado/bloqueado/cancelado` : ''}</span>
       <a data-act="tab" data-id="processos"><b>${S.processos.length}</b> processos · ${S.processos.filter(naUltima).length} entregues</a>
       <a data-act="tab" data-id="equipe">referências <b>${comRef}/${setores.length}</b> setores</a>
-      <a data-act="tab" data-id="backlog"><b>${S.ideias.filter(i => i.status === 'Em análise').length}</b> novo(s) projeto(s) em análise</a>
+      <a data-act="tab" data-id="backlog"><b>${S.ideias.filter(i => i.status === 'Em análise').length}</b> nova(s) demanda(s) em análise</a>
       <a data-act="tab" data-id="atualizacoes"${nNaoLidas() ? ' class="alerta"' : ''}><b>${nNaoLidas()}</b> atualização(ões) não lida(s)</a>
     </div>
+    ${FILTROS(BAL_ET(S.modulos, 'modEt'), 'modQ', 'Buscar por palavra-chave…')}
     <div class="toolbar">
-      <input class="fi-input search" placeholder="Buscar módulo, pessoa, dependência…" data-ui="modQ" value="${esc(ui.modQ)}">
       <select class="fi-select" data-ui="modPrio">${optList(S.listas.prioridades, ui.modPrio, 'Todas as prioridades')}</select>
       <span style="flex:1"></span>
     </div>
@@ -1590,11 +1602,10 @@ function vModulos() {
 }
 function fillModulos() {
   const q = norm(ui.modQ), ord = { 'Alta': 0, 'Média': 1, 'Baixa': 2 };
-  const l = S.modulos.filter(m => (!ui.modPrio || m.prioridade === ui.modPrio) &&
-    (!q || norm([m.cod, m.nome, m.dep, m.escopo, m.proximos, m.objetivo, ...procsDoModulo(m.id).map(p => p.nome), ...PEOPLE_FIELDS.modulos.flatMap(([k]) => (m[k] || []).map(tokName))].join(' ')).includes(q)));
+  const l = S.modulos.filter(m => (!ui.modPrio || m.prioridade === ui.modPrio) && (!ui.modEt || m.etapa === ui.modEt) && (!q || bate('modulos', m, ui.modQ)));
   if (!ui.edit) l.sort((a, b) => (ord[a.prioridade] ?? 3) - (ord[b.prioridade] ?? 3));
   if (ui.cheio && ui.cheio.col === 'modulos') { const x = byId('modulos', ui.cheio.id); l.splice(0, l.length, ...(x ? [x] : [])); }
-  if (!l.length) { $('#list').innerHTML = `<div class="fi-card fi-empty">Nenhum módulo encontrado.</div>`; return; }
+  if (!l.length) { $('#list').innerHTML = `<div class="fi-card fi-empty">Nenhum módulo encontrado${ui.modQ ? ` para “${esc(ui.modQ)}”` : ''}.</div>`; return; }
   const P = (m, k) => `modulos.#${m.id}.${k}`;
   $('#list').innerHTML = `${barraCheio('modulos')}<div class="${ui.cheio ? 'cheio' : 'gauto'}">${l.map(m => {
     const np = procsDoModulo(m.id).length, mc = k => campoCfg('modulos', k).mostrar !== false;
@@ -1618,6 +1629,29 @@ function fillModulos() {
     </div>`; }).join('')}</div>`;
 }
 
+/* Busca por palavra-chave: procura em todo o texto do cartão (campos, pessoas, áreas, vínculos, campos extras, anotações).
+   Várias palavras = todas precisam aparecer. Sem diferença de acento ou maiúscula. */
+function buscaTxt(col, x) {
+  const out = [], LK = ['areas', 'modulos', 'processos', 'sistemas', 'etapas', 'participantes'];
+  const walk = v => {
+    if (v == null) return;
+    if (typeof v === 'string') { out.push(v); if (v[0] === '@') out.push(tokName(v)); else if (v.length < 48 && !/\s/.test(v)) LK.forEach(c => { const n = nome(c, v); if (n) out.push(n); }); }
+    else if (typeof v === 'number') out.push(String(v));
+    else if (Array.isArray(v)) v.forEach(walk);
+    else if (typeof v === 'object') Object.values(v).forEach(walk);
+  };
+  walk(x);
+  if (col === 'modulos') procsDoModulo(x.id).forEach(p => out.push(p.cod || '', p.nome));
+  if (col === 'ideias') triCampos().forEach(c => out.push(triValor(c, (x.resp || {})[c.id])));
+  return norm(out.join(' '));
+}
+const bate = (col, x, q) => { const p = norm(q || '').split(/\s+/).filter(Boolean); if (!p.length) return true; const t = buscaTxt(col, x); return p.every(w => t.includes(w)); };
+/* Linha de filtros: balões de status/etapa | busca */
+function FILTROS(baloes, k, ph) {
+  return `<div class="filtros"><div class="subnav">${baloes}</div><span class="vsep" aria-hidden="true"></span><label class="busca"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" placeholder="${esc(ph)}" data-ui="${k}" value="${esc(ui[k] || '')}" aria-label="Buscar por palavra-chave"></label></div>`;
+}
+const BAL_ET = (lista, uk) => `<button class="${!ui[uk] ? 'on' : ''}" data-act="flt-et" data-ui-k="${uk}" data-id="">Todas<b>${lista.length}</b></button>${S.etapas.map((e, i) => `<button class="${ui[uk] === e.id ? 'on' : ''}" data-act="flt-et" data-ui-k="${uk}" data-id="${esc(e.id)}" title="Etapa ${i + 1}">${i + 1}. ${esc(e.nome)}<b>${lista.filter(x => x.etapa === e.id).length}</b></button>`).join('')}`;
+
 /* ---------- Processos ---------- */
 function vProcessos() {
   const areas = S.areas.filter(a => a.mapear === 'Sim' || S.processos.some(p => p.area === a.id));
@@ -1625,7 +1659,7 @@ function vProcessos() {
   const semArea = S.processos.filter(p => !byId('areas', p.area)).length;
   $('#view').className = 'fi-page fam-ink-exec';
   $('#view').innerHTML = `
-    ${head('processos', `<button class="fi-btn" data-act="export-csv">⭳ CSV (Excel)</button>${ADD('processos', 'Processo')}`)}
+    ${head('processos', `<button class="fi-btn" data-act="export-xlsx" data-col="processos" title="Baixar a lista em Excel (.xlsx)">⭳ Excel</button>${ADD('processos', 'Processo')}`)}
     <div class="resumo">
       <span><b>${S.processos.length}</b> processos · ${S.processos.filter(naUltima).length} entregues${S.processos.filter(p => (p.cond || 'Normal') !== 'Normal').length ? ` · ${S.processos.filter(p => (p.cond || 'Normal') !== 'Normal').length} pausado/bloqueado/cancelado` : ''}</span>
       <span><b>${S.processos.filter(p => !(p.modulos || []).length).length}</b> sem módulo</span>
@@ -1633,10 +1667,9 @@ function vProcessos() {
       <span>áreas com processo <b>${new Set(S.processos.map(p => p.area).filter(a => byId('areas', a))).size}/${areas.length}</b></span>
       <a data-act="tab" data-id="atualizacoes"${nNaoLidas() ? ' class="alerta"' : ''}><b>${nNaoLidas()}</b> atualização(ões) não lida(s)</a>
     </div>
+    ${FILTROS(BAL_ET(S.processos, 'procStatus'), 'procQ', 'Buscar por palavra-chave…')}
     <div class="toolbar">
-      <input class="fi-input search" placeholder="Buscar processo ou pessoa…" data-ui="procQ" value="${esc(ui.procQ)}">
       <select class="fi-select" data-ui="procArea"><option value="*"${ui.procArea === '*' ? ' selected' : ''}>Todas as áreas (${S.processos.length})</option>${areas.map(a => `<option value="${esc(a.id)}"${ui.procArea === a.id ? ' selected' : ''}>${esc(a.nome)} (${cnt(a.id)})</option>`).join('')}${semArea ? `<option value=""${ui.procArea === '' ? ' selected' : ''}>Sem área (${semArea})</option>` : ''}</select>
-      <select class="fi-select" data-ui="procStatus"><option value="">Todas as etapas</option>${S.etapas.map((e, i) => `<option value="${esc(e.id)}"${ui.procStatus === e.id ? ' selected' : ''}>${i + 1}. ${esc(e.nome)}</option>`).join('')}</select>
       ${ui.procMod ? `<span class="tag">Módulo: ${esc(nome('modulos', ui.procMod))} <button class="x" data-act="proc-mod" data-id="">×</button></span>` : ''}
       <span style="flex:1"></span>
     </div>
@@ -1648,7 +1681,7 @@ function fillProcessos() {
   const q = norm(ui.procQ);
   const l = S.processos.filter(p => (ui.procArea === '*' || (ui.procArea === '' ? !byId('areas', p.area) : p.area === ui.procArea)) &&
     (!ui.procStatus || p.etapa === ui.procStatus) && (!ui.procMod || (p.modulos || []).includes(ui.procMod)) &&
-    (!q || norm([p.cod, p.nome, p.obs, p.integ, p.gatilho, p.entrega, p.passos, ...(p.modulos || []).map(m => nome('modulos', m)), ...PEOPLE_FIELDS.processos.flatMap(([k]) => (p[k] || []).map(tokName))].join(' ')).includes(q)));
+    (!q || bate('processos', p, ui.procQ)));
   if (ui.cheio && ui.cheio.col === 'processos') { const x = byId('processos', ui.cheio.id); l.splice(0, l.length, ...(x ? [x] : [])); }
   if (!l.length) { $('#list').innerHTML = `<div class="fi-card fi-empty"><div>Nenhum processo nesta seleção.${canEdit && !ui.edit ? '<br><br>Clique em <b>✎ Editar</b> no topo para cadastrar.' : ''}</div></div>`; return; }
   const P = (p, k) => `processos.#${p.id}.${k}`;
@@ -1705,7 +1738,7 @@ function trilhaTri(i) {
   const fim = i.status === 'Aprovada' || i.status === 'Reprovada';
   const dec = i.status === 'Reprovada' ? 'Reprovada' : i.virou && i.virou.atrelado ? 'Atrelada' : i.status === 'Aprovada' ? 'Aprovada' : 'Decisão';
   const et = ['Solicitação', 'Em análise', dec], at = fim ? 3 : 1;
-  return `<div class="trilha-w tri-rm${i.status === 'Reprovada' ? ' rep' : ''}"><div class="k">Roadmap do novo projeto · ${fim ? `<b>decidida: ${esc(dec.toLowerCase())}</b>` : `etapa 2 de 3: <b>Em análise</b>`}</div>
+  return `<div class="trilha-w tri-rm${i.status === 'Reprovada' ? ' rep' : ''}"><div class="k">Roadmap da nova demanda · ${fim ? `<b>decidida: ${esc(dec.toLowerCase())}</b>` : `etapa 2 de 3: <b>Em análise</b>`}</div>
     <div class="trilha" style="grid-template-columns:repeat(3,minmax(0,1fr))">${et.map((e, k) => `<span class="tr-s${k < at ? ' feito' : k === at ? ' atual' : ''}" title="${k + 1}. ${esc(e)}"><b>${k + 1}</b><em>${esc(hifen(e))}</em></span>`).join('')}</div></div>`;
 }
 function triagemBloco(x) {
@@ -1713,22 +1746,20 @@ function triagemBloco(x) {
   return lista.map(t => triagemUm(t)).join('');
 }
 function triagemUm(t) {
-  return `<details class="anterior"><summary>⇢ Veio de Novos Projetos${t.cod ? ` ${esc(t.cod)}` : ''} · solicitado por ${esc(t.solicitante || '—')}${t.em ? ` em ${esc(dataBR(t.em))}` : ''}</summary>
+  return `<details class="anterior"><summary>⇢ Veio de Novas Demandas${t.cod ? ` ${esc(t.cod)}` : ''} · solicitado por ${esc(t.solicitante || '—')}${t.em ? ` em ${esc(dataBR(t.em))}` : ''}</summary>
     <div class="kv">${(t.respostas || []).map(r => `<div class="full"><div class="k">${esc(r.pergunta)}</div><div class="txt" style="white-space:pre-wrap">${esc(r.resposta || '—')}</div></div>`).join('')}</div></details>`;
 }
 function vBacklog() {
-  const l = S.ideias.filter(i => !ui.ideiaStatus || i.status === ui.ideiaStatus).sort((a, b) => String(b.em || '').localeCompare(String(a.em || '')));
+  const l = S.ideias.filter(i => (!ui.ideiaStatus || i.status === ui.ideiaStatus) && bate('ideias', i, ui.ideiaQ)).sort((a, b) => String(b.em || '').localeCompare(String(a.em || '')));
   if (ui.cheio && ui.cheio.col === 'ideias') { const x = byId('ideias', ui.cheio.id); l.splice(0, l.length, ...(x ? [x] : [])); }
   const P = (i, k) => `ideias.#${i.id}.${k}`, cs = triCampos(), ap = podeTri();
   $('#view').className = 'fi-page fam-ink-exec';
   $('#view').innerHTML = `
-    ${head('backlog', canEdit ? `<button class="fi-btn fi-btn--primary" data-act="tri-nova">＋ Novo projeto</button>` : '')}
-    <div class="subnav">
-      <button class="${!ui.ideiaStatus ? 'on' : ''}" data-act="ideia-st" data-id="">Todas<b>${S.ideias.length}</b></button>
-      ${S.listas.stIdeia.map(st => `<button class="${ui.ideiaStatus === st ? 'on' : ''}" data-act="ideia-st" data-id="${esc(st)}">${esc(st)}<b>${S.ideias.filter(i => i.status === st).length}</b></button>`).join('')}
-    </div>
+    ${head('backlog', `<button class="fi-btn" data-act="export-xlsx" data-col="ideias" title="Baixar a lista em Excel (.xlsx)">⭳ Excel</button>${canEdit ? `<button class="fi-btn fi-btn--primary" data-act="tri-nova">＋ Nova demanda</button>` : ''}`)}
+    ${FILTROS(`<button class="${!ui.ideiaStatus ? 'on' : ''}" data-act="ideia-st" data-id="">Todas<b>${S.ideias.length}</b></button>
+      ${S.listas.stIdeia.map(st => `<button class="${ui.ideiaStatus === st ? 'on' : ''}" data-act="ideia-st" data-id="${esc(st)}">${esc(st)}<b>${S.ideias.filter(i => i.status === st).length}</b></button>`).join('')}`, 'ideiaQ', 'Buscar por palavra-chave…')}
     ${barraCheio('ideias')}
-    ${!l.length ? `<div class="fi-card fi-empty">Nenhuma demanda nesta seleção.</div>` : `<div class="${ui.cheio ? 'cheio' : 'gauto'}">${l.map(i => {
+    ${!l.length ? `<div class="fi-card fi-empty">Nenhuma demanda nesta seleção${ui.ideiaQ ? ` para “${esc(ui.ideiaQ)}”` : ''}.</div>` : `<div class="${ui.cheio ? 'cheio' : 'gauto'}">${l.map(i => {
       const aberta = i.status === 'Em análise', meu = (i.autor || []).includes(USER_TOK) || i.porTok === meuTok();
       return `<div class="fi-card item tri" data-card="${esc(i.id)}">
         <div class="card-top"><h3 class="grow">${T(P(i, 'titulo'), { one: 1 })}</h3>${pill(i.status)}${COD(i)}${BT_CHEIO('ideias', i)}${(isAdm || (meu && aberta && ui.edit)) ? `<button class="rm" data-act="rm" data-col="ideias" data-id="${esc(i.id)}" title="Excluir">✕</button>` : ''}</div>
@@ -1747,7 +1778,7 @@ function vBacklog() {
         ${notasBloco('ideias', i)}
       </div>`; }).join('')}</div>`}`;
 }
-/* "Solicitado por": pessoa que pediu o novo projeto (editável). Fica logo acima do campo de área. */
+/* "Solicitado por": pessoa que pediu a nova demanda (editável). Fica logo acima do campo de área. */
 const SOL_PERG = 'Solicitado por';
 const solAntes = cs => { const k = cs.findIndex((c, i) => i > 0 && c.tipo === 'setor'); return k < 0 ? cs.length : k; };
 function solOpts(v) {
@@ -1760,7 +1791,7 @@ function SOLIC(i, ed) {
   return `<div><div class="k">${SOL_PERG}</div>${ed ? `<select class="es" data-solic="${esc(i.id)}" title="${SOL_PERG}">${solOpts(v)}</select>` : `<span class="tag">${esc(v || '—')}</span>`}</div>`;
 }
 
-const solCampo = () => `<label class="fi-field" data-campo="solic"><span class="fi-label">${SOL_PERG} <b class="req">*</b></span><select class="fi-select" data-solicnovo>${solOpts(quemSou())}</select><span class="fi-field__help">Quem pediu o novo projeto (já vem com o seu nome; altere se for outra pessoa).</span></label>`;
+const solCampo = () => `<label class="fi-field" data-campo="solic"><span class="fi-label">${SOL_PERG} <b class="req">*</b></span><select class="fi-select" data-solicnovo>${solOpts(quemSou())}</select><span class="fi-field__help">Quem pediu a nova demanda (já vem com o seu nome; altere se for outra pessoa).</span></label>`;
 function triNova() {
   const cs = triCampos();
   const inp = (c, k) => { const nm = `data-tri="${c.id}"`;
@@ -1769,9 +1800,9 @@ function triNova() {
     if (c.tipo === 'area') return `<textarea class="fi-input" rows="4" ${nm}></textarea>`;
     if (c.tipo === 'setor') return `<select class="fi-select" ${nm}><option value="">—</option>${S.areas.map(a => `<option value="${esc(a.id)}">${esc(a.nome)}</option>`).join('')}</select>`;
     return `<select class="fi-select" ${nm}><option value="">—</option>${S.listas.prioridades.map(o => `<option>${esc(o)}</option>`).join('')}</select>`; };
-  modal.innerHTML = `<div class="m-head"><h2>Novo projeto</h2><button class="rm" data-act="close" title="Fechar">✕</button></div>
+  modal.innerHTML = `<div class="m-head"><h2>Nova demanda</h2><button class="rm" data-act="close" title="Fechar">✕</button></div>
     <div class="m-body ficha">${cs.map((c, k) => `${k === solAntes(cs) ? solCampo() : ''}<label class="fi-field" data-campo="${c.id}"><span class="fi-label">${esc(c.pergunta)} <b class="req">*</b></span>${inp(c, k)}${c.ajuda ? `<span class="fi-field__help">${esc(c.ajuda)}</span>` : ''}</label>`).join('')}${solAntes(cs) === cs.length ? solCampo() : ''}${cxVis('ideias').map(cxCampoFicha).join('')}
-      <span class="muted" style="font-size:.74rem">As perguntas com * são obrigatórias. O restante do cadastro é feito por quem aprovar o novo projeto.</span></div>
+      <span class="muted" style="font-size:.74rem">As perguntas com * são obrigatórias. O restante do cadastro é feito por quem aprovar a nova demanda.</span></div>
     <div class="m-foot"><button class="fi-btn" data-act="close">Cancelar</button><button class="fi-btn fi-btn--primary" data-act="tri-ok">Enviar</button></div>`;
   modal.showModal(); const f = modal.querySelector('[data-tri]'); if (f) f.focus();
 }
@@ -1786,12 +1817,12 @@ function triOk() {
   const id = uid(v.f1 || 'demanda'), resp = {}; cs.slice(1).forEach(c => { resp[c.id] = v[c.id]; });
   const it = { id, titulo: UP(v[cs[0].id]), resp, autor: USER_TOK ? [USER_TOK] : [], porNome: sol, cadPor: quemSou(), porTok: meuTok(), em: new Date().toISOString(), status: 'Em análise', notas: [], extra, area: cs.find(c => c.tipo === 'setor') ? v[cs.find(c => c.tipo === 'setor').id] : '' };
   modal.close();
-  commit(st => { st.ideias.push(clone(it)); registrar(st, 'ideias', id, `Enviou a demanda “${it.titulo}” para Novos Projetos (em análise).`, 'Triagem'); }, true);
-  notify('Demanda enviada para Novos Projetos.', 'success');
+  commit(st => { st.ideias.push(clone(it)); registrar(st, 'ideias', id, `Enviou a demanda “${it.titulo}” para Novas Demandas (em análise).`, 'Triagem'); }, true);
+  notify('Demanda enviada para Novas Demandas.', 'success');
 }
 function triAprovar(col, id) {
   const i = byId('ideias', id); if (!i) return;
-  if (!podeTri()) { notify('Somente a Direção (ou admin) aprova novos projetos.', 'warning'); return; }
+  if (!podeTri()) { notify('Somente a Direção (ou admin) aprova novas demandas.', 'warning'); return; }
   const cs = triCampos(), vals = { nome: UP(i.titulo) };
   const longo = cs.slice(1).filter(c => c.tipo === 'area' || c.tipo === 'texto').map(c => (i.resp || {})[c.id]).filter(Boolean).join('\n\n');
   const setor = (cs.find(c => c.tipo === 'setor') || {}).id, prio = (cs.find(c => c.tipo === 'prioridade') || {}).id;
@@ -1800,7 +1831,7 @@ function triAprovar(col, id) {
 }
 function triAtrelar(col, id) {
   const i = byId('ideias', id); if (!i) return;
-  if (!podeTri()) { notify('Somente a Direção (ou admin) decide novos projetos.', 'warning'); return; }
+  if (!podeTri()) { notify('Somente a Direção (ou admin) decide novas demandas.', 'warning'); return; }
   const ops = [...S[col]].sort((a, b) => String(a.cod).localeCompare(String(b.cod)));
   modal.innerHTML = `<div class="m-head"><h2>Atrelar “${esc(i.titulo)}” a ${col === 'modulos' ? 'um módulo' : 'um processo'} existente</h2><button class="rm" data-act="close" title="Fechar">✕</button></div>
     <div class="m-body"><input class="fi-input" id="atrQ" placeholder="Filtrar por ID ou nome…" autocomplete="off">
@@ -1913,7 +1944,7 @@ function vSistemas() {
    ===================================================================== */
 function vAdm() {
   const s = ui.admSec === 'cadastro' ? 'cad-modulos' : ui.admSec;
-  const nav = [['participantes', 'Participantes', S.participantes.length], ['areas', 'Áreas / Setores', S.areas.length], ['tipos', 'Papéis no projeto', S.tipos.length], ['listas', 'Listas de opções', Object.keys(S.listas).length], ['triagem', 'Novos Projetos', 3 + cxDe('ideias').length], ['cad-modulos', 'Módulos', CAMPOS.modulos.length + cxDe('modulos').length], ['cad-processos', 'Processos', CAMPOS.processos.length + cxDe('processos').length], ['cad-sistemas', 'Sistemas', SIS_CAMPOS.length + cxDe('sistemas').length], ['responsaveis', 'Responsáveis', S.etapas.length]];
+  const nav = [['participantes', 'Participantes', S.participantes.length], ['areas', 'Áreas / Setores', S.areas.length], ['tipos', 'Papéis no projeto', S.tipos.length], ['listas', 'Listas de opções', Object.keys(S.listas).length], ['triagem', 'Novas Demandas', 3 + cxDe('ideias').length], ['cad-modulos', 'Módulos', CAMPOS.modulos.length + cxDe('modulos').length], ['cad-processos', 'Processos', CAMPOS.processos.length + cxDe('processos').length], ['cad-sistemas', 'Sistemas', SIS_CAMPOS.length + cxDe('sistemas').length], ['responsaveis', 'Responsáveis', S.etapas.length]];
   $('#view').className = 'fi-page fam-ink-adm';
   $('#view').innerHTML = `
     ${head('adm')}
@@ -1952,21 +1983,21 @@ function vAdm() {
       </tbody></table></div>
       <div class="fi-alert" style="margin-top:12px">O <b>grupo</b> define onde o participante aparece na guia Equipe: Direção, Técnica e Processos formam a equipe do projeto; Setores aparece nas referências por setor.</div>`;
   } else if (s === 'listas') {
-    const nomes = { prioridades: 'Prioridades', condicoes: 'Condição (módulos e processos)', stIdeia: 'Status de novos projetos', stSistema: 'Situação do sistema', catSistema: 'Categorias de sistema', grupos: 'Grupos de função', stParticipante: 'Status do participante', simNao: 'Sim / Não' };
+    const nomes = { prioridades: 'Prioridades', condicoes: 'Condição (módulos e processos)', stIdeia: 'Status de novas demandas', stSistema: 'Situação do sistema', catSistema: 'Categorias de sistema', grupos: 'Grupos de função', stParticipante: 'Status do participante', simNao: 'Sim / Não' };
     body.innerHTML = `${sec('admListas')}
       <div class="fi-alert" style="margin-bottom:12px">Uma opção por linha. As opções aparecem nas caixas de seleção de todas as guias. Renomear uma opção aqui não altera os itens que já usam o nome antigo.</div>
       <div class="lists">${Object.keys(S.listas).map(k => `<label class="fi-field"><span class="fi-label">${esc(nomes[k] || k)}</span><textarea data-lista="${k}" ${ui.edit ? '' : 'readonly'}>${esc(S.listas[k].join('\n'))}</textarea></label>`).join('')}</div>`;
   } else if (s === 'triagem') {
     const ed = ui.edit && isAdm, dis = ed ? '' : 'disabled', cs = triCampos();
     body.innerHTML = `${ed ? '' : `<div class="fi-alert" style="margin-bottom:12px">Clique em <b>✎ Editar</b> no topo para alterar.</div>`}${sec('admTri')}
-      <div class="fi-alert" style="margin-bottom:12px">As 3 perguntas abaixo são obrigatórias para enviar um novo projeto. A 1ª é sempre o nome da demanda (vira o nome do módulo ou processo). Quem aprova completa o restante do cadastro na ficha padrão; as respostas ficam guardadas no cartão.</div>
+      <div class="fi-alert" style="margin-bottom:12px">As 3 perguntas abaixo são obrigatórias para enviar uma nova demanda. A 1ª é sempre o nome da demanda (vira o nome do módulo ou processo). Quem aprova completa o restante do cadastro na ficha padrão; as respostas ficam guardadas no cartão.</div>
       <div class="fi-table-wrap"><table class="fi-table sheet"><thead><tr><th>#</th><th>Pergunta</th><th>Ajuda (exemplo)</th><th>Tipo de resposta</th><th>Obrigatória</th></tr></thead>
       <tbody>${cs.map((c, k) => `<tr><td class="nw"><b>${k + 1}</b></td>
         <td class="wide"><input class="fi-input" data-cfg="triagem.campos.${k}.pergunta" value="${esc(c.pergunta)}" ${dis}></td>
         <td class="wide"><input class="fi-input" data-cfg="triagem.campos.${k}.ajuda" value="${esc(c.ajuda || '')}" ${dis}></td>
         <td class="nw">${k === 0 ? 'Texto curto (nome)' : `<select class="fi-select" data-cfg="triagem.campos.${k}.tipo" ${dis}>${TRI_TIPOS.map(([v, l]) => `<option value="${v}"${c.tipo === v ? ' selected' : ''}>${l}</option>`).join('')}</select>`}</td>
         <td class="nw">Sim</td></tr>`).join('')}</tbody></table></div>
-      <label class="fi-field" style="max-width:320px;margin-top:12px"><span class="fi-label">Quem aprova os novos projetos</span><select class="fi-select" data-cfg="triagem.aprovar" ${dis}>${[['diretores', 'Direção (sponsors) e admin'], ['admin', 'Somente admin']].map(([v, l]) => `<option value="${v}"${(S.triagem || {}).aprovar === v ? ' selected' : ''}>${l}</option>`).join('')}</select></label>
+      <label class="fi-field" style="max-width:320px;margin-top:12px"><span class="fi-label">Quem aprova as novas demandas</span><select class="fi-select" data-cfg="triagem.aprovar" ${dis}>${[['diretores', 'Direção (sponsors) e admin'], ['admin', 'Somente admin']].map(([v, l]) => `<option value="${v}"${(S.triagem || {}).aprovar === v ? ' selected' : ''}>${l}</option>`).join('')}</select></label>
       <div style="margin-top:14px">${cxTabelaAdm('ideias', ed)}</div>
       ${ed ? `<button class="fi-btn" style="margin-top:12px" data-act="tri-reset">↺ Voltar ao padrão</button>` : ''}`;
   } else if (s === 'responsaveis') {
@@ -2030,8 +2061,8 @@ function addItem(col) {
   const it = Object.assign({ id: uid(col.split('.').pop()) }, NEW[col]());
   commit(st => { arrOf(st, col).push(clone(it)); }, false);
   if (col === 'processos') { ui.procStatus = ''; ui.procQ = ''; ui.procMod = ''; }
-  if (col === 'modulos') { ui.modPrio = ''; ui.modQ = ''; }
-  if (col === 'ideias') ui.ideiaStatus = '';
+  if (col === 'modulos') { ui.modPrio = ''; ui.modQ = ''; ui.modEt = ''; }
+  if (col === 'ideias') { ui.ideiaStatus = ''; ui.ideiaQ = ''; }
   const k = it.nome !== undefined ? 'nome' : it.titulo !== undefined ? 'titulo' : 't';
   ui.focus = `[data-p="${col}.#${it.id}.${k}"]`;
   render();
@@ -2086,7 +2117,7 @@ function abrirFicha(col, pre) {
     return `<label class="fi-field" data-campo="${c.k}">${lab}${inp}${help}</label>`;
   };
   modal.innerHTML = `<div class="m-head"><h2>Cadastrar ${col === 'modulos' ? 'módulo' : 'processo'}</h2><button class="rm" data-act="close" title="Fechar">✕</button></div>
-    <div class="m-body ficha">${pre && pre.de ? `<div class="fi-alert">Criando a partir de <b>${esc(pre.de)}</b>: o vínculo já está marcado; complete o restante.</div>` : ''}${pre && pre.origem ? `<div class="fi-alert">Aprovando a demanda de Novos Projetos <b>${esc(pre.titulo || '')}</b>. As respostas já foram copiadas; complete o restante.</div>` : ''}${CAMPOS[col].map(campo).join('')}${cxVis(col).map(cxCampoFicha).join('')}
+    <div class="m-body ficha">${pre && pre.de ? `<div class="fi-alert">Criando a partir de <b>${esc(pre.de)}</b>: o vínculo já está marcado; complete o restante.</div>` : ''}${pre && pre.origem ? `<div class="fi-alert">Aprovando a nova demanda <b>${esc(pre.titulo || '')}</b>. As respostas já foram copiadas; complete o restante.</div>` : ''}${CAMPOS[col].map(campo).join('')}${cxVis(col).map(cxCampoFicha).join('')}
       <datalist id="fichaPessoas">${ativos.map(x => `<option value="${esc(x.nome)}">${esc(papel(x))}</option>`).join('')}</datalist>
       <span class="muted" style="font-size:.74rem"><b class="req">*</b> obrigatório</span></div>
     <div class="m-foot"><button class="fi-btn" data-act="close">Cancelar</button><button class="fi-btn fi-btn--primary" data-act="ficha-ok" data-col="${col}">Cadastrar</button></div>`;
@@ -2138,13 +2169,13 @@ function fichaOk(col) {
     st[col].push(clone(it)); criados.forEach(x => st[v.outro].push(clone(x)));
     if (col === 'modulos') ids.forEach(pid => setVinc(st, 'modulos', it.id, pid, true));
     rels.forEach(o => setRel(st, col, it.id, o, true));
-    registrar(st, col, it.id, `Cadastrou ${col === 'modulos' ? 'o módulo' : 'o processo'} ${it.nome}${origem ? ' a partir de Novos Projetos' : ''}.`, 'Cadastro');
+    registrar(st, col, it.id, `Cadastrou ${col === 'modulos' ? 'o módulo' : 'o processo'} ${it.nome}${origem ? ' a partir de Novas Demandas' : ''}.`, 'Cadastro');
     criados.forEach(x => registrar(st, v.outro, x.id, `Cadastrou ${v.outro === 'modulos' ? 'o módulo' : 'o processo'} ${x.nome} (pelo vínculo com ${it.nome}).`, 'Cadastro'));
     if (origem) { const ide = st.ideias.find(z => z.id === origem); if (ide) { ide.status = 'Aprovada'; ide.virou = { col, id: it.id }; ide.decisao = { por: quemSou(), em: new Date().toISOString() };
       const y = st[col].find(z => z.id === it.id); if (y) y.triagem = { id: ide.id, solicitante: ide.porNome || (ide.autor || []).map(tokName).join(', '), em: ide.em, respostas: triResumo(ide), cod: ide.cod };
       registrar(st, 'ideias', ide.id, `Aprovou a demanda “${ide.titulo}” como ${col === 'modulos' ? 'módulo' : 'processo'}.`, 'Triagem'); } }
   }, false);
-  if (col === 'processos') { ui.procStatus = ''; ui.procQ = ''; ui.procMod = ''; ui.procArea = '*'; } else { ui.modPrio = ''; ui.modQ = ''; }
+  if (col === 'processos') { ui.procStatus = ''; ui.procQ = ''; ui.procMod = ''; ui.procArea = '*'; } else { ui.modPrio = ''; ui.modQ = ''; ui.modEt = ''; }
   ui.cheio = null; render();
   notify(`${col === 'modulos' ? 'Módulo' : 'Processo'} cadastrado${criados.length ? ` com ${criados.length} ${v.um}(s) novo(s) — complete a ficha deles` : ''}`, 'success');
 }
@@ -2219,6 +2250,78 @@ function exportCsv() {
   const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
   download(`processos-fiorella-${today()}.csv`, '﻿' + [cols.map(c => q(c[0])).join(';'), ...S.processos.map(p => cols.map(c => q(c[1](p))).join(';'))].join('\r\n'), 'text/csv;charset=utf-8');
 }
+/* ---------- Exportação para Excel (.xlsx gerado no próprio navegador, sem bibliotecas externas) ---------- */
+const CRC_T = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+const crc32 = b => { let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = CRC_T[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
+function zipStore(files) {
+  const enc = new TextEncoder(), parts = [], dir = []; let off = 0;
+  const u16 = v => [v & 255, (v >>> 8) & 255], u32 = v => [v & 255, (v >>> 8) & 255, (v >>> 16) & 255, (v >>> 24) & 255];
+  files.forEach(([name, txt]) => {
+    const nb = enc.encode(name), db = enc.encode(txt), crc = crc32(db);
+    const comum = [...u16(20), ...u16(0x0800), ...u16(0), ...u16(0), ...u16(0x21), ...u32(crc), ...u32(db.length), ...u32(db.length), ...u16(nb.length), ...u16(0)];
+    const lh = new Uint8Array([...u32(0x04034b50), ...comum]);
+    parts.push(lh, nb, db);
+    dir.push(new Uint8Array([...u32(0x02014b50), ...u16(20), ...comum, ...u16(0), ...u16(0), ...u16(0), ...u32(0), ...u32(off)]), nb);
+    off += lh.length + nb.length + db.length;
+  });
+  const tam = dir.reduce((a, p) => a + p.length, 0);
+  const fim = new Uint8Array([...u32(0x06054b50), ...u16(0), ...u16(0), ...u16(files.length), ...u16(files.length), ...u32(tam), ...u32(off), ...u16(0)]);
+  return new Blob([...parts, ...dir, fim], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+}
+function xlsxBlob(nomeAba, titulo, sub, cab, linhas, larg) {
+  const x = v => String(v ?? '').replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const colL = i => { let r = ''; i++; while (i) { const m = (i - 1) % 26; r = String.fromCharCode(65 + m) + r; i = Math.floor((i - 1) / 26); } return r; };
+  const cel = (r, c, v, st) => (v === '' || v == null) ? `<c r="${colL(c)}${r}" s="${st}"/>` : `<c r="${colL(c)}${r}" s="${st}" t="inlineStr"><is><t xml:space="preserve">${x(v)}</t></is></c>`;
+  const ult = colL(cab.length - 1), nL = linhas.length + 4;
+  const rows = [`<row r="1">${cel(1, 0, titulo, 1)}</row>`, `<row r="2">${cel(2, 0, sub, 2)}</row>`,
+    `<row r="4">${cab.map((h, c) => cel(4, c, h, 3)).join('')}</row>`,
+    ...linhas.map((l, i) => `<row r="${i + 5}">${l.map((v, c) => cel(i + 5, c, v, 4)).join('')}</row>`)].join('');
+  const sheet = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><dimension ref="A1:${ult}${nL}"/><sheetViews><sheetView workbookViewId="0"><pane ySplit="4" topLeftCell="A5" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><sheetFormatPr defaultRowHeight="15"/><cols>${cab.map((h, c) => `<col min="${c + 1}" max="${c + 1}" width="${larg[c] || 22}" customWidth="1"/>`).join('')}</cols><sheetData>${rows}</sheetData>${linhas.length ? `<autoFilter ref="A4:${ult}${nL}"/>` : ''}<pageMargins left="0.5" right="0.5" top="0.6" bottom="0.6" header="0.3" footer="0.3"/><pageSetup orientation="landscape" paperSize="9"/></worksheet>`;
+  const styles = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="4"><font><sz val="10"/><name val="Calibri"/></font><font><b/><sz val="14"/><color rgb="FF8B1A1A"/><name val="Calibri"/></font><font><i/><sz val="10"/><color rgb="FF555555"/><name val="Calibri"/></font><font><b/><sz val="10"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF8B1A1A"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left style="thin"><color rgb="FFD0D4DA"/></left><right style="thin"><color rgb="FFD0D4DA"/></right><top style="thin"><color rgb="FFD0D4DA"/></top><bottom style="thin"><color rgb="FFD0D4DA"/></bottom><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="5"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="0" fontId="3" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf><xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
+  return zipStore([
+    ['[Content_Types].xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`],
+    ['_rels/.rels', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`],
+    ['xl/workbook.xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="${x(nomeAba.slice(0, 31))}" sheetId="1" r:id="rId1"/></sheets>${linhas.length ? `<definedNames><definedName name="_xlnm._FilterDatabase" localSheetId="0" hidden="1">'${x(nomeAba.slice(0, 31))}'!$A$4:$${ult}$${nL}</definedName></definedNames>` : ''}</workbook>`],
+    ['xl/_rels/workbook.xml.rels', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`],
+    ['xl/worksheets/sheet1.xml', sheet], ['xl/styles.xml', styles]]);
+}
+function exportXlsx(col) {
+  const agora = new Date(), dt = agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  const pess = v => (Array.isArray(v) ? v : v ? [v] : []).map(tokName).filter(Boolean).join(', ');
+  const dBR = v => /^\d{4}-\d{2}-\d{2}$/.test(v || '') ? v.split('-').reverse().join('/') : (v || '');
+  const extras = cxDe(col).map(c => [c.pergunta, i => dBR(((i.extra || {})[c.id]) ?? '')]);
+  let titulo, cols, itens;
+  if (col === 'ideias') {
+    titulo = 'Novas Demandas'; itens = S.ideias.slice().sort((a, b) => String(a.cod || '').localeCompare(String(b.cod || ''), 'pt', { numeric: true }));
+    cols = [['Código', i => i.cod], ['Demanda', i => i.titulo], ['Status', i => i.status],
+      ...triCampos().slice(1).map(c => [c.pergunta, i => triValor(c, (i.resp || {})[c.id])]),
+      ['Solicitado por', i => i.porNome || pess(i.autor)], ['Cadastrado por', i => i.cadPor || i.porNome || ''], ['Cadastrado em', i => dataBR(i.em)],
+      ['Decisão', i => i.status === 'Aprovada' && i.virou ? `${i.virou.atrelado ? 'Atrelada ao' : 'Aprovada como'} ${i.virou.col === 'modulos' ? 'módulo' : 'processo'} ${rotItem(i.virou.col, byId(i.virou.col, i.virou.id)) || ''}`.trim() : i.status === 'Reprovada' ? `Reprovada${i.decisao && i.decisao.motivo ? ': ' + i.decisao.motivo : ''}` : ''],
+      ['Decidido por', i => (i.decisao && i.decisao.por) || ''], ['Decidido em', i => i.decisao ? dataBR(i.decisao.em) : ''], ...extras];
+  } else {
+    const cfg = cfgCad(col), um = col === 'modulos' ? 'Módulo' : 'Processo';
+    titulo = col === 'modulos' ? 'Módulos' : 'Processos';
+    itens = S[col].slice().sort((a, b) => String(a.cod || '').localeCompare(String(b.cod || ''), 'pt', { numeric: true }));
+    const val = (c, i) => {
+      if (c.tipo === 'vinculo') return (col === 'modulos' ? procsDoModulo(i.id) : (i.modulos || []).map(id => byId('modulos', id)).filter(Boolean)).map(y => `${y.cod || ''} ${y.nome}`.trim()).join('; ');
+      if (c.tipo === 'relacao') return (i.rel || []).map(id => byId(col, id)).filter(Boolean).map(y => `${y.cod || ''} ${y.nome}`.trim()).join('; ');
+      if (c.tipo === 'pessoa' || c.tipo === 'diretor') return pess(i[c.k]);
+      if (c.tipo === 'ref') return nome(c.col, i[c.k]) || i[c.k] || '';
+      return i[c.k] ?? '';
+    };
+    cols = [['Código', i => i.cod], [um, i => i.nome],
+      ...CAMPOS[col].filter(c => c.k !== 'nome').map(c => [(cfg.campos[c.k] || {}).pergunta || c.pergunta, i => val(c, i)]),
+      ['Etapa', i => i.concluido ? 'Entregue e finalizado' : (() => { const k = S.etapas.findIndex(e => e.id === i.etapa); return k < 0 ? '' : `${k + 1}. ${S.etapas[k].nome}`; })()],
+      ['Condição', i => i.cond || 'Normal'], ['Veio de Novas Demandas', i => [i.triagem, ...(i.triagens || [])].filter(Boolean).map(t => t.cod).join(', ')], ...extras];
+  }
+  const cab = cols.map(c => c[0]), linhas = itens.map(i => cols.map(c => { const v = c[1](i); return Array.isArray(v) ? v.join(', ') : (v ?? ''); }));
+  const larg = cab.map((h, k) => k === 0 ? 9 : Math.min(60, Math.max(12, h.length + 2, ...linhas.map(l => Math.min(60, String(l[k]).split('\n').reduce((a, z) => Math.max(a, z.length), 0) + 2)))));
+  const blob = xlsxBlob(titulo, `${titulo} — Projeto Plataforma Corporativa Fiorella`, `Gerado em ${dt} por ${quemSou()} · ${itens.length} ${itens.length === 1 ? 'item' : 'itens'} · Documento ${DOC_VERSAO}`, cab, linhas, larg);
+  const a = document.createElement('a'), p2 = n => String(n).padStart(2, '0');
+  a.href = URL.createObjectURL(blob); a.download = `${{ ideias: 'novas-demandas', modulos: 'modulos', processos: 'processos' }[col]}-fiorella-${agora.getFullYear()}-${p2(agora.getMonth() + 1)}-${p2(agora.getDate())}_${p2(agora.getHours())}h${p2(agora.getMinutes())}.xlsx`;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1500);
+  notify(`${titulo}: lista exportada para Excel.`, 'success');
+}
 function replaceAll(novo) { const snap = clone(novo); commit(st => { for (const k of Object.keys(st)) delete st[k]; Object.assign(st, clone(snap)); }, true); }
 $('#importFile').addEventListener('change', e => {
   const f = e.target.files[0]; if (!f) return;
@@ -2257,7 +2360,7 @@ document.addEventListener('click', async e => {
     case 'notas-tog': ui.notasAbertas = ui.notasAbertas || {}; ui.notasAbertas[id] = !ui.notasAbertas[id]; render(); break;
     case 'upd-f': ui.updF = id; render(); break;
     case 'upd-tab': ui.updTab = id; render(); break;
-    case 'cheio-de': { const c = el.dataset.col; ui.cheio = { col: c, id }; ui.ideiaStatus = ''; if (c === 'processos') { ui.procQ = ''; ui.procArea = '*'; ui.procStatus = ''; ui.procMod = ''; } else { ui.modQ = ''; ui.modPrio = ''; } go(c === 'ideias' ? 'backlog' : c); scrollTo({ top: 0 }); break; }
+    case 'cheio-de': { const c = el.dataset.col; ui.cheio = { col: c, id }; ui.ideiaStatus = ''; ui.ideiaQ = ''; ui.modEt = ''; if (c === 'processos') { ui.procQ = ''; ui.procArea = '*'; ui.procStatus = ''; ui.procMod = ''; } else { ui.modQ = ''; ui.modPrio = ''; ui.modEt = ''; } go(c === 'ideias' ? 'backlog' : c); scrollTo({ top: 0 }); break; }
     case 'upd-lida': setLeitura([el.dataset.n], 1); break;
     case 'upd-naolida': setLeitura([el.dataset.n], 0); break;
     case 'upd-todas': { const m = leituraMapa(); setLeitura(todasNotas().filter(({ n }) => !lida(n, m)).map(({ n }) => n.id), 1); break; }
@@ -2265,7 +2368,7 @@ document.addEventListener('click', async e => {
       const c = el.dataset.col, x = byId(c, id); if (!x) break;
       setLeitura([el.dataset.n], 1);
       ui.notasAbertas = ui.notasAbertas || {}; ui.notasAbertas[id] = true;
-      if (c === 'processos') { ui.procQ = ''; ui.procArea = '*'; ui.procStatus = ''; ui.procMod = ''; } else { ui.modQ = ''; ui.modPrio = ''; }
+      if (c === 'processos') { ui.procQ = ''; ui.procArea = '*'; ui.procStatus = ''; ui.procMod = ''; } else { ui.modQ = ''; ui.modPrio = ''; ui.modEt = ''; }
       ui.cheio = { col: c, id };
       ui.focus = `[data-nota="${el.dataset.n}"]`; ui.ideiaStatus = ''; go(c === 'ideias' ? 'backlog' : c);
       setTimeout(() => { const e = document.querySelector(`[data-nota="${el.dataset.n}"]`); if (e) { e.classList.add('pisca'); setTimeout(() => e.classList.remove('pisca'), 2200); } }, 50);
@@ -2291,6 +2394,7 @@ document.addEventListener('click', async e => {
     case 'proc-area': ui.procArea = id; render(); break;
     case 'proc-mod': ui.cheio = null; ui.procMod = id; if (id) { ui.procArea = '*'; ui.procQ = ''; ui.procStatus = ''; } go('processos'); break;
     case 'ideia-st': ui.ideiaStatus = id; render(); break;
+    case 'flt-et': ui[el.dataset.uiK] = id; render(); break;
     case 'tri-nova': triNova(); break;
     case 'tri-ok': triOk(); break;
     case 'tri-aprovar': triAprovar(el.dataset.col, id); break;
@@ -2305,13 +2409,14 @@ document.addEventListener('click', async e => {
     case 'log-item-x': ui.logItem = ''; render(); break;
     case 'adm-go': if (modal.open) modal.close(); ui.admSec = id; go('adm'); break;
     case 'export-csv': exportCsv(); break;
+    case 'export-xlsx': exportXlsx(el.dataset.col); break;
     case 'cx-add': if (isAdm) commit(st => { const c = el.dataset.col; st.camposExtra = st.camposExtra || {}; (st.camposExtra[c] = st.camposExtra[c] || []).push({ id: 'cx' + Date.now().toString(36), pergunta: 'Nova pergunta', ajuda: '', tipo: 'texto', opcoes: '', mostrar: true, obrig: false }); }, true); break;
     case 'cx-rm': { if (!isAdm) break; const c = el.dataset.col, i = +el.dataset.i, f = (S.camposExtra[c] || [])[i]; if (!f) break;
       if (await ask(`Excluir o campo “${f.pergunta}”? Ele deixa de aparecer nas fichas e cartões. As respostas já gravadas ficam guardadas no histórico do banco, mas não serão mais exibidas.`, true)) commit(st => { st.camposExtra[c].splice(i, 1); }, true); break; }
     case 'sis-novo': abrirFichaSis(); break;
     case 'sis-ok': sisOk(); break;
     case 'sis-reset': if (await ask('Voltar a ficha de sistemas às perguntas padrão? Os campos adicionais não são apagados.')) commit(st => { st.cadastroSis = { campos: {} }; }, true); break;
-    case 'tri-reset': if (await ask('Voltar as perguntas de Novos Projetos ao padrão?')) commit(st => { st.triagem = clone(TRIAGEM_PADRAO); }, true); break;
+    case 'tri-reset': if (await ask('Voltar as perguntas de Novas Demandas ao padrão?')) commit(st => { st.triagem = clone(TRIAGEM_PADRAO); }, true); break;
     case 'resp-reset': if (await ask('Voltar os responsáveis por etapa ao padrão?')) commit(st => { st.responsaveis = { modulos: Object.assign({}, RESP_PADRAO), processos: Object.assign({}, RESP_PADRAO) }; }, true); break;
     case 'cad-reset': if (await ask('Voltar a ficha de módulos e processos às perguntas e permissões padrão? Os campos adicionais não são apagados.')) commit(st => { st.cadastro = cadPadrao(); }, true); break;
     case 'export-json': download(`projeto-fiorella-${today()}.json`, JSON.stringify(S, null, 2), 'application/json'); break;
@@ -2352,7 +2457,7 @@ document.addEventListener('change', e => {
   if (t.dataset.cfg && isAdm) { const p = t.dataset.cfg, v = t.type === 'checkbox' ? t.checked : t.value; commit(st => { let o = st; p.split('.').slice(0, -1).forEach(k => { if (o[k] == null || typeof o[k] !== 'object') o[k] = {}; o = o[k]; }); setP(st, p, v); }, true); return; }
   if (t.dataset.lista) { const k = t.dataset.lista, v = t.value.split('\n').map(s => s.trim()).filter(Boolean); commit(st => { st.listas[k] = v; }, false); }
 });
-document.addEventListener('input', e => { if (e.target.dataset && e.target.dataset.upper !== undefined) { const t = e.target, c = t.selectionStart; t.value = UP(t.value); try { t.setSelectionRange(c, c); } catch (err) {} return; } const k = e.target.dataset && e.target.dataset.ui; if (!k) return; ui[k] = e.target.value; (FILLS[ui.tab] || render)(); });
+document.addEventListener('input', e => { if (e.target.dataset && e.target.dataset.upper !== undefined) { const t = e.target, c = t.selectionStart; t.value = UP(t.value); try { t.setSelectionRange(c, c); } catch (err) {} return; } const k = e.target.dataset && e.target.dataset.ui; if (!k) return; ui[k] = e.target.value; const pos = e.target.selectionStart; (FILLS[ui.tab] || render)(); const nv = document.querySelector(`[data-ui="${k}"]`); if (nv && nv !== document.activeElement) { nv.focus(); try { nv.setSelectionRange(pos, pos); } catch (err) {} } });
 /* Janelas só fecham pelo ✕ (ou Esc); clicar/soltar o mouse fora não fecha mais */
 modal.addEventListener('close', () => { modal.dataset.origem = ''; });
 
