@@ -360,6 +360,10 @@ body{background:color-mix(in srgb,var(--fi-bg,#f4f6f8) 91%,#000)!important}
 .filtros .busca:focus-within{border-color:var(--exec);color:var(--exec)}
 .filtros .busca input{border:0;outline:0;background:none;font:inherit;font-size:.78rem;color:var(--fi-text);width:100%;min-width:0;padding:0}
 .filtros .busca input::-webkit-search-cancel-button{cursor:pointer}
+.filtros .area-f{flex:0 1 230px;min-width:170px;cursor:pointer}
+.filtros .area-f select{border:0;outline:0;background:none;font:inherit;font-size:.78rem;color:var(--fi-text);width:100%;min-width:0;padding:0;cursor:pointer;appearance:auto}
+.filtros .area-f.on{border-color:var(--exec);color:var(--exec)}.filtros .area-f.on select{color:var(--exec);font-weight:700}
+.filtros .area-f option{color:var(--fi-text);background:var(--fi-surface);font-weight:400}
 .subnav button{border:1px solid var(--fi-line);background:var(--fi-surface);border-radius:999px;padding:5px 12px;font:inherit;font-size:.76rem;font-weight:650;cursor:pointer;color:var(--fi-muted)}
 .subnav button b{margin-left:4px;opacity:.7}
 .subnav button.on{background:var(--exec);border-color:var(--exec);color:#fff}
@@ -424,7 +428,7 @@ dialog::backdrop{background:rgba(9,12,16,.55)}
 
 <header class="fi-topbar">
   <a class="fi-brand" href="#modulos"><img data-fi-logo></a>
-  <div class="proj-name"><b data-fi-page-title>Projeto Plataforma Corporativa</b><small id="docVersao" title="Versão deste arquivo HTML (03/10/2026). Aumenta a cada atualização entregue.">Documento V.016</small></div>
+  <div class="proj-name"><b data-fi-page-title>Projeto Plataforma Corporativa</b><small id="docVersao" title="Versão deste arquivo HTML (03/10/2026). Aumenta a cada atualização entregue.">Documento V.017</small></div>
   <div class="fi-topbar__actions">
     <span class="sync" id="sync"></span>
     <button class="fi-btn btn-edit" id="btnEdit" data-act="toggle-edit" hidden>✎ Editar</button>
@@ -451,7 +455,7 @@ dialog::backdrop{background:rgba(9,12,16,.55)}
    qualquer outro texto é texto livre (ex.: "Gestor da área").
    ===================================================================== */
 /* VERSÃO DO DOCUMENTO (HTML): aumentar em 1 a cada atualização entregue (formato V.001). Aparece no topo, abaixo da versão da Fiorella UI. */
-const DOC_VERSAO = 'V.016', DOC_DATA = '03/10/2026';
+const DOC_VERSAO = 'V.017', DOC_DATA = '03/10/2026';
 console.info('[Projeto Fiorella] documento ' + DOC_VERSAO + ' · ' + DOC_DATA);
 const SCHEMA = 12;
 const SEED = {
@@ -886,7 +890,7 @@ const clone = o => JSON.parse(JSON.stringify(o));
 let S = clone(SEED);
 let sb = null, canEdit = false, isAdm = false, USER_TOK = '';
 let VER = 0, META = { em: null, por: null };
-const ui = { tab: 'modulos', edit: false, procArea: '*', procStatus: '', procQ: '', procMod: '', procView: 'cards', modPrio: '', modQ: '', modEt: '', ideiaQ: '', modView: 'cards', implKind: 'modulos', ideiaStatus: '', admSec: 'participantes', focus: '' };
+const ui = { tab: 'modulos', edit: false, procArea: '*', procStatus: '', procQ: '', procMod: '', procView: 'cards', modPrio: '', modQ: '', modEt: '', ideiaQ: '', modArea: '', ideiaArea: '', modView: 'cards', implKind: 'modulos', ideiaStatus: '', admSec: 'participantes', focus: '' };
 
 /* Garante o formato atual (dados antigos / importados) */
 function migrate(d) {
@@ -1316,7 +1320,7 @@ async function converter(col, id) {
     relAntes.forEach(r => setRel(st, tgt, id, r, true));
     st.modulos.forEach(m => { m.semProcesso = m.semProcesso && !st.processos.some(p => (p.modulos || []).includes(m.id)); });
   }, false);
-  if (tgt === 'processos') { ui.procQ = x.nome; ui.procArea = '*'; ui.procStatus = ''; ui.procMod = ''; } else { ui.modQ = x.nome; ui.modPrio = ''; ui.modEt = ''; }
+  if (tgt === 'processos') { ui.procQ = x.nome; ui.procArea = '*'; ui.procStatus = ''; ui.procMod = ''; } else { ui.modQ = x.nome; ui.modPrio = ''; ui.modEt = ''; ui.modArea = ''; }
   ui.cheio = null; go(tgt);
   notify(`Convertido em ${VINC[col].um}.`, 'success');
 }
@@ -1598,7 +1602,7 @@ function vModulos() {
       <a data-act="tab" data-id="backlog"><b>${S.ideias.filter(i => i.status === 'Em análise').length}</b> nova(s) demanda(s) em análise</a>
       <a data-act="tab" data-id="atualizacoes"${nNaoLidas() ? ' class="alerta"' : ''}><b>${nNaoLidas()}</b> atualização(ões) não lida(s)</a>
     </div>
-    ${FILTROS(BAL_ET(S.modulos, 'modEt'), 'modQ', 'Buscar por palavra-chave…')}
+    ${FILTROS(BAL_ET(S.modulos, 'modEt'), 'modQ', 'Buscar por palavra-chave…', AREA_F('modulos', 'modArea'))}
     <div class="toolbar">
       <select class="fi-select" data-ui="modPrio">${optList(S.listas.prioridades, ui.modPrio, 'Todas as prioridades')}</select>
       <span style="flex:1"></span>
@@ -1608,7 +1612,7 @@ function vModulos() {
 }
 function fillModulos() {
   const q = norm(ui.modQ), ord = { 'Alta': 0, 'Média': 1, 'Baixa': 2 };
-  const l = S.modulos.filter(m => (!ui.modPrio || m.prioridade === ui.modPrio) && (!ui.modEt || m.etapa === ui.modEt) && (!q || bate('modulos', m, ui.modQ)));
+  const l = S.modulos.filter(m => (!ui.modPrio || m.prioridade === ui.modPrio) && (!ui.modEt || m.etapa === ui.modEt) && naArea('modulos', m, ui.modArea) && (!q || bate('modulos', m, ui.modQ)));
   if (!ui.edit) l.sort((a, b) => (ord[a.prioridade] ?? 3) - (ord[b.prioridade] ?? 3));
   if (ui.cheio && ui.cheio.col === 'modulos') { const x = byId('modulos', ui.cheio.id); l.splice(0, l.length, ...(x ? [x] : [])); }
   if (!l.length) { $('#list').innerHTML = `<div class="fi-card fi-empty">Nenhum módulo encontrado${ui.modQ ? ` para “${esc(ui.modQ)}”` : ''}.</div>`; return; }
@@ -1653,8 +1657,33 @@ function buscaTxt(col, x) {
 }
 const bate = (col, x, q) => { const p = norm(q || '').split(/\s+/).filter(Boolean); if (!p.length) return true; const t = buscaTxt(col, x); return p.every(w => t.includes(w)); };
 /* Linha de filtros: balões de status/etapa | busca */
-function FILTROS(baloes, k, ph) {
-  return `<div class="filtros"><div class="subnav">${baloes}</div><span class="vsep" aria-hidden="true"></span><label class="busca"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" placeholder="${esc(ph)}" data-ui="${k}" value="${esc(ui[k] || '')}" aria-label="Buscar por palavra-chave"></label></div>`;
+function FILTROS(baloes, k, ph, extra = '') {
+  return `<div class="filtros"><div class="subnav">${baloes}</div><span class="vsep" aria-hidden="true"></span><label class="busca"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" placeholder="${esc(ph)}" data-ui="${k}" value="${esc(ui[k] || '')}" aria-label="Buscar por palavra-chave"></label>${extra}</div>`;
+}
+/* Busca por área. Demanda: área informada no cadastro. Processo: área responsável.
+   Módulo: áreas dos processos vinculados + área do gestor que vai usar. Campos extras do tipo área também contam. */
+function areasDe(col, x) {
+  const out = new Set(), porNome = n => { const a = S.areas.find(z => norm(z.nome) === norm(n)); return a ? a.id : n; };
+  if (col === 'ideias') { triCampos().filter(c => c.tipo === 'setor').forEach(c => { const v = (x.resp || {})[c.id]; if (v) out.add(v); }); if (x.area && !out.size) out.add(x.area); }
+  if (col === 'processos' && x.area) out.add(x.area);
+  if (col === 'modulos') {
+    procsDoModulo(x.id).forEach(p => { if (p.area) out.add(p.area); });
+    (x.dono || []).forEach(t => { const p = t && t[0] === '@' && byId('participantes', t.slice(1)); if (p && p.area) out.add(p.area); });
+  }
+  cxDe(col).filter(c => c.tipo === 'setor').forEach(c => { const v = (x.extra || {})[c.id]; if (v) out.add(porNome(v)); });
+  return [...out].filter(id => byId('areas', id));
+}
+const AREA_TODAS = { processos: '*' }, AREA_SEM = { processos: '' };
+function naArea(col, x, v) {
+  const todas = AREA_TODAS[col] ?? '', sem = AREA_SEM[col] ?? '_sem';
+  if (v === todas || v == null) return true;
+  const a = areasDe(col, x); return v === sem ? !a.length : a.includes(v);
+}
+function AREA_F(col, k) {
+  const lista = S[col], todas = AREA_TODAS[col] ?? '', sem = AREA_SEM[col] ?? '_sem', v = ui[k] ?? todas;
+  const cnt = id => lista.filter(x => areasDe(col, x).includes(id)).length, nSem = lista.filter(x => !areasDe(col, x).length).length;
+  return `<label class="busca area-f${v !== todas ? ' on' : ''}" title="Busca por área"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg><select data-ui="${k}" aria-label="Busca por área">
+    <option value="${todas}"${v === todas ? ' selected' : ''}>Busca por área</option>${ABC(S.areas).map(a => `<option value="${esc(a.id)}"${v === a.id ? ' selected' : ''}>${esc(a.nome)} (${cnt(a.id)})</option>`).join('')}${nSem ? `<option value="${sem}"${v === sem ? ' selected' : ''}>Sem área (${nSem})</option>` : ''}</select></label>`;
 }
 const BAL_ET = (lista, uk) => `<button class="${!ui[uk] ? 'on' : ''}" data-act="flt-et" data-ui-k="${uk}" data-id="">Todas<b>${lista.length}</b></button>${S.etapas.map((e, i) => `<button class="${ui[uk] === e.id ? 'on' : ''}" data-act="flt-et" data-ui-k="${uk}" data-id="${esc(e.id)}" title="Etapa ${i + 1}">${i + 1}. ${esc(e.nome)}<b>${lista.filter(x => x.etapa === e.id).length}</b></button>`).join('')}`;
 
@@ -1673,9 +1702,8 @@ function vProcessos() {
       <span>áreas com processo <b>${new Set(S.processos.map(p => p.area).filter(a => byId('areas', a))).size}/${areas.length}</b></span>
       <a data-act="tab" data-id="atualizacoes"${nNaoLidas() ? ' class="alerta"' : ''}><b>${nNaoLidas()}</b> atualização(ões) não lida(s)</a>
     </div>
-    ${FILTROS(BAL_ET(S.processos, 'procStatus'), 'procQ', 'Buscar por palavra-chave…')}
+    ${FILTROS(BAL_ET(S.processos, 'procStatus'), 'procQ', 'Buscar por palavra-chave…', AREA_F('processos', 'procArea'))}
     <div class="toolbar">
-      <select class="fi-select" data-ui="procArea"><option value="*"${ui.procArea === '*' ? ' selected' : ''}>Todas as áreas (${S.processos.length})</option>${areas.map(a => `<option value="${esc(a.id)}"${ui.procArea === a.id ? ' selected' : ''}>${esc(a.nome)} (${cnt(a.id)})</option>`).join('')}${semArea ? `<option value=""${ui.procArea === '' ? ' selected' : ''}>Sem área (${semArea})</option>` : ''}</select>
       ${ui.procMod ? `<span class="tag">Módulo: ${esc(nome('modulos', ui.procMod))} <button class="x" data-act="proc-mod" data-id="">×</button></span>` : ''}
       <span style="flex:1"></span>
     </div>
@@ -1685,7 +1713,7 @@ function vProcessos() {
 }
 function fillProcessos() {
   const q = norm(ui.procQ);
-  const l = S.processos.filter(p => (ui.procArea === '*' || (ui.procArea === '' ? !byId('areas', p.area) : p.area === ui.procArea)) &&
+  const l = S.processos.filter(p => naArea('processos', p, ui.procArea) &&
     (!ui.procStatus || p.etapa === ui.procStatus) && (!ui.procMod || (p.modulos || []).includes(ui.procMod)) &&
     (!q || bate('processos', p, ui.procQ)));
   if (ui.cheio && ui.cheio.col === 'processos') { const x = byId('processos', ui.cheio.id); l.splice(0, l.length, ...(x ? [x] : [])); }
@@ -1756,14 +1784,14 @@ function triagemUm(t) {
     <div class="kv">${(t.respostas || []).map(r => `<div class="full"><div class="k">${esc(r.pergunta)}</div><div class="txt" style="white-space:pre-wrap">${esc(r.resposta || '—')}</div></div>`).join('')}</div></details>`;
 }
 function vBacklog() {
-  const l = S.ideias.filter(i => (!ui.ideiaStatus || i.status === ui.ideiaStatus) && bate('ideias', i, ui.ideiaQ)).sort((a, b) => String(b.em || '').localeCompare(String(a.em || '')));
+  const l = S.ideias.filter(i => (!ui.ideiaStatus || i.status === ui.ideiaStatus) && naArea('ideias', i, ui.ideiaArea) && bate('ideias', i, ui.ideiaQ)).sort((a, b) => String(b.em || '').localeCompare(String(a.em || '')));
   if (ui.cheio && ui.cheio.col === 'ideias') { const x = byId('ideias', ui.cheio.id); l.splice(0, l.length, ...(x ? [x] : [])); }
   const P = (i, k) => `ideias.#${i.id}.${k}`, cs = triCampos(), ap = podeTri();
   $('#view').className = 'fi-page fam-ink-exec';
   $('#view').innerHTML = `
     ${head('backlog', `<button class="fi-btn" data-act="export-xlsx" data-col="ideias" title="Baixar a lista em Excel (.xlsx)">⭳ Excel</button>${canEdit ? `<button class="fi-btn fi-btn--primary" data-act="tri-nova">＋ Nova demanda</button>` : ''}`)}
     ${FILTROS(`<button class="${!ui.ideiaStatus ? 'on' : ''}" data-act="ideia-st" data-id="">Todas<b>${S.ideias.length}</b></button>
-      ${S.listas.stIdeia.map(st => `<button class="${ui.ideiaStatus === st ? 'on' : ''}" data-act="ideia-st" data-id="${esc(st)}">${esc(st)}<b>${S.ideias.filter(i => i.status === st).length}</b></button>`).join('')}`, 'ideiaQ', 'Buscar por palavra-chave…')}
+      ${S.listas.stIdeia.map(st => `<button class="${ui.ideiaStatus === st ? 'on' : ''}" data-act="ideia-st" data-id="${esc(st)}">${esc(st)}<b>${S.ideias.filter(i => i.status === st).length}</b></button>`).join('')}`, 'ideiaQ', 'Buscar por palavra-chave…', AREA_F('ideias', 'ideiaArea'))}
     ${barraCheio('ideias')}
     ${!l.length ? `<div class="fi-card fi-empty">Nenhuma demanda nesta seleção${ui.ideiaQ ? ` para “${esc(ui.ideiaQ)}”` : ''}.</div>` : `<div class="${ui.cheio ? 'cheio' : 'gauto'}">${l.map(i => {
       const aberta = i.status === 'Em análise', meu = (i.autor || []).includes(USER_TOK) || i.porTok === meuTok();
@@ -2067,8 +2095,8 @@ function addItem(col) {
   const it = Object.assign({ id: uid(col.split('.').pop()) }, NEW[col]());
   commit(st => { arrOf(st, col).push(clone(it)); }, false);
   if (col === 'processos') { ui.procStatus = ''; ui.procQ = ''; ui.procMod = ''; }
-  if (col === 'modulos') { ui.modPrio = ''; ui.modQ = ''; ui.modEt = ''; }
-  if (col === 'ideias') { ui.ideiaStatus = ''; ui.ideiaQ = ''; }
+  if (col === 'modulos') { ui.modPrio = ''; ui.modQ = ''; ui.modEt = ''; ui.modArea = ''; }
+  if (col === 'ideias') { ui.ideiaStatus = ''; ui.ideiaQ = ''; ui.ideiaArea = ''; }
   const k = it.nome !== undefined ? 'nome' : it.titulo !== undefined ? 'titulo' : 't';
   ui.focus = `[data-p="${col}.#${it.id}.${k}"]`;
   render();
@@ -2181,7 +2209,7 @@ function fichaOk(col) {
       const y = st[col].find(z => z.id === it.id); if (y) y.triagem = { id: ide.id, solicitante: ide.porNome || (ide.autor || []).map(tokName).join(', '), em: ide.em, respostas: triResumo(ide), cod: ide.cod };
       registrar(st, 'ideias', ide.id, `Aprovou a demanda “${ide.titulo}” como ${col === 'modulos' ? 'módulo' : 'processo'}.`, 'Triagem'); } }
   }, false);
-  if (col === 'processos') { ui.procStatus = ''; ui.procQ = ''; ui.procMod = ''; ui.procArea = '*'; } else { ui.modPrio = ''; ui.modQ = ''; ui.modEt = ''; }
+  if (col === 'processos') { ui.procStatus = ''; ui.procQ = ''; ui.procMod = ''; ui.procArea = '*'; } else { ui.modPrio = ''; ui.modQ = ''; ui.modEt = ''; ui.modArea = ''; }
   ui.cheio = null; render();
   notify(`${col === 'modulos' ? 'Módulo' : 'Processo'} cadastrado${criados.length ? ` com ${criados.length} ${v.um}(s) novo(s) — complete a ficha deles` : ''}`, 'success');
 }
@@ -2366,7 +2394,7 @@ document.addEventListener('click', async e => {
     case 'notas-tog': ui.notasAbertas = ui.notasAbertas || {}; ui.notasAbertas[id] = !ui.notasAbertas[id]; render(); break;
     case 'upd-f': ui.updF = id; render(); break;
     case 'upd-tab': ui.updTab = id; render(); break;
-    case 'cheio-de': { const c = el.dataset.col; ui.cheio = { col: c, id }; ui.ideiaStatus = ''; ui.ideiaQ = ''; ui.modEt = ''; if (c === 'processos') { ui.procQ = ''; ui.procArea = '*'; ui.procStatus = ''; ui.procMod = ''; } else { ui.modQ = ''; ui.modPrio = ''; ui.modEt = ''; } go(c === 'ideias' ? 'backlog' : c); scrollTo({ top: 0 }); break; }
+    case 'cheio-de': { const c = el.dataset.col; ui.cheio = { col: c, id }; ui.ideiaStatus = ''; ui.ideiaQ = ''; ui.ideiaArea = ''; ui.modEt = ''; ui.modArea = ''; if (c === 'processos') { ui.procQ = ''; ui.procArea = '*'; ui.procStatus = ''; ui.procMod = ''; } else { ui.modQ = ''; ui.modPrio = ''; ui.modEt = ''; ui.modArea = ''; } go(c === 'ideias' ? 'backlog' : c); scrollTo({ top: 0 }); break; }
     case 'upd-lida': setLeitura([el.dataset.n], 1); break;
     case 'upd-naolida': setLeitura([el.dataset.n], 0); break;
     case 'upd-todas': { const m = leituraMapa(); setLeitura(todasNotas().filter(({ n }) => !lida(n, m)).map(({ n }) => n.id), 1); break; }
@@ -2374,7 +2402,7 @@ document.addEventListener('click', async e => {
       const c = el.dataset.col, x = byId(c, id); if (!x) break;
       setLeitura([el.dataset.n], 1);
       ui.notasAbertas = ui.notasAbertas || {}; ui.notasAbertas[id] = true;
-      if (c === 'processos') { ui.procQ = ''; ui.procArea = '*'; ui.procStatus = ''; ui.procMod = ''; } else { ui.modQ = ''; ui.modPrio = ''; ui.modEt = ''; }
+      if (c === 'processos') { ui.procQ = ''; ui.procArea = '*'; ui.procStatus = ''; ui.procMod = ''; } else { ui.modQ = ''; ui.modPrio = ''; ui.modEt = ''; ui.modArea = ''; }
       ui.cheio = { col: c, id };
       ui.focus = `[data-nota="${el.dataset.n}"]`; ui.ideiaStatus = ''; go(c === 'ideias' ? 'backlog' : c);
       setTimeout(() => { const e = document.querySelector(`[data-nota="${el.dataset.n}"]`); if (e) { e.classList.add('pisca'); setTimeout(() => e.classList.remove('pisca'), 2200); } }, 50);
