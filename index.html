@@ -404,7 +404,7 @@ dialog::backdrop{background:rgba(9,12,16,.55)}
 
 <header class="fi-topbar">
   <a class="fi-brand" href="#modulos"><img data-fi-logo></a>
-  <div class="proj-name"><b data-fi-page-title>Projeto Plataforma Corporativa</b><small id="docVersao" title="Versão deste arquivo HTML (03/10/2026). Aumenta a cada atualização entregue.">Documento V.003</small></div>
+  <div class="proj-name"><b data-fi-page-title>Projeto Plataforma Corporativa</b><small id="docVersao" title="Versão deste arquivo HTML (03/10/2026). Aumenta a cada atualização entregue.">Documento V.004</small></div>
   <div class="fi-topbar__actions">
     <span class="sync" id="sync"></span>
     <button class="fi-btn btn-edit" id="btnEdit" data-act="toggle-edit" hidden>✎ Editar</button>
@@ -431,7 +431,7 @@ dialog::backdrop{background:rgba(9,12,16,.55)}
    qualquer outro texto é texto livre (ex.: "Gestor da área").
    ===================================================================== */
 /* VERSÃO DO DOCUMENTO (HTML): aumentar em 1 a cada atualização entregue (formato V.001). Aparece no topo, abaixo da versão da Fiorella UI. */
-const DOC_VERSAO = 'V.003', DOC_DATA = '03/10/2026';
+const DOC_VERSAO = 'V.004', DOC_DATA = '03/10/2026';
 console.info('[Projeto Fiorella] documento ' + DOC_VERSAO + ' · ' + DOC_DATA);
 const SCHEMA = 12;
 const SEED = {
@@ -663,6 +663,45 @@ function aplicarPlanilhaIA(d) {
 const RESP_PADRAO = { levantamento: 'pessoa:wesley', definicao: 'direcao', avaliacao: 'tipo:arquiteto', aprovacao: 'direcao', desenvolvimento: 'tipo:arquiteto', homologacao: 'tipo:coordtec', acompanhamento: 'tipo:coordtec' };
 const FIM = '__fim';
 /* Campos adicionais criados pelo admin (ADM → Cadastro / Triagem). Valores ficam em item.extra[id]. */
+/* Cadastro de sistemas (somente admin): campos padrão com pergunta/ajuda/mostrar/obrigatório editáveis em ADM → Sistemas */
+const SIS_CAMPOS = [
+  { k: 'nome', tipo: 'texto', fixo: 1, pergunta: 'Nome do sistema', ajuda: 'Ex.: PROTHEUS (TOTVS), PORTAL FIORELLA.' },
+  { k: 'cat', tipo: 'lista', lista: 'catSistema', pergunta: 'Categoria', ajuda: '' },
+  { k: 'status', tipo: 'lista', lista: 'stSistema', pergunta: 'Situação', ajuda: '' },
+  { k: 'desc', tipo: 'area', pergunta: 'O que o sistema faz?', ajuda: 'Função, tecnologia (linguagem e banco de dados) e módulos em uso.' },
+  { k: 'integ', tipo: 'texto', pergunta: 'Com o que integra?', ajuda: 'Ex.: Protheus, bancos, portais, API.' },
+  { k: 'resp', tipo: 'pessoa', pergunta: 'Responsável', ajuda: '' } ];
+const sisCfg = k => Object.assign({}, SIS_CAMPOS.find(c => c.k === k), ((S.cadastroSis || {}).campos || {})[k] || {});
+const sisMostra = k => k === 'nome' || sisCfg(k).mostrar !== false;
+function abrirFichaSis() {
+  if (!isAdm) { notify('Somente o admin cadastra sistemas.', 'warning'); return; }
+  const inp = c => { const a = `data-sk="${c.k}"`;
+    if (c.tipo === 'texto') return c.k === 'nome' ? `<input class="fi-input up" ${a} data-upper>` : `<input class="fi-input" ${a}>`;
+    if (c.tipo === 'area') return `<textarea class="fi-input" rows="3" ${a}></textarea>`;
+    if (c.tipo === 'lista') return `<select class="fi-select" ${a}><option value="">—</option>${(S.listas[c.lista] || []).map(o => `<option>${esc(o)}</option>`).join('')}</select>`;
+    return `<input class="fi-input" list="fichaPessoas" ${a} placeholder="Participante ou texto livre">`; };
+  modal.innerHTML = `<div class="m-head"><h2>Cadastrar sistema</h2><button class="rm" data-act="close">✕</button></div>
+    <div class="m-body ficha">${SIS_CAMPOS.filter(c => sisMostra(c.k)).map(c0 => { const c = sisCfg(c0.k), ob = c0.fixo || c.obrig;
+      return `<label class="fi-field" data-campo="${c0.k}"><span class="fi-label">${esc(c.pergunta)}${ob ? ' <b class="req">*</b>' : ''}</span>${inp(c0)}${c.ajuda ? `<span class="fi-field__help">${esc(c.ajuda)}</span>` : ''}</label>`; }).join('')}
+      ${cxVis('sistemas').map(cxCampoFicha).join('')}
+      <datalist id="fichaPessoas">${S.participantes.filter(x => x.status !== 'Inativo').map(x => `<option value="${esc(x.nome)}">${esc(papel(x))}</option>`).join('')}</datalist></div>
+    <div class="m-foot"><button class="fi-btn" data-act="close">Cancelar</button><button class="fi-btn fi-btn--primary" data-act="sis-ok">Cadastrar</button></div>`;
+  modal.showModal(); const f = modal.querySelector('[data-sk="nome"]'); if (f) f.focus();
+}
+function sisOk() {
+  const val = {}, falta = [];
+  modal.querySelectorAll('.fi-field.erro').forEach(e => e.classList.remove('erro'));
+  SIS_CAMPOS.filter(c => sisMostra(c.k)).forEach(c0 => { const c = sisCfg(c0.k), e = modal.querySelector(`[data-sk="${c0.k}"]`), x = (e && e.value || '').trim();
+    if ((c0.fixo || c.obrig) && !x) { falta.push(c.pergunta); modal.querySelector(`[data-campo="${c0.k}"]`).classList.add('erro'); }
+    if (!x) return;
+    if (c0.tipo === 'pessoa') { const m = S.participantes.find(p => norm(p.nome) === norm(x)); val[c0.k] = [m ? '@' + m.id : x]; } else val[c0.k] = c0.k === 'nome' ? UP(x) : x; });
+  const extra = cxColetar('sistemas', falta);
+  if (falta.length) { notify('Responda: ' + falta.join(' · '), 'warning'); return; }
+  const it = Object.assign({ id: uid(val.nome) }, NEW.sistemas(), val, { extra });
+  modal.close();
+  commit(st => { st.sistemas.push(clone(it)); registrar(st, 'sistemas', it.id, `Cadastrou o sistema ${it.nome}.`, 'Cadastro'); }, true);
+  notify('Sistema cadastrado.', 'success');
+}
 const CX_TIPOS = [['texto', 'Texto curto'], ['area', 'Texto longo'], ['numero', 'Número'], ['data', 'Data'], ['lista', 'Lista de opções'], ['simnao', 'Sim / Não'], ['setor', 'Área / setor']];
 const cxDe = col => ((S.camposExtra || {})[col] || []).filter(c => c && c.id);
 const cxVis = col => cxDe(col).filter(c => c.mostrar !== false);
@@ -686,7 +725,7 @@ function cxColetar(col, falta) {
 const dataFmt = v => /^\d{4}-\d{2}-\d{2}$/.test(v || '') ? v.split('-').reverse().join('/') : (v || '');
 function cxBloco(col, x) {
   const cs = cxVis(col); if (!cs.length) return '';
-  const ed = ui.edit && (col === 'ideias' ? (isAdm || podeTri()) : podeCad(col, 'editar'));
+  const ed = ui.edit && (col === 'ideias' ? (isAdm || podeTri()) : col === 'sistemas' ? isAdm : podeCad(col, 'editar'));
   const base = `${col}.#${x.id}.extra.`;
   return `<div class="cx-bloco"><div class="k">Informações adicionais</div><div class="kv">${cs.map(c => { const v = (x.extra || {})[c.id];
     let h;
@@ -803,7 +842,7 @@ const PEOPLE_FIELDS = {
 };
 const COL_LABEL = { modulos: 'Módulos', processos: 'Processos', sistemas: 'Sistemas', areas: 'Áreas', ideias: 'Triagem', etapas: 'Etapas de implantação', fases: 'Fases do projeto' };
 /* Coleções editáveis somente por admin (guia ADM) */
-const ADM_ROOTS = ['participantes', 'areas', 'tipos', 'listas', 'cadastro', 'responsaveis', 'triagem', 'camposExtra'];
+const ADM_ROOTS = ['participantes', 'areas', 'tipos', 'listas', 'cadastro', 'responsaveis', 'triagem', 'camposExtra', 'cadastroSis', 'sistemas'];
 
 /* Novos itens */
 const NEW = {
@@ -929,7 +968,8 @@ function migrate(d) {
   /* versão 11: triagem só "Em análise" → Aprovada / Reprovada; códigos únicos */
   (d.ideias || []).forEach(i => { if (i.status === 'Nova' || !i.status) i.status = 'Em análise'; if (i.status === 'Descartada') i.status = 'Reprovada'; if (!Array.isArray(i.notas)) i.notas = []; });
   if (!d.listas.stIdeia || d.listas.stIdeia.some(x => x === 'Nova' || x === 'Descartada')) d.listas.stIdeia = ['Em análise', 'Aprovada', 'Reprovada'];
-  d.camposExtra = Object.assign({ modulos: [], processos: [], ideias: [] }, d.camposExtra || {});
+  d.camposExtra = Object.assign({ modulos: [], processos: [], ideias: [], sistemas: [] }, d.camposExtra || {});
+  d.cadastroSis = d.cadastroSis || { campos: {} };
   d.log = Array.isArray(d.log) ? d.log : [];
   ['modulos', 'processos'].forEach(c => (d[c] || []).forEach(x => {
     const sis = (x.notas || []).filter(n => n.sis);
@@ -1766,16 +1806,17 @@ function vSistemas() {
   const P = (s, k) => `sistemas.#${s.id}.${k}`;
   const card = s => `<div class="fi-card item">
       <div class="card-top"><h3 class="grow">${T(P(s, 'nome'), { one: 1 })}</h3>${SEL(P(s, 'status'), 'stSistema')}${RM('sistemas', s.id)}</div>
-      ${ui.edit ? `<div class="row"><span class="k" style="margin:0">Categoria</span>${SEL(P(s, 'cat'), 'catSistema')}</div>` : ''}
-      ${T(P(s, 'desc'), { tag: 'div', cls: 'txt' })}
-      <div class="kv"><div class="full"><div class="k">Integrações</div>${T(P(s, 'integ'), { tag: 'div', ph: 'A definir' })}</div>
-      <div class="full"><div class="k">Responsáveis</div>${PPL(P(s, 'resp'))}</div></div></div>`;
+      ${ui.edit && sisMostra('cat') ? `<div class="row"><span class="k" style="margin:0">${esc(sisCfg('cat').pergunta)}</span>${SEL(P(s, 'cat'), 'catSistema')}</div>` : ''}
+      ${sisMostra('desc') ? T(P(s, 'desc'), { tag: 'div', cls: 'txt' }) : ''}
+      <div class="kv">${sisMostra('integ') ? `<div class="full"><div class="k">${esc(sisCfg('integ').pergunta)}</div>${T(P(s, 'integ'), { tag: 'div', ph: 'A definir' })}</div>` : ''}
+      ${sisMostra('resp') ? `<div class="full"><div class="k">${esc(sisCfg('resp').pergunta)}</div>${PPL(P(s, 'resp'))}</div>` : ''}</div>
+      ${cxBloco('sistemas', s)}</div>`;
   const grupos = cats.map(c => [c || 'Sem categoria', S.sistemas.filter(s => (s.cat || '') === c)]).filter(([, l]) => l.length);
   const semCat = S.sistemas.filter(s => !s.cat);
   if (semCat.length && !cats.includes('')) grupos.push(['Sem categoria', semCat]);
   $('#view').className = 'fi-page fam-ink-doc';
   $('#view').innerHTML = `
-    ${head('sistemas', ADD('sistemas', 'Sistema'))}
+    ${head('sistemas', isAdm ? `<button class="fi-btn fi-btn--primary" data-act="sis-novo">＋ Sistema</button>` : '')}
     ${grupos.map(([c, l]) => `<div class="group-label">${esc(c)} · ${l.length}</div><div class="gauto">${l.map(card).join('')}</div>`).join('')}
     ${sec('blocos', S.blocos.length + ' blocos', ADD('blocos', 'Bloco'))}
     <div class="fi-table-wrap"><table class="fi-table sheet">
@@ -1789,7 +1830,7 @@ function vSistemas() {
    ===================================================================== */
 function vAdm() {
   const s = ui.admSec === 'cadastro' ? 'cad-modulos' : ui.admSec;
-  const nav = [['participantes', 'Participantes', S.participantes.length], ['areas', 'Áreas / Setores', S.areas.length], ['tipos', 'Papéis no projeto', S.tipos.length], ['listas', 'Listas de opções', Object.keys(S.listas).length], ['triagem', 'Triagem', 3 + cxDe('ideias').length], ['cad-modulos', 'Módulos', CAMPOS.modulos.length + cxDe('modulos').length], ['cad-processos', 'Processos', CAMPOS.processos.length + cxDe('processos').length], ['responsaveis', 'Responsáveis', S.etapas.length]];
+  const nav = [['participantes', 'Participantes', S.participantes.length], ['areas', 'Áreas / Setores', S.areas.length], ['tipos', 'Papéis no projeto', S.tipos.length], ['listas', 'Listas de opções', Object.keys(S.listas).length], ['triagem', 'Triagem', 3 + cxDe('ideias').length], ['cad-modulos', 'Módulos', CAMPOS.modulos.length + cxDe('modulos').length], ['cad-processos', 'Processos', CAMPOS.processos.length + cxDe('processos').length], ['cad-sistemas', 'Sistemas', SIS_CAMPOS.length + cxDe('sistemas').length], ['responsaveis', 'Responsáveis', S.etapas.length]];
   $('#view').className = 'fi-page fam-ink-adm';
   $('#view').innerHTML = `
     ${head('adm')}
@@ -1854,6 +1895,18 @@ function vAdm() {
       <div class="fi-table-wrap"><table class="fi-table sheet"><thead><tr><th>Etapa</th><th>Módulos — quem pede a mudança</th><th>Processos — quem pede a mudança</th><th>Quem aprova</th></tr></thead>
       <tbody>${S.etapas.map((e, i) => `<tr><td class="nw"><b>${i + 1}. ${esc(e.nome)}</b></td><td>${cel('modulos', e)}</td><td>${cel('processos', e)}</td><td class="nw">${i === S.etapas.length - 1 ? 'Direção assina e finaliza' : 'Direção'}</td></tr>`).join('')}</tbody></table></div>
       ${ed ? `<button class="fi-btn" style="margin-top:12px" data-act="resp-reset">↺ Voltar ao padrão</button>` : ''}`;
+  } else if (s === 'cad-sistemas') {
+    const ed = ui.edit && isAdm, dis = ed ? '' : 'disabled';
+    body.innerHTML = `${ed ? '' : `<div class="fi-alert" style="margin-bottom:12px">Clique em <b>✎ Editar</b> no topo para alterar.</div>`}<div class="sec"><span>Cadastro de sistemas</span></div>
+      <div class="fi-alert" style="margin-bottom:12px">Define a ficha usada pelo admin para cadastrar os sistemas existentes (botão <b>＋ Sistema</b> na guia Sistemas): o texto de cada pergunta, a ajuda, se aparece e se é obrigatória. Abaixo, crie campos adicionais. Somente o admin cadastra, edita e exclui sistemas.</div>
+      <div class="fi-card card-pad" style="margin-bottom:16px"><div class="fi-table-wrap"><table class="fi-table sheet"><thead><tr><th>Campo</th><th>Pergunta na ficha</th><th>Ajuda (texto de exemplo)</th><th>Mostrar</th><th>Obrigatório</th></tr></thead><tbody>
+      ${SIS_CAMPOS.map(c0 => { const c = sisCfg(c0.k), b = `cadastroSis.campos.${c0.k}`; return `<tr><td class="nw"><b>${esc(c0.k)}</b><div class="muted" style="font-size:.7rem">${esc(c0.tipo)}</div></td>
+        <td class="wide"><input class="fi-input" data-cfg="${b}.pergunta" value="${esc(c.pergunta)}" ${dis}></td>
+        <td class="wide"><input class="fi-input" data-cfg="${b}.ajuda" value="${esc(c.ajuda || '')}" ${dis}></td>
+        <td class="nw"><input type="checkbox" data-cfg="${b}.mostrar" ${c.mostrar !== false ? 'checked' : ''} ${c0.fixo ? 'disabled' : dis}></td>
+        <td class="nw"><input type="checkbox" data-cfg="${b}.obrig" ${c0.fixo || c.obrig ? 'checked' : ''} ${c0.fixo ? 'disabled' : dis}></td></tr>`; }).join('')}</tbody></table></div></div>
+      ${cxTabelaAdm('sistemas', ed)}
+      ${ed ? `<button class="fi-btn" data-act="sis-reset">↺ Voltar às perguntas padrão</button>` : ''}`;
   } else if (s === 'cad-modulos' || s === 'cad-processos') {
     const colSel = s === 'cad-processos' ? 'processos' : 'modulos';
     const ed = ui.edit && isAdm, dis = ed ? '' : 'disabled';
@@ -2172,6 +2225,9 @@ document.addEventListener('click', async e => {
     case 'cx-add': if (isAdm) commit(st => { const c = el.dataset.col; st.camposExtra = st.camposExtra || {}; (st.camposExtra[c] = st.camposExtra[c] || []).push({ id: 'cx' + Date.now().toString(36), pergunta: 'Nova pergunta', ajuda: '', tipo: 'texto', opcoes: '', mostrar: true, obrig: false }); }, true); break;
     case 'cx-rm': { if (!isAdm) break; const c = el.dataset.col, i = +el.dataset.i, f = (S.camposExtra[c] || [])[i]; if (!f) break;
       if (await ask(`Excluir o campo “${f.pergunta}”? Ele deixa de aparecer nas fichas e cartões. As respostas já gravadas ficam guardadas no histórico do banco, mas não serão mais exibidas.`, true)) commit(st => { st.camposExtra[c].splice(i, 1); }, true); break; }
+    case 'sis-novo': abrirFichaSis(); break;
+    case 'sis-ok': sisOk(); break;
+    case 'sis-reset': if (await ask('Voltar a ficha de sistemas às perguntas padrão? Os campos adicionais não são apagados.')) commit(st => { st.cadastroSis = { campos: {} }; }, true); break;
     case 'tri-reset': if (await ask('Voltar as perguntas da triagem ao padrão?')) commit(st => { st.triagem = clone(TRIAGEM_PADRAO); }, true); break;
     case 'resp-reset': if (await ask('Voltar os responsáveis por etapa ao padrão?')) commit(st => { st.responsaveis = { modulos: Object.assign({}, RESP_PADRAO), processos: Object.assign({}, RESP_PADRAO) }; }, true); break;
     case 'cad-reset': if (await ask('Voltar a ficha de módulos e processos às perguntas e permissões padrão? Os campos adicionais não são apagados.')) commit(st => { st.cadastro = cadPadrao(); }, true); break;
@@ -2207,7 +2263,7 @@ document.addEventListener('change', e => {
   if (t.dataset && t.dataset.menFor) { const ta = document.querySelector(`[data-nota-txt="${t.dataset.menFor}"]`); if (ta && t.value) { ta.value = (ta.value && !/\s$/.test(ta.value) ? ta.value + ' ' : ta.value) + '@' + t.value + ' '; ta.focus(); } t.value = ''; return; }
   if (t.dataset && t.dataset.upper !== undefined) { const c = t.selectionStart; t.value = UP(t.value); try { t.setSelectionRange(c, c); } catch (err) {} }
   if (t.classList.contains('es')) { const p = t.dataset.p, v = t.value; commit(st => setP(st, p, v), true); return; }
-  if (t.dataset.cfg && isAdm) { const p = t.dataset.cfg, v = t.type === 'checkbox' ? t.checked : t.value; commit(st => setP(st, p, v), true); return; }
+  if (t.dataset.cfg && isAdm) { const p = t.dataset.cfg, v = t.type === 'checkbox' ? t.checked : t.value; commit(st => { let o = st; p.split('.').slice(0, -1).forEach(k => { if (o[k] == null || typeof o[k] !== 'object') o[k] = {}; o = o[k]; }); setP(st, p, v); }, true); return; }
   if (t.dataset.lista) { const k = t.dataset.lista, v = t.value.split('\n').map(s => s.trim()).filter(Boolean); commit(st => { st.listas[k] = v; }, false); }
 });
 document.addEventListener('input', e => { if (e.target.dataset && e.target.dataset.upper !== undefined) { const t = e.target, c = t.selectionStart; t.value = UP(t.value); try { t.setSelectionRange(c, c); } catch (err) {} return; } const k = e.target.dataset && e.target.dataset.ui; if (!k) return; ui[k] = e.target.value; (FILLS[ui.tab] || render)(); });
