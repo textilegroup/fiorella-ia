@@ -357,13 +357,17 @@ body{background:color-mix(in srgb,var(--fi-bg,#f4f6f8) 91%,#000)!important}
 .filtros .subnav{margin-bottom:0}
 .filtros .vsep{width:1px;align-self:stretch;max-height:28px;min-height:22px;margin:auto 0;background:var(--fi-line,#dfe3e8)}
 .filtros .busca{display:flex;align-items:center;gap:6px;border:1px solid var(--fi-line);background:var(--fi-surface);border-radius:999px;padding:0 12px;height:28px;flex:0 1 260px;min-width:180px;color:var(--fi-muted)}
-.filtros .busca:focus-within{border-color:var(--exec);color:var(--exec)}
+.filtros .busca:not(.sel-f):focus-within{border-color:var(--exec);color:var(--exec)}
 .filtros .busca input{border:0;outline:0;background:none;font:inherit;font-size:.78rem;color:var(--fi-text);width:100%;min-width:0;padding:0}
+.filtros .busca input::placeholder{color:var(--fi-muted);opacity:.85}
 .filtros .busca input::-webkit-search-cancel-button{cursor:pointer}
-.filtros .area-f{flex:0 1 230px;min-width:170px;cursor:pointer}
-.filtros .area-f select{border:0;outline:0;background:none;font:inherit;font-size:.78rem;color:var(--fi-text);width:100%;min-width:0;padding:0;cursor:pointer;appearance:auto}
-.filtros .area-f.on{border-color:var(--exec);color:var(--exec)}.filtros .area-f.on select{color:var(--exec);font-weight:700}
-.filtros .area-f option{color:var(--fi-text);background:var(--fi-surface);font-weight:400}
+.filtros label.busca.sel-f{position:relative;flex:0 1 220px;min-width:170px;cursor:pointer}
+.filtros label.busca.sel-f select{-webkit-appearance:none;appearance:none;border:0;outline:0;box-shadow:none;background:none;margin:0;padding:0 16px 0 0;height:auto;min-height:0;width:100%;min-width:0;font:inherit;font-size:.78rem;font-weight:400;line-height:1.2;color:var(--fi-muted);opacity:.95;cursor:pointer;text-overflow:ellipsis}
+.filtros label.busca.sel-f .chev{position:absolute;right:11px;pointer-events:none;opacity:.7}
+.filtros label.busca.sel-f:focus-within{border-color:color-mix(in srgb,var(--fi-muted) 60%,var(--fi-line))}
+.filtros label.busca.sel-f.on{border-color:var(--exec);color:var(--exec)}
+.filtros label.busca.sel-f.on select{color:var(--exec);font-weight:700;opacity:1}
+.filtros label.busca.sel-f option{color:var(--fi-text);background:var(--fi-surface);font-weight:400}
 .subnav button{border:1px solid var(--fi-line);background:var(--fi-surface);border-radius:999px;padding:5px 12px;font:inherit;font-size:.76rem;font-weight:650;cursor:pointer;color:var(--fi-muted)}
 .subnav button b{margin-left:4px;opacity:.7}
 .subnav button.on{background:var(--exec);border-color:var(--exec);color:#fff}
@@ -428,7 +432,7 @@ dialog::backdrop{background:rgba(9,12,16,.55)}
 
 <header class="fi-topbar">
   <a class="fi-brand" href="#modulos"><img data-fi-logo></a>
-  <div class="proj-name"><b data-fi-page-title>Projeto Plataforma Corporativa</b><small id="docVersao" title="Versão deste arquivo HTML (03/10/2026). Aumenta a cada atualização entregue.">Documento V.017</small></div>
+  <div class="proj-name"><b data-fi-page-title>Projeto Plataforma Corporativa</b><small id="docVersao" title="Versão deste arquivo HTML (03/10/2026). Aumenta a cada atualização entregue.">Documento V.018</small></div>
   <div class="fi-topbar__actions">
     <span class="sync" id="sync"></span>
     <button class="fi-btn btn-edit" id="btnEdit" data-act="toggle-edit" hidden>✎ Editar</button>
@@ -455,7 +459,7 @@ dialog::backdrop{background:rgba(9,12,16,.55)}
    qualquer outro texto é texto livre (ex.: "Gestor da área").
    ===================================================================== */
 /* VERSÃO DO DOCUMENTO (HTML): aumentar em 1 a cada atualização entregue (formato V.001). Aparece no topo, abaixo da versão da Fiorella UI. */
-const DOC_VERSAO = 'V.017', DOC_DATA = '03/10/2026';
+const DOC_VERSAO = 'V.018', DOC_DATA = '03/10/2026';
 console.info('[Projeto Fiorella] documento ' + DOC_VERSAO + ' · ' + DOC_DATA);
 const SCHEMA = 12;
 const SEED = {
@@ -890,7 +894,7 @@ const clone = o => JSON.parse(JSON.stringify(o));
 let S = clone(SEED);
 let sb = null, canEdit = false, isAdm = false, USER_TOK = '';
 let VER = 0, META = { em: null, por: null };
-const ui = { tab: 'modulos', edit: false, procArea: '*', procStatus: '', procQ: '', procMod: '', procView: 'cards', modPrio: '', modQ: '', modEt: '', ideiaQ: '', modArea: '', ideiaArea: '', modView: 'cards', implKind: 'modulos', ideiaStatus: '', admSec: 'participantes', focus: '' };
+const ui = { tab: 'modulos', edit: false, procArea: '*', procStatus: '', procQ: '', procMod: '', procView: 'cards', modPrio: '', modQ: '', modEt: '', ideiaQ: '', modArea: '', ideiaArea: '', ideiaSol: '', modSol: '', procSol: '', modView: 'cards', implKind: 'modulos', ideiaStatus: '', admSec: 'participantes', focus: '' };
 
 /* Garante o formato atual (dados antigos / importados) */
 function migrate(d) {
@@ -1320,7 +1324,7 @@ async function converter(col, id) {
     relAntes.forEach(r => setRel(st, tgt, id, r, true));
     st.modulos.forEach(m => { m.semProcesso = m.semProcesso && !st.processos.some(p => (p.modulos || []).includes(m.id)); });
   }, false);
-  if (tgt === 'processos') { ui.procQ = x.nome; ui.procArea = '*'; ui.procStatus = ''; ui.procMod = ''; } else { ui.modQ = x.nome; ui.modPrio = ''; ui.modEt = ''; ui.modArea = ''; }
+  if (tgt === 'processos') { ui.procQ = x.nome; ui.procArea = '*'; ui.procSol = ''; ui.procStatus = ''; ui.procMod = ''; } else { ui.modQ = x.nome; ui.modPrio = ''; ui.modEt = ''; ui.modArea = ''; ui.modSol = ''; }
   ui.cheio = null; go(tgt);
   notify(`Convertido em ${VINC[col].um}.`, 'success');
 }
@@ -1602,7 +1606,7 @@ function vModulos() {
       <a data-act="tab" data-id="backlog"><b>${S.ideias.filter(i => i.status === 'Em análise').length}</b> nova(s) demanda(s) em análise</a>
       <a data-act="tab" data-id="atualizacoes"${nNaoLidas() ? ' class="alerta"' : ''}><b>${nNaoLidas()}</b> atualização(ões) não lida(s)</a>
     </div>
-    ${FILTROS(BAL_ET(S.modulos, 'modEt'), 'modQ', 'Buscar por palavra-chave…', AREA_F('modulos', 'modArea'))}
+    ${FILTROS(BAL_ET(S.modulos, 'modEt'), 'modQ', 'Buscar por palavra-chave…', AREA_F('modulos', 'modArea') + SOL_F('modulos', 'modSol'))}
     <div class="toolbar">
       <select class="fi-select" data-ui="modPrio">${optList(S.listas.prioridades, ui.modPrio, 'Todas as prioridades')}</select>
       <span style="flex:1"></span>
@@ -1612,7 +1616,7 @@ function vModulos() {
 }
 function fillModulos() {
   const q = norm(ui.modQ), ord = { 'Alta': 0, 'Média': 1, 'Baixa': 2 };
-  const l = S.modulos.filter(m => (!ui.modPrio || m.prioridade === ui.modPrio) && (!ui.modEt || m.etapa === ui.modEt) && naArea('modulos', m, ui.modArea) && (!q || bate('modulos', m, ui.modQ)));
+  const l = S.modulos.filter(m => (!ui.modPrio || m.prioridade === ui.modPrio) && (!ui.modEt || m.etapa === ui.modEt) && naArea('modulos', m, ui.modArea) && naSol('modulos', m, ui.modSol) && (!q || bate('modulos', m, ui.modQ)));
   if (!ui.edit) l.sort((a, b) => (ord[a.prioridade] ?? 3) - (ord[b.prioridade] ?? 3));
   if (ui.cheio && ui.cheio.col === 'modulos') { const x = byId('modulos', ui.cheio.id); l.splice(0, l.length, ...(x ? [x] : [])); }
   if (!l.length) { $('#list').innerHTML = `<div class="fi-card fi-empty">Nenhum módulo encontrado${ui.modQ ? ` para “${esc(ui.modQ)}”` : ''}.</div>`; return; }
@@ -1679,11 +1683,27 @@ function naArea(col, x, v) {
   if (v === todas || v == null) return true;
   const a = areasDe(col, x); return v === sem ? !a.length : a.includes(v);
 }
+const IC_AREA = '<path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/>', IC_PESSOA = '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/>';
+function SEL_F(k, rot, ic, todas, opcoes) {
+  const v = ui[k] ?? todas, on = v !== todas;
+  return `<label class="busca sel-f${on ? ' on' : ''}" title="${esc(rot)}"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${ic}</svg><select data-ui="${k}" aria-label="${esc(rot)}">
+    <option value="${esc(todas)}"${!on ? ' selected' : ''}>${esc(rot)}</option>${opcoes.map(([val, txt]) => `<option value="${esc(val)}"${v === val ? ' selected' : ''}>${esc(txt)}</option>`).join('')}</select><svg class="chev" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></label>`;
+}
 function AREA_F(col, k) {
-  const lista = S[col], todas = AREA_TODAS[col] ?? '', sem = AREA_SEM[col] ?? '_sem', v = ui[k] ?? todas;
+  const lista = S[col], todas = AREA_TODAS[col] ?? '', sem = AREA_SEM[col] ?? '_sem';
   const cnt = id => lista.filter(x => areasDe(col, x).includes(id)).length, nSem = lista.filter(x => !areasDe(col, x).length).length;
-  return `<label class="busca area-f${v !== todas ? ' on' : ''}" title="Busca por área"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg><select data-ui="${k}" aria-label="Busca por área">
-    <option value="${todas}"${v === todas ? ' selected' : ''}>Busca por área</option>${ABC(S.areas).map(a => `<option value="${esc(a.id)}"${v === a.id ? ' selected' : ''}>${esc(a.nome)} (${cnt(a.id)})</option>`).join('')}${nSem ? `<option value="${sem}"${v === sem ? ' selected' : ''}>Sem área (${nSem})</option>` : ''}</select></label>`;
+  return SEL_F(k, 'Busca por área', IC_AREA, todas, [...ABC(S.areas).map(a => [a.id, `${a.nome} (${cnt(a.id)})`]), ...(nSem ? [[sem, `Sem área (${nSem})`]] : [])]);
+}
+/* Solicitante: na demanda, "Solicitado por"; no módulo/processo, quem solicitou a(s) demanda(s) de origem */
+function solDe(col, x) {
+  const l = col === 'ideias' ? [x.porNome || (x.autor || []).map(tokName).join(', ')] : [x.triagem, ...(x.triagens || [])].filter(Boolean).map(t => t.solicitante);
+  return [...new Set(l.map(n => String(n || '').trim()).filter(Boolean))];
+}
+const naSol = (col, x, v) => !v || (v === '_sem' ? !solDe(col, x).length : solDe(col, x).includes(v));
+function SOL_F(col, k) {
+  const lista = S[col], nomes = [...new Set(lista.flatMap(x => solDe(col, x)))].sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
+  const nSem = lista.filter(x => !solDe(col, x).length).length;
+  return SEL_F(k, 'Busca por solicitante', IC_PESSOA, '', [...nomes.map(n => [n, `${n} (${lista.filter(x => solDe(col, x).includes(n)).length})`]), ...(nSem ? [['_sem', `Sem solicitante (${nSem})`]] : [])]);
 }
 const BAL_ET = (lista, uk) => `<button class="${!ui[uk] ? 'on' : ''}" data-act="flt-et" data-ui-k="${uk}" data-id="">Todas<b>${lista.length}</b></button>${S.etapas.map((e, i) => `<button class="${ui[uk] === e.id ? 'on' : ''}" data-act="flt-et" data-ui-k="${uk}" data-id="${esc(e.id)}" title="Etapa ${i + 1}">${i + 1}. ${esc(e.nome)}<b>${lista.filter(x => x.etapa === e.id).length}</b></button>`).join('')}`;
 
@@ -1702,7 +1722,7 @@ function vProcessos() {
       <span>áreas com processo <b>${new Set(S.processos.map(p => p.area).filter(a => byId('areas', a))).size}/${areas.length}</b></span>
       <a data-act="tab" data-id="atualizacoes"${nNaoLidas() ? ' class="alerta"' : ''}><b>${nNaoLidas()}</b> atualização(ões) não lida(s)</a>
     </div>
-    ${FILTROS(BAL_ET(S.processos, 'procStatus'), 'procQ', 'Buscar por palavra-chave…', AREA_F('processos', 'procArea'))}
+    ${FILTROS(BAL_ET(S.processos, 'procStatus'), 'procQ', 'Buscar por palavra-chave…', AREA_F('processos', 'procArea') + SOL_F('processos', 'procSol'))}
     <div class="toolbar">
       ${ui.procMod ? `<span class="tag">Módulo: ${esc(nome('modulos', ui.procMod))} <button class="x" data-act="proc-mod" data-id="">×</button></span>` : ''}
       <span style="flex:1"></span>
@@ -1713,7 +1733,7 @@ function vProcessos() {
 }
 function fillProcessos() {
   const q = norm(ui.procQ);
-  const l = S.processos.filter(p => naArea('processos', p, ui.procArea) &&
+  const l = S.processos.filter(p => naArea('processos', p, ui.procArea) && naSol('processos', p, ui.procSol) &&
     (!ui.procStatus || p.etapa === ui.procStatus) && (!ui.procMod || (p.modulos || []).includes(ui.procMod)) &&
     (!q || bate('processos', p, ui.procQ)));
   if (ui.cheio && ui.cheio.col === 'processos') { const x = byId('processos', ui.cheio.id); l.splice(0, l.length, ...(x ? [x] : [])); }
@@ -1784,14 +1804,14 @@ function triagemUm(t) {
     <div class="kv">${(t.respostas || []).map(r => `<div class="full"><div class="k">${esc(r.pergunta)}</div><div class="txt" style="white-space:pre-wrap">${esc(r.resposta || '—')}</div></div>`).join('')}</div></details>`;
 }
 function vBacklog() {
-  const l = S.ideias.filter(i => (!ui.ideiaStatus || i.status === ui.ideiaStatus) && naArea('ideias', i, ui.ideiaArea) && bate('ideias', i, ui.ideiaQ)).sort((a, b) => String(b.em || '').localeCompare(String(a.em || '')));
+  const l = S.ideias.filter(i => (!ui.ideiaStatus || i.status === ui.ideiaStatus) && naArea('ideias', i, ui.ideiaArea) && naSol('ideias', i, ui.ideiaSol) && bate('ideias', i, ui.ideiaQ)).sort((a, b) => String(b.em || '').localeCompare(String(a.em || '')));
   if (ui.cheio && ui.cheio.col === 'ideias') { const x = byId('ideias', ui.cheio.id); l.splice(0, l.length, ...(x ? [x] : [])); }
   const P = (i, k) => `ideias.#${i.id}.${k}`, cs = triCampos(), ap = podeTri();
   $('#view').className = 'fi-page fam-ink-exec';
   $('#view').innerHTML = `
     ${head('backlog', `<button class="fi-btn" data-act="export-xlsx" data-col="ideias" title="Baixar a lista em Excel (.xlsx)">⭳ Excel</button>${canEdit ? `<button class="fi-btn fi-btn--primary" data-act="tri-nova">＋ Nova demanda</button>` : ''}`)}
     ${FILTROS(`<button class="${!ui.ideiaStatus ? 'on' : ''}" data-act="ideia-st" data-id="">Todas<b>${S.ideias.length}</b></button>
-      ${S.listas.stIdeia.map(st => `<button class="${ui.ideiaStatus === st ? 'on' : ''}" data-act="ideia-st" data-id="${esc(st)}">${esc(st)}<b>${S.ideias.filter(i => i.status === st).length}</b></button>`).join('')}`, 'ideiaQ', 'Buscar por palavra-chave…', AREA_F('ideias', 'ideiaArea'))}
+      ${S.listas.stIdeia.map(st => `<button class="${ui.ideiaStatus === st ? 'on' : ''}" data-act="ideia-st" data-id="${esc(st)}">${esc(st)}<b>${S.ideias.filter(i => i.status === st).length}</b></button>`).join('')}`, 'ideiaQ', 'Buscar por palavra-chave…', AREA_F('ideias', 'ideiaArea') + SOL_F('ideias', 'ideiaSol'))}
     ${barraCheio('ideias')}
     ${!l.length ? `<div class="fi-card fi-empty">Nenhuma demanda nesta seleção${ui.ideiaQ ? ` para “${esc(ui.ideiaQ)}”` : ''}.</div>` : `<div class="${ui.cheio ? 'cheio' : 'gauto'}">${l.map(i => {
       const aberta = i.status === 'Em análise', meu = (i.autor || []).includes(USER_TOK) || i.porTok === meuTok();
@@ -2095,8 +2115,8 @@ function addItem(col) {
   const it = Object.assign({ id: uid(col.split('.').pop()) }, NEW[col]());
   commit(st => { arrOf(st, col).push(clone(it)); }, false);
   if (col === 'processos') { ui.procStatus = ''; ui.procQ = ''; ui.procMod = ''; }
-  if (col === 'modulos') { ui.modPrio = ''; ui.modQ = ''; ui.modEt = ''; ui.modArea = ''; }
-  if (col === 'ideias') { ui.ideiaStatus = ''; ui.ideiaQ = ''; ui.ideiaArea = ''; }
+  if (col === 'modulos') { ui.modPrio = ''; ui.modQ = ''; ui.modEt = ''; ui.modArea = ''; ui.modSol = ''; }
+  if (col === 'ideias') { ui.ideiaStatus = ''; ui.ideiaQ = ''; ui.ideiaArea = ''; ui.ideiaSol = ''; }
   const k = it.nome !== undefined ? 'nome' : it.titulo !== undefined ? 'titulo' : 't';
   ui.focus = `[data-p="${col}.#${it.id}.${k}"]`;
   render();
@@ -2209,7 +2229,7 @@ function fichaOk(col) {
       const y = st[col].find(z => z.id === it.id); if (y) y.triagem = { id: ide.id, solicitante: ide.porNome || (ide.autor || []).map(tokName).join(', '), em: ide.em, respostas: triResumo(ide), cod: ide.cod };
       registrar(st, 'ideias', ide.id, `Aprovou a demanda “${ide.titulo}” como ${col === 'modulos' ? 'módulo' : 'processo'}.`, 'Triagem'); } }
   }, false);
-  if (col === 'processos') { ui.procStatus = ''; ui.procQ = ''; ui.procMod = ''; ui.procArea = '*'; } else { ui.modPrio = ''; ui.modQ = ''; ui.modEt = ''; ui.modArea = ''; }
+  if (col === 'processos') { ui.procStatus = ''; ui.procQ = ''; ui.procMod = ''; ui.procArea = '*'; ui.procSol = ''; } else { ui.modPrio = ''; ui.modQ = ''; ui.modEt = ''; ui.modArea = ''; ui.modSol = ''; }
   ui.cheio = null; render();
   notify(`${col === 'modulos' ? 'Módulo' : 'Processo'} cadastrado${criados.length ? ` com ${criados.length} ${v.um}(s) novo(s) — complete a ficha deles` : ''}`, 'success');
 }
@@ -2394,7 +2414,7 @@ document.addEventListener('click', async e => {
     case 'notas-tog': ui.notasAbertas = ui.notasAbertas || {}; ui.notasAbertas[id] = !ui.notasAbertas[id]; render(); break;
     case 'upd-f': ui.updF = id; render(); break;
     case 'upd-tab': ui.updTab = id; render(); break;
-    case 'cheio-de': { const c = el.dataset.col; ui.cheio = { col: c, id }; ui.ideiaStatus = ''; ui.ideiaQ = ''; ui.ideiaArea = ''; ui.modEt = ''; ui.modArea = ''; if (c === 'processos') { ui.procQ = ''; ui.procArea = '*'; ui.procStatus = ''; ui.procMod = ''; } else { ui.modQ = ''; ui.modPrio = ''; ui.modEt = ''; ui.modArea = ''; } go(c === 'ideias' ? 'backlog' : c); scrollTo({ top: 0 }); break; }
+    case 'cheio-de': { const c = el.dataset.col; ui.cheio = { col: c, id }; ui.ideiaStatus = ''; ui.ideiaQ = ''; ui.ideiaArea = ''; ui.ideiaSol = ''; ui.modEt = ''; ui.modArea = ''; ui.modSol = ''; if (c === 'processos') { ui.procQ = ''; ui.procArea = '*'; ui.procSol = ''; ui.procStatus = ''; ui.procMod = ''; } else { ui.modQ = ''; ui.modPrio = ''; ui.modEt = ''; ui.modArea = ''; ui.modSol = ''; } go(c === 'ideias' ? 'backlog' : c); scrollTo({ top: 0 }); break; }
     case 'upd-lida': setLeitura([el.dataset.n], 1); break;
     case 'upd-naolida': setLeitura([el.dataset.n], 0); break;
     case 'upd-todas': { const m = leituraMapa(); setLeitura(todasNotas().filter(({ n }) => !lida(n, m)).map(({ n }) => n.id), 1); break; }
@@ -2402,7 +2422,7 @@ document.addEventListener('click', async e => {
       const c = el.dataset.col, x = byId(c, id); if (!x) break;
       setLeitura([el.dataset.n], 1);
       ui.notasAbertas = ui.notasAbertas || {}; ui.notasAbertas[id] = true;
-      if (c === 'processos') { ui.procQ = ''; ui.procArea = '*'; ui.procStatus = ''; ui.procMod = ''; } else { ui.modQ = ''; ui.modPrio = ''; ui.modEt = ''; ui.modArea = ''; }
+      if (c === 'processos') { ui.procQ = ''; ui.procArea = '*'; ui.procSol = ''; ui.procStatus = ''; ui.procMod = ''; } else { ui.modQ = ''; ui.modPrio = ''; ui.modEt = ''; ui.modArea = ''; ui.modSol = ''; }
       ui.cheio = { col: c, id };
       ui.focus = `[data-nota="${el.dataset.n}"]`; ui.ideiaStatus = ''; go(c === 'ideias' ? 'backlog' : c);
       setTimeout(() => { const e = document.querySelector(`[data-nota="${el.dataset.n}"]`); if (e) { e.classList.add('pisca'); setTimeout(() => e.classList.remove('pisca'), 2200); } }, 50);
@@ -2417,7 +2437,7 @@ document.addEventListener('click', async e => {
     case 'vinc-add': abrirVinc(el.dataset.col, id); break;
     case 'vinc-ok': vincOk(el.dataset.col, id); break;
     case 'vinc-rm': vincRm(el.dataset.col, id, el.dataset.o); break;
-    case 'vinc-ir': if (modal.open) modal.close(); ui.cheio = null; if (el.dataset.col === 'processos') { ui.procMod = ''; ui.procQ = (byId('processos', id) || {}).nome || ''; ui.procArea = '*'; ui.procStatus = ''; go('processos'); } else { ui.modQ = (byId('modulos', id) || {}).nome || ''; ui.modPrio = ''; go('modulos'); } break;
+    case 'vinc-ir': if (modal.open) modal.close(); ui.cheio = null; if (el.dataset.col === 'processos') { ui.procMod = ''; ui.procQ = (byId('processos', id) || {}).nome || ''; ui.procArea = '*'; ui.procSol = ''; ui.procStatus = ''; go('processos'); } else { ui.modQ = (byId('modulos', id) || {}).nome || ''; ui.modPrio = ''; go('modulos'); } break;
     case 'rm': removeItem(el.dataset.col, id); break;
     case 'ppl-add': openPicker(el.dataset.p, !!el.dataset.single); break;
     case 'ppl-rm': commit(st => { const arr = getP(st, el.dataset.p) || []; arr.splice(+el.dataset.i, 1); }, true); break;
@@ -2426,7 +2446,7 @@ document.addEventListener('click', async e => {
     case 'close': modal.close(); break;
     case 'view': ui[el.dataset.k] = id; render(); break;
     case 'proc-area': ui.procArea = id; render(); break;
-    case 'proc-mod': ui.cheio = null; ui.procMod = id; if (id) { ui.procArea = '*'; ui.procQ = ''; ui.procStatus = ''; } go('processos'); break;
+    case 'proc-mod': ui.cheio = null; ui.procMod = id; if (id) { ui.procArea = '*'; ui.procSol = ''; ui.procQ = ''; ui.procStatus = ''; } go('processos'); break;
     case 'ideia-st': ui.ideiaStatus = id; render(); break;
     case 'flt-et': ui[el.dataset.uiK] = id; render(); break;
     case 'tri-nova': await frescos(); triNova(); break;
