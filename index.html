@@ -424,7 +424,7 @@ dialog::backdrop{background:rgba(9,12,16,.55)}
 
 <header class="fi-topbar">
   <a class="fi-brand" href="#modulos"><img data-fi-logo></a>
-  <div class="proj-name"><b data-fi-page-title>Projeto Plataforma Corporativa</b><small id="docVersao" title="Versão deste arquivo HTML (03/10/2026). Aumenta a cada atualização entregue.">Documento V.015</small></div>
+  <div class="proj-name"><b data-fi-page-title>Projeto Plataforma Corporativa</b><small id="docVersao" title="Versão deste arquivo HTML (03/10/2026). Aumenta a cada atualização entregue.">Documento V.016</small></div>
   <div class="fi-topbar__actions">
     <span class="sync" id="sync"></span>
     <button class="fi-btn btn-edit" id="btnEdit" data-act="toggle-edit" hidden>✎ Editar</button>
@@ -451,7 +451,7 @@ dialog::backdrop{background:rgba(9,12,16,.55)}
    qualquer outro texto é texto livre (ex.: "Gestor da área").
    ===================================================================== */
 /* VERSÃO DO DOCUMENTO (HTML): aumentar em 1 a cada atualização entregue (formato V.001). Aparece no topo, abaixo da versão da Fiorella UI. */
-const DOC_VERSAO = 'V.015', DOC_DATA = '03/10/2026';
+const DOC_VERSAO = 'V.016', DOC_DATA = '03/10/2026';
 console.info('[Projeto Fiorella] documento ' + DOC_VERSAO + ' · ' + DOC_DATA);
 const SCHEMA = 12;
 const SEED = {
@@ -704,7 +704,7 @@ function abrirFichaSis() {
     <div class="m-body ficha">${SIS_CAMPOS.filter(c => sisMostra(c.k)).map(c0 => { const c = sisCfg(c0.k), ob = c0.fixo || c.obrig;
       return `<label class="fi-field" data-campo="${c0.k}"><span class="fi-label">${esc(c.pergunta)}${ob ? ' <b class="req">*</b>' : ''}</span>${inp(c0)}${c.ajuda ? `<span class="fi-field__help">${esc(c.ajuda)}</span>` : ''}</label>`; }).join('')}
       ${cxVis('sistemas').map(cxCampoFicha).join('')}
-      <datalist id="fichaPessoas">${S.participantes.filter(x => x.status !== 'Inativo').map(x => `<option value="${esc(x.nome)}">${esc(papel(x))}</option>`).join('')}</datalist></div>
+      <datalist id="fichaPessoas">${ABC(S.participantes.filter(x => x.status !== 'Inativo')).map(x => `<option value="${esc(x.nome)}">${esc(papel(x))}</option>`).join('')}</datalist></div>
     <div class="m-foot"><button class="fi-btn" data-act="close">Cancelar</button><button class="fi-btn fi-btn--primary" data-act="sis-ok">Cadastrar</button></div>`;
   modal.showModal(); const f = modal.querySelector('[data-sk="nome"]'); if (f) f.focus();
 }
@@ -723,9 +723,11 @@ function sisOk() {
   notify('Sistema cadastrado.', 'success');
 }
 const CX_TIPOS = [['texto', 'Texto curto'], ['area', 'Texto longo'], ['numero', 'Número'], ['data', 'Data'], ['lista', 'Lista de opções'], ['simnao', 'Sim / Não'], ['setor', 'Área / setor']];
+/* Ordem alfabética (pt-BR) para listas suspensas de cadastros */
+const ABC = arr => (arr || []).slice().sort((a, b) => String(a.nome || a.titulo || '').localeCompare(String(b.nome || b.titulo || ''), 'pt-BR', { sensitivity: 'base' }));
 const cxDe = col => ((S.camposExtra || {})[col] || []).filter(c => c && c.id);
 const cxVis = col => cxDe(col).filter(c => c.mostrar !== false);
-const cxOpcoes = c => c.tipo === 'simnao' ? ['Sim', 'Não'] : c.tipo === 'setor' ? S.areas.map(a => a.nome) : String(c.opcoes || '').split('\n').map(x => x.trim()).filter(Boolean);
+const cxOpcoes = c => c.tipo === 'simnao' ? ['Sim', 'Não'] : c.tipo === 'setor' ? ABC(S.areas).map(a => a.nome) : String(c.opcoes || '').split('\n').map(x => x.trim()).filter(Boolean);
 function cxInput(c, attr, val) {
   val = val == null ? '' : String(val);
   if (c.tipo === 'area') return `<textarea class="fi-input" rows="3" ${attr}>${esc(val)}</textarea>`;
@@ -1118,6 +1120,10 @@ async function refresh() {
   } catch (e) {}
 }
 window.addEventListener('focus', refresh);
+async function frescos() {
+  if (!sb || ops.length || saving) return;
+  try { const rem = await fetchRemote(); if (rem && rem.versao > VER) { S = migrate(rem.dados); VER = rem.versao; META = { em: rem.atualizado_em, por: rem.atualizado_por }; setSync('ok'); render(); } } catch (e) {}
+}
 setInterval(refresh, 60000);
 window.addEventListener('beforeunload', e => { if (ops.length || saving) { e.preventDefault(); e.returnValue = ''; } });
 
@@ -1161,7 +1167,7 @@ function SEL(p, lista, o = {}) {
 function REF(p, col, o = {}) {
   const v = getP(S, p) || '';
   if (!canEditPath(p)) return v && byId(col, v) ? (o.tag ? `<span class="tag">${esc(nome(col, v))}</span>` : esc(nome(col, v))) : `<span class="muted">${esc(o.empty ?? '—')}</span>`;
-  return `<select class="es" data-p="${esc(p)}"><option value="">—</option>${S[col].map(x => `<option value="${esc(x.id)}"${x.id === v ? ' selected' : ''}>${esc(x.nome || x.titulo)}</option>`).join('')}</select>`;
+  return `<select class="es" data-p="${esc(p)}"><option value="">—</option>${(col === 'etapas' ? S[col] : ABC(S[col])).map(x => `<option value="${esc(x.id)}"${x.id === v ? ' selected' : ''}>${esc(x.nome || x.titulo)}</option>`).join('')}</select>`;
 }
 /* Pessoas: participantes cadastrados ou texto livre */
 function chip(t) {
@@ -1654,7 +1660,7 @@ const BAL_ET = (lista, uk) => `<button class="${!ui[uk] ? 'on' : ''}" data-act="
 
 /* ---------- Processos ---------- */
 function vProcessos() {
-  const areas = S.areas.filter(a => a.mapear === 'Sim' || S.processos.some(p => p.area === a.id));
+  const areas = ABC(S.areas.filter(a => a.mapear === 'Sim' || S.processos.some(p => p.area === a.id)));
   const cnt = id => S.processos.filter(p => p.area === id).length;
   const semArea = S.processos.filter(p => !byId('areas', p.area)).length;
   $('#view').className = 'fi-page fam-ink-exec';
@@ -1782,7 +1788,7 @@ function vBacklog() {
 const SOL_PERG = 'Solicitado por';
 const solAntes = cs => { const k = cs.findIndex((c, i) => i > 0 && c.tipo === 'setor'); return k < 0 ? cs.length : k; };
 function solOpts(v) {
-  const nomes = S.participantes.filter(p => p.status !== 'Inativo').map(p => p.nome);
+  const nomes = ABC(S.participantes.filter(p => p.status !== 'Inativo')).map(p => p.nome);
   if (v && !nomes.includes(v)) nomes.unshift(v);
   return `<option value="">—</option>${nomes.map(n => `<option${n === v ? ' selected' : ''}>${esc(n)}</option>`).join('')}`;
 }
@@ -1798,7 +1804,7 @@ function triNova() {
     if (k === 0) return `<input class="fi-input up" ${nm} data-upper>`;
     if (c.tipo === 'texto') return `<input class="fi-input" ${nm}>`;
     if (c.tipo === 'area') return `<textarea class="fi-input" rows="4" ${nm}></textarea>`;
-    if (c.tipo === 'setor') return `<select class="fi-select" ${nm}><option value="">—</option>${S.areas.map(a => `<option value="${esc(a.id)}">${esc(a.nome)}</option>`).join('')}</select>`;
+    if (c.tipo === 'setor') return `<select class="fi-select" ${nm}><option value="">—</option>${ABC(S.areas).map(a => `<option value="${esc(a.id)}">${esc(a.nome)}</option>`).join('')}</select>`;
     return `<select class="fi-select" ${nm}><option value="">—</option>${S.listas.prioridades.map(o => `<option>${esc(o)}</option>`).join('')}</select>`; };
   modal.innerHTML = `<div class="m-head"><h2>Nova demanda</h2><button class="rm" data-act="close" title="Fechar">✕</button></div>
     <div class="m-body ficha">${cs.map((c, k) => `${k === solAntes(cs) ? solCampo() : ''}<label class="fi-field" data-campo="${c.id}"><span class="fi-label">${esc(c.pergunta)} <b class="req">*</b></span>${inp(c, k)}${c.ajuda ? `<span class="fi-field__help">${esc(c.ajuda)}</span>` : ''}</label>`).join('')}${solAntes(cs) === cs.length ? solCampo() : ''}${cxVis('ideias').map(cxCampoFicha).join('')}
@@ -2109,7 +2115,7 @@ function abrirFicha(col, pre) {
     else if (c.tipo === 'diretor') inp = `<div class="vbox">${diretores().map(p => `<label><input type="checkbox" data-diretor="${esc(p.id)}"> ${esc(p.nome)}</label>`).join('') || '<span class="muted">Nenhum participante da Direção cadastrado (ADM → Participantes).</span>'}</div>`;
     else if (c.tipo === 'area') inp = `<textarea class="fi-input" rows="3" ${nm}></textarea>`;
     else if (c.tipo === 'lista') inp = `<select class="fi-select" ${nm}><option value="">—</option>${(S.listas[c.lista] || []).map(o => `<option>${esc(o)}</option>`).join('')}</select>`;
-    else if (c.tipo === 'ref') inp = `<select class="fi-select" ${nm}><option value="">—</option>${(S[c.col] || []).map(o => `<option value="${esc(o.id)}">${esc(o.nome)}</option>`).join('')}</select>`;
+    else if (c.tipo === 'ref') inp = `<select class="fi-select" ${nm}><option value="">—</option>${ABC(S[c.col]).map(o => `<option value="${esc(o.id)}">${esc(o.nome)}</option>`).join('')}</select>`;
     else if (c.tipo === 'pessoa') inp = `<input class="fi-input" list="fichaPessoas" ${nm} placeholder="Participante ou texto livre">`;
     else if (c.tipo === 'vinculo') inp = `<div class="vbox">${S[v.outro].map(o => `<label><input type="checkbox" data-vinc="${esc(o.id)}"> ${esc(o.nome)}</label>`).join('') || `<span class="muted">Nenhum ${v.um} cadastrado ainda.</span>`}</div>
       <input class="fi-input up" data-vnovo data-upper placeholder="NOVO ${UP(v.um)}: DIGITE O NOME (VÁRIOS SEPARADOS POR ;)">
@@ -2347,7 +2353,7 @@ document.addEventListener('click', async e => {
     case 'toggle-edit': if (!isAdm) break; if (ui.edit) flush(); ui.edit = !ui.edit; try { sessionStorage.setItem('projetoFiorella.edit', ui.edit ? '1' : ''); } catch (err) {} render(); break;
     case 'retry': flush(); break;
     case 'add': addItem(el.dataset.col); break;
-    case 'novo': abrirFicha(el.dataset.col); break;
+    case 'novo': await frescos(); abrirFicha(el.dataset.col); break;
     case 'rel-add': abrirRel(el.dataset.col, id); break;
     case 'rel-rm': commit(st => setRel(st, el.dataset.col, id, el.dataset.o, false), true); break;
     case 'rel-ok': { const c = el.dataset.col, sel = [...modal.querySelectorAll('[data-relc]:checked')].map(x => x.dataset.relc); if (!sel.length) { notify('Marque pelo menos um.', 'warning'); break; } modal.close(); commit(st => sel.forEach(o => setRel(st, c, id, o, true)), true); break; }
@@ -2395,7 +2401,7 @@ document.addEventListener('click', async e => {
     case 'proc-mod': ui.cheio = null; ui.procMod = id; if (id) { ui.procArea = '*'; ui.procQ = ''; ui.procStatus = ''; } go('processos'); break;
     case 'ideia-st': ui.ideiaStatus = id; render(); break;
     case 'flt-et': ui[el.dataset.uiK] = id; render(); break;
-    case 'tri-nova': triNova(); break;
+    case 'tri-nova': await frescos(); triNova(); break;
     case 'tri-ok': triOk(); break;
     case 'tri-aprovar': triAprovar(el.dataset.col, id); break;
     case 'tri-atrelar': triAtrelar(el.dataset.col, id); break;
@@ -2413,7 +2419,7 @@ document.addEventListener('click', async e => {
     case 'cx-add': if (isAdm) commit(st => { const c = el.dataset.col; st.camposExtra = st.camposExtra || {}; (st.camposExtra[c] = st.camposExtra[c] || []).push({ id: 'cx' + Date.now().toString(36), pergunta: 'Nova pergunta', ajuda: '', tipo: 'texto', opcoes: '', mostrar: true, obrig: false }); }, true); break;
     case 'cx-rm': { if (!isAdm) break; const c = el.dataset.col, i = +el.dataset.i, f = (S.camposExtra[c] || [])[i]; if (!f) break;
       if (await ask(`Excluir o campo “${f.pergunta}”? Ele deixa de aparecer nas fichas e cartões. As respostas já gravadas ficam guardadas no histórico do banco, mas não serão mais exibidas.`, true)) commit(st => { st.camposExtra[c].splice(i, 1); }, true); break; }
-    case 'sis-novo': abrirFichaSis(); break;
+    case 'sis-novo': await frescos(); abrirFichaSis(); break;
     case 'sis-ok': sisOk(); break;
     case 'sis-reset': if (await ask('Voltar a ficha de sistemas às perguntas padrão? Os campos adicionais não são apagados.')) commit(st => { st.cadastroSis = { campos: {} }; }, true); break;
     case 'tri-reset': if (await ask('Voltar as perguntas de Novas Demandas ao padrão?')) commit(st => { st.triagem = clone(TRIAGEM_PADRAO); }, true); break;
