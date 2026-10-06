@@ -353,6 +353,13 @@ body{background:color-mix(in srgb,var(--fi-bg,#f4f6f8) 91%,#000)!important}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.76rem;color:var(--fi-muted);margin-bottom:14px}
 .legend span{display:inline-flex;gap:5px;align-items:center}
 .subnav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.assin{font-size:.76rem;margin:4px 0 2px;color:var(--fi-text)}.assin b{color:var(--exec)}
+details.crit{margin:6px 0;font-size:.78rem;border:1px dashed var(--fi-line);border-radius:6px;padding:4px 8px}details.crit summary{cursor:pointer;font-weight:700;color:var(--fi-muted)}
+.excl-in{display:flex;justify-content:flex-end;margin-top:10px;padding-top:8px;border-top:1px dashed var(--fi-line,#dfe3e8)}
+.excl-fora{display:flex;justify-content:flex-end;margin:10px 2px 0}
+.bt-excl{display:inline-flex;align-items:center;gap:5px;border:1px solid transparent;background:none;color:var(--fi-muted);font:inherit;font-size:.74rem;font-weight:600;padding:4px 10px;border-radius:6px;cursor:pointer}
+.bt-excl:hover{color:#dc2626;border-color:color-mix(in srgb,#dc2626 45%,transparent);background:color-mix(in srgb,#dc2626 8%,transparent)}
+.excl-fora .bt-excl{border-color:var(--fi-line,#dfe3e8)}
 .filtros{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-bottom:12px}
 .filtros .subnav{margin-bottom:0}
 .filtros .vsep{width:1px;align-self:stretch;max-height:28px;min-height:22px;margin:auto 0;background:var(--fi-line,#dfe3e8)}
@@ -432,7 +439,7 @@ dialog::backdrop{background:rgba(9,12,16,.55)}
 
 <header class="fi-topbar">
   <a class="fi-brand" href="#modulos"><img data-fi-logo></a>
-  <div class="proj-name"><b data-fi-page-title>Projeto Plataforma Corporativa</b><small id="docVersao" title="Versão deste arquivo HTML (03/10/2026). Aumenta a cada atualização entregue.">Documento V.018</small></div>
+  <div class="proj-name"><b data-fi-page-title>Projeto Plataforma Corporativa</b><small id="docVersao" title="Versão deste arquivo HTML (03/10/2026). Aumenta a cada atualização entregue.">Documento V.021</small></div>
   <div class="fi-topbar__actions">
     <span class="sync" id="sync"></span>
     <button class="fi-btn btn-edit" id="btnEdit" data-act="toggle-edit" hidden>✎ Editar</button>
@@ -459,7 +466,7 @@ dialog::backdrop{background:rgba(9,12,16,.55)}
    qualquer outro texto é texto livre (ex.: "Gestor da área").
    ===================================================================== */
 /* VERSÃO DO DOCUMENTO (HTML): aumentar em 1 a cada atualização entregue (formato V.001). Aparece no topo, abaixo da versão da Fiorella UI. */
-const DOC_VERSAO = 'V.018', DOC_DATA = '03/10/2026';
+const DOC_VERSAO = 'V.021', DOC_DATA = '03/10/2026';
 console.info('[Projeto Fiorella] documento ' + DOC_VERSAO + ' · ' + DOC_DATA);
 const SCHEMA = 12;
 const SEED = {
@@ -473,7 +480,7 @@ const SEED = {
     implantacao: { t: 'Implantação', d: 'Roadmap individual: cada módulo e cada processo percorre as mesmas 7 etapas, em sequência. Os itens andam em paralelo, cada um no seu ritmo.' },
     backlog: { t: 'Novas Demandas', d: 'Entrada de novas demandas: quem solicita responde 3 perguntas obrigatórias. A Direção analisa e aprova como módulo ou processo, completando o restante do cadastro no padrão da plataforma.' },
     atualizacoes: { t: 'Atualizações', d: 'Anotações registradas nos cartões de módulos e processos. Marque como lida ou não lida, veja onde foi mencionado com @ e clique para ir ao cartão de origem.' },
-    adm: { t: 'Administração', d: 'Cadastros-base que alimentam as demais guias. Um participante cadastrado uma única vez pode aparecer como sponsor, responsável, executor, aprovador, consultado, informado ou suplente em qualquer item.' },
+    adm: { t: 'Administração', d: 'Cadastros-base que alimentam as demais guias. Um participante cadastrado uma única vez pode aparecer como diretor responsável, responsável, executor, aprovador, consultado, informado ou suplente em qualquer item.' },
     sec: {
       conceito: 'Conceito: Protheus + Plataforma Fiorella + IA',
       fases: 'Roadmap geral do projeto — fases sequenciais',
@@ -518,7 +525,7 @@ const SEED = {
     { id: 'levantamento', nome: 'Levantamento', desc: 'Documentar a rotina real (AS-IS): quem faz, como faz, documentos, sistemas usados e gargalos.', resp: ['@wesley'], part: 'Referência do setor / Key User', entrega: 'Mapa do processo atual e lista de gargalos' },
     { id: 'avaliacao', nome: 'Avaliação técnica', desc: 'Verificar viabilidade, integração com o Protheus, arquitetura, segurança e esforço.', resp: ['@thiago'], part: 'Alexandre', entrega: 'Parecer técnico e solução proposta' },
     { id: 'definicao', nome: 'Escopo', desc: 'Definir o escopo e o processo futuro (TO-BE): responsável, executor, aprovador, prazo, escalonamento e integrações.', resp: ['@victor', '@flavio'], part: 'Gestor da área + Wesley', entrega: 'Processo futuro definido' },
-    { id: 'aprovacao', nome: 'Aprovação', desc: 'Validação dos sponsors antes de iniciar desenvolvimento ou configuração.', resp: ['@flavio', '@victor'], part: 'Gestor da área', entrega: 'Escopo aprovado' },
+    { id: 'aprovacao', nome: 'Aprovação', desc: 'Validação dos diretores responsáveis antes de iniciar desenvolvimento ou configuração.', resp: ['@flavio', '@victor'], part: 'Gestor da área', entrega: 'Escopo aprovado' },
     { id: 'desenvolvimento', nome: 'Desenvolvimento', desc: 'Desenvolvimento, configuração, integrações e testes internos da solução aprovada.', resp: ['@alexandre'], part: 'Thiago + Dailon', entrega: 'Solução pronta para homologar' },
     { id: 'homologacao', nome: 'Homologação', desc: 'Key user testa e aprova, treinamento dos usuários e entrada em produção.', resp: ['@alexandre'], part: 'Key User + gestor da área', entrega: 'Solução homologada e em produção' },
     { id: 'acompanhamento', nome: 'Entrega', desc: 'O coordenador técnico libera para entrega; a Direção assina e finaliza.', resp: ['@alexandre'], part: 'Direção (assina e finaliza)', entrega: 'Entregue e finalizado' },
@@ -536,7 +543,7 @@ const SEED = {
   },
 
   tipos: [
-    { id: 'sponsor', nome: 'Sponsor', grupo: 'Direção', desc: 'Patrocina o projeto e decide prioridades, escopo e aprovações.' },
+    { id: 'sponsor', nome: 'Diretor Responsável', grupo: 'Direção', desc: 'Patrocina o projeto e decide prioridades, escopo e aprovações.' },
     { id: 'arquiteto', nome: 'Arquiteto / Engenheiro Líder', grupo: 'Técnica', desc: 'Projeta a arquitetura tecnológica e desenvolve ou indica as ferramentas.' },
     { id: 'coordtec', nome: 'Coordenador Técnico', grupo: 'Técnica', desc: 'Ponte técnica interna; acompanha desenvolvimento, integrações, testes e implantação.' },
     { id: 'assistec', nome: 'Assistente Técnico', grupo: 'Técnica', desc: 'Configuração, testes, cadastros, documentação e suporte técnico.' },
@@ -809,7 +816,7 @@ const CAMPOS = {
     { k: 'objetivo', tipo: 'area', pergunta: 'Que problema ele resolve?', ajuda: 'O que acontece hoje (planilha, papel, retrabalho, falta de controle) e vai melhorar.' },
     { k: 'escopo', tipo: 'area', pergunta: 'O que ele precisa fazer?', ajuda: 'Principais funções, em poucas linhas.' },
     { k: 'sistema', tipo: 'ref', col: 'sistemas', pergunta: 'Em qual sistema vai rodar?', ajuda: 'Protheus, Portal Fiorella, sistema contratado…' },
-    { k: 'sponsor', tipo: 'diretor', pergunta: 'Quem é o sponsor do módulo?', ajuda: 'Somente participantes da Direção (papel no projeto do grupo Direção), como Victor e Flávio.' },
+    { k: 'sponsor', tipo: 'diretor', pergunta: 'Quem é o diretor responsável pelo módulo?', ajuda: 'Somente participantes da Direção (papel no projeto do grupo Direção), como Victor e Flávio.' },
     { k: 'dono', tipo: 'pessoa', pergunta: 'Quem é o gestor da área que vai usar?' },
     { k: 'keyuser', tipo: 'pessoa', pergunta: 'Quem vai testar e homologar (key user)?' },
     { k: 'prioridade', tipo: 'lista', lista: 'prioridades', pergunta: 'Qual a prioridade?' },
@@ -863,7 +870,7 @@ function setVinc(st, col, id, outroId, on) {
 
 /* Campos de pessoas (para vínculos e exclusão de participante) */
 const PEOPLE_FIELDS = {
-  modulos: [['sponsor', 'Sponsor'], ['dono', 'Gestor da área'], ['coord', 'Coord. técnico'], ['dev', 'Desenvolvimento'], ['proc', 'Processos'], ['keyuser', 'Key User']],
+  modulos: [['sponsor', 'Diretor responsável'], ['dono', 'Gestor da área'], ['coord', 'Coord. técnico'], ['dev', 'Desenvolvimento'], ['proc', 'Processos'], ['keyuser', 'Key User']],
   processos: [['resp', 'Responsável'], ['exec', 'Executor'], ['aprov', 'Aprovador'], ['cons', 'Consultado'], ['inf', 'Informado'], ['sup', 'Suplente']],
   sistemas: [['resp', 'Responsável']],
   areas: [['referencia', 'Referência do setor']],
@@ -872,7 +879,7 @@ const PEOPLE_FIELDS = {
 };
 const COL_LABEL = { modulos: 'Módulos', processos: 'Processos', sistemas: 'Sistemas', areas: 'Áreas', ideias: 'Novas Demandas', etapas: 'Etapas de implantação', fases: 'Fases do projeto' };
 /* Coleções editáveis somente por admin (guia ADM) */
-const ADM_ROOTS = ['participantes', 'areas', 'tipos', 'listas', 'cadastro', 'responsaveis', 'triagem', 'camposExtra', 'cadastroSis', 'sistemas'];
+const ADM_ROOTS = ['participantes', 'areas', 'tipos', 'listas', 'cadastro', 'responsaveis', 'aprovadores', 'triagem', 'camposExtra', 'cadastroSis', 'sistemas'];
 
 /* Novos itens */
 const NEW = {
@@ -946,7 +953,7 @@ function migrate(d) {
   (d.etapas || []).forEach(e => { e.part = gestor(e.part); e.desc = gestor(e.desc); });
   (d.modulos || []).forEach(m => { m.proximos = gestor(m.proximos); m.escopo = gestor(m.escopo); });
   for (const c in d.cadastro) for (const k in d.cadastro[c].campos) d.cadastro[c].campos[k].pergunta = gestor(d.cadastro[c].campos[k].pergunta);
-  if (d.cadastro.modulos && d.cadastro.modulos.campos.sponsor && /patrocina/i.test(d.cadastro.modulos.campos.sponsor.pergunta || '')) Object.assign(d.cadastro.modulos.campos.sponsor, { pergunta: 'Quem é o sponsor do módulo?', ajuda: 'Somente participantes da Direção (papel no projeto do grupo Direção), como Victor e Flávio.' });
+  if (d.cadastro.modulos && d.cadastro.modulos.campos.sponsor && /patrocina/i.test(d.cadastro.modulos.campos.sponsor.pergunta || '')) Object.assign(d.cadastro.modulos.campos.sponsor, { pergunta: 'Quem é o diretor responsável pelo módulo?', ajuda: 'Somente participantes da Direção (papel no projeto do grupo Direção), como Victor e Flávio.' });
   (d.modulos || []).forEach(m => { if (m.semProcesso === undefined) m.semProcesso = false; });
   ['modulos', 'processos'].forEach(c => (d[c] || []).forEach(x => { if (!Array.isArray(x.rel)) x.rel = []; if (!Array.isArray(x.notas)) x.notas = []; }));
   /* versão 7: etapa é o único andamento (7 etapas, iguais para todos); "situação" vira "condição" */
@@ -996,6 +1003,18 @@ function migrate(d) {
     if (!i.em) i.em = '';
   });
   (((d.triagem || {}).campos) || []).forEach(c => { if (c.pergunta === 'Qual área solicita?') c.pergunta = 'Qual área se aplica?'; });
+  /* "sponsor" passa a ser "diretor responsável" em todo texto gravado (identificadores internos não mudam) */
+  const semSponsor = t => t.replace(/Quem é o sponsor do módulo\?/g, 'Quem é o diretor responsável pelo módulo?')
+    .replace(/\bSponsors\b/g, 'Diretores responsáveis').replace(/\bsponsors\b/gi, 'diretores responsáveis')
+    .replace(/\bSponsor\b/g, 'Diretor responsável').replace(/\bsponsor\b/gi, 'diretor responsável');
+  const varre = (o, chave) => {
+    if (Array.isArray(o)) { o.forEach((v, i) => { if (typeof v === 'string') { if (/\s/.test(v) || /^Sponsors?$/.test(v)) o[i] = semSponsor(v); } else if (v && typeof v === 'object') varre(v); }); return; }
+    for (const k in o) { const v = o[k];
+      if (typeof v === 'string') { if (k === 'id' || k === 'tipo' || k === 'por' || k === 'porTok' || /^[a-z]+:sponsor$/.test(v)) continue; if (/sponsor/i.test(v) && (/\s/.test(v) || /^Sponsors?$/.test(v))) o[k] = semSponsor(v); }
+      else if (v && typeof v === 'object') varre(v, k); }
+  };
+  ['tipos', 'etapas', 'cadastro', 'textos', 'log', 'modulos', 'processos', 'ideias', 'listas', 'triagem', 'camposExtra'].forEach(k => { if (d[k] && typeof d[k] === 'object') varre(d[k], k); });
+  (d.tipos || []).forEach(t => { if (t.id === 'sponsor' && /^diretor responsável$/i.test(t.nome || '')) t.nome = 'Diretor Responsável'; });
   /* versão 11: triagem só "Em análise" → Aprovada / Reprovada; códigos únicos */
   (d.ideias || []).forEach(i => { if (i.status === 'Nova' || !i.status) i.status = 'Em análise'; if (i.status === 'Descartada') i.status = 'Reprovada'; if (!Array.isArray(i.notas)) i.notas = []; });
   if (!d.listas.stIdeia || d.listas.stIdeia.some(x => x === 'Nova' || x === 'Descartada')) d.listas.stIdeia = ['Em análise', 'Aprovada', 'Reprovada'];
@@ -1037,6 +1056,11 @@ function migrate(d) {
   if ((d.schema || 0) < 9 && (d.participantes || []).some(p => p.id === 'wesley')) ['modulos', 'processos'].forEach(c => { if (d.responsaveis[c].levantamento === 'tipo:analista') d.responsaveis[c].levantamento = 'pessoa:wesley'; });
   if (!d.listas.condicoes) d.listas.condicoes = clone(SEED.listas.condicoes);
   delete d.tarefas; delete d._savedAt;
+  /* Quem aprova: por etapa (módulos/processos) e em Novas Demandas; n = assinaturas exigidas */
+  d.aprovadores = d.aprovadores || {};
+  ['modulos', 'processos'].forEach(c => { const base = ((d.cadastro || {})[c] || {}).aprovar === 'admin' ? 'admin' : 'direcao'; d.aprovadores[c] = d.aprovadores[c] || {};
+    (d.etapas || []).forEach(e => { d.aprovadores[c][e.id] = Object.assign({ quem: base, n: 1 }, d.aprovadores[c][e.id] || {}); }); });
+  d.aprovadores.ideias = Object.assign({ quem: (d.triagem || {}).aprovar === 'admin' ? 'admin' : 'direcao', n: 1, criterios: '' }, d.aprovadores.ideias || {});
   d.schema = SCHEMA;
   return d;
 }
@@ -1226,13 +1250,27 @@ function trilha(x) {
 /* Mudança de etapa: pedido + aprovação por botão dentro do cartão */
 const quemSou = () => { const p = USER_TOK && byId('participantes', USER_TOK.slice(1)); return p ? p.nome : ((window.APP && APP.usuario && APP.usuario.email) || 'usuário'); };
 const souDiretor = () => !!(USER_TOK && diretores().some(p => '@' + p.id === USER_TOK));
-const podeAprovar = col => canEdit && (isAdm || (cfgCad(col).aprovar !== 'admin' && souDiretor()));
+
 const dataBR = iso => { try { if (!iso) return ''; const d = new Date(iso); if (isNaN(d)) return ''; return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; } };
 const respDe = (col, et) => ((S.responsaveis || {})[col] || RESP_PADRAO)[et] || '';
 const respRot = v => v === 'direcao' ? 'Direção (diretoria)' : v && v.startsWith('tipo:') ? (nome('tipos', v.slice(5)) || '—') : v && v.startsWith('pessoa:') ? (nome('participantes', v.slice(7)) || '(participante removido)') : 'Qualquer editor';
 const respGente = v => v === 'direcao' ? diretores() : v && v.startsWith('tipo:') ? S.participantes.filter(p => p.status !== 'Inativo' && p.tipo === v.slice(5)) : v && v.startsWith('pessoa:') ? S.participantes.filter(p => p.id === v.slice(7)) : [];
 const souResp = (col, x) => isAdm || (() => { const v = respDe(col, x.etapa); if (!v) return podeCad(col, 'editar'); return !!USER_TOK && respGente(v).some(p => '@' + p.id === USER_TOK); })();
 const nomeEt = id => id === FIM ? 'Finalizado' : nome('etapas', id);
+/* Quem aprova (ADM → Responsáveis): por etapa em módulos e processos; único para Novas Demandas.
+   quem: 'direcao' | 'tipo:<papel>' | 'pessoa:<id>' | 'admin'. n: assinaturas exigidas (1 ou 2; nunca mais que o nº de pessoas do grupo). O admin sempre pode assinar. */
+const aprovDe = (col, et) => { const a = (S.aprovadores || {})[col] || {}; return Object.assign({ quem: 'direcao', n: 1 }, (col === 'ideias' ? a : a[et]) || {}); };
+const aprovGente = v => v === 'admin' ? [] : respGente(v);
+const aprovRot = v => v === 'admin' ? 'Somente admin' : v === 'direcao' ? 'Direção' : respRot(v);
+const assinNec = (col, et) => { const a = aprovDe(col, et), g = aprovGente(a.quem).length; return Math.max(1, Math.min(+a.n || 1, Math.max(g, 1))); };
+const souAprov = (col, et) => canEdit && (isAdm || (!!USER_TOK && aprovGente(aprovDe(col, et).quem).some(p => '@' + p.id === USER_TOK)));
+const jaAssinei = l => (l || []).some(a => (USER_TOK && a.tok === USER_TOK) || a.por === quemSou());
+const podeAprovarX = (col, x) => !!(x && x.pedido) && souAprov(col, x.etapa) && !jaAssinei(x.pedido.assin);
+const aprovMen = (col, et) => { const g = aprovGente(aprovDe(col, et).quem); return (g.length ? g : diretores()).map(p => '@' + p.id); };
+function assinLinha(lista, nec) {
+  if (nec < 2 && !(lista || []).length) return '';
+  return `<div class="assin">✍ Assinaturas: <b>${(lista || []).length} de ${nec}</b>${(lista || []).map(a => ` · ${esc(a.por)} <span class="muted">${esc(dataBR(a.em))}</span>`).join('')}</div>`;
+}
 function respLinha(col, x) {
   if (x.concluido) return '';
   const v = respDe(col, x.etapa), g = respGente(v).map(p => p.nome);
@@ -1245,10 +1283,11 @@ function etapaCtl(col, x, compact) {
     h += `<div class="fim">✔ Entregue e finalizado${compact ? '' : ` — assinado por ${esc(x.concluido.por)} em ${esc(dataBR(x.concluido.em))}`}</div>`;
   } else if (ped) {
     h += `<div class="ped"><span>⏳ Aguardando aprovação: <b>${esc(nomeEt(x.etapa))} → ${esc(nomeEt(ped.para))}</b>${compact ? '' : ` · pedido por ${esc(ped.por)} em ${esc(dataBR(ped.em))}`}</span>
-      <span class="ped-bt">${podeAprovar(col) ? `<button class="fi-btn fi-btn--primary bt-s" data-act="et-ok" data-col="${col}" data-id="${esc(x.id)}">${ped.para === FIM ? 'Assinar e finalizar' : '✓ Aprovar'}</button><button class="fi-btn bt-s" data-act="et-no" data-col="${col}" data-id="${esc(x.id)}">✕ Recusar</button>` : ''}
+      ${assinLinha(ped.assin, assinNec(col, x.etapa))}
+      <span class="ped-bt">${podeAprovarX(col, x) ? `<button class="fi-btn fi-btn--primary bt-s" data-act="et-ok" data-col="${col}" data-id="${esc(x.id)}">${ped.para === FIM ? 'Assinar e finalizar' : '✓ Aprovar'}</button><button class="fi-btn bt-s" data-act="et-no" data-col="${col}" data-id="${esc(x.id)}">✕ Recusar</button>` : souAprov(col, x.etapa) && jaAssinei(ped.assin) ? `<span class="muted" style="font-size:.74rem">Você já assinou · aguardando a outra assinatura</span>` : `<span class="muted" style="font-size:.74rem">Aprova: ${esc(aprovRot(aprovDe(col, x.etapa).quem))}</span>`}
       ${souResp(col, x) || isAdm ? `<button class="fi-btn bt-s" data-act="et-cancel" data-col="${col}" data-id="${esc(x.id)}">Cancelar pedido</button>` : ''}</span></div>`;
   } else if (souResp(col, x) && podeCad(col, 'editar')) {
-    h += `<div class="ped-bt">${ult ? `<button class="fi-btn bt-s" data-act="et-pedir" data-col="${col}" data-id="${esc(x.id)}" data-dir="1">Liberar para entrega → Direção assina</button>` : `<button class="fi-btn bt-s" data-act="et-pedir" data-col="${col}" data-id="${esc(x.id)}" data-dir="1">Solicitar avanço → ${esc(nomeEt(S.etapas[i + 1].id))}</button>`}
+    h += `<div class="ped-bt">${ult ? `<button class="fi-btn bt-s" data-act="et-pedir" data-col="${col}" data-id="${esc(x.id)}" data-dir="1">Liberar para entrega → ${esc(aprovRot(aprovDe(col, x.etapa).quem))} assina</button>` : `<button class="fi-btn bt-s" data-act="et-pedir" data-col="${col}" data-id="${esc(x.id)}" data-dir="1">Solicitar avanço → ${esc(nomeEt(S.etapas[i + 1].id))}</button>`}
       ${i > 0 && !compact ? `<button class="fi-btn bt-s" data-act="et-pedir" data-col="${col}" data-id="${esc(x.id)}" data-dir="-1">← Solicitar retorno</button>` : ''}</div>`;
   }
   if (!compact) h = respLinha(col, x) + h;
@@ -1262,16 +1301,24 @@ function etPedir(col, id, dir) {
   if (n < 0 || n > ids.length) return;
   const para = n === ids.length ? FIM : ids[n];
   commit(st => { const y = st[col].find(z => z.id === id); if (!y) return; y.pedido = { para, por: quemSou(), em: new Date().toISOString() };
-    novaNota(st, col, id, para === FIM ? `Liberou para entrega. Aguardando a Direção assinar e finalizar.` : `Pediu mudança de etapa: ${nomeEt(y.etapa)} → ${nomeEt(para)}. Aguardando aprovação da Direção.`, { sis: true, men: diretores().map(p => '@' + p.id) }); }, true);
-  notify(para === FIM ? 'Liberado para entrega. Falta a assinatura da Direção.' : 'Pedido enviado. A etapa muda quando for aprovado.', 'info');
+    const ap = aprovRot(aprovDe(col, y.etapa).quem), nn = assinNec(col, y.etapa), qt = nn > 1 ? ` (${nn} assinaturas)` : '';
+    novaNota(st, col, id, para === FIM ? `Liberou para entrega. Aguardando ${ap} assinar e finalizar${qt}.` : `Pediu mudança de etapa: ${nomeEt(y.etapa)} → ${nomeEt(para)}. Aguardando aprovação de ${ap}${qt}.`, { sis: true, men: aprovMen(col, y.etapa) }); }, true);
+  notify(para === FIM ? 'Liberado para entrega. Falta a assinatura de quem aprova.' : 'Pedido enviado. A etapa muda quando for aprovado.', 'info');
 }
 async function etDecidir(col, id, ok) {
   const x = byId(col, id); if (!x || !x.pedido) return;
-  if (!podeAprovar(col)) { notify('Somente a Direção (ou admin) aprova mudança de etapa.', 'warning'); return; }
-  const fim = x.pedido.para === FIM;
+  if (!podeAprovarX(col, x)) { notify(jaAssinei(x.pedido.assin) ? 'Você já assinou este pedido.' : `Quem aprova esta etapa: ${aprovRot(aprovDe(col, x.etapa).quem)}.`, 'warning'); return; }
+  const fim = x.pedido.para === FIM, nec = assinNec(col, x.etapa), tem = (x.pedido.assin || []).length;
   if (!(await ask(fim ? `${ok ? 'Assinar e finalizar' : 'Recusar a entrega de'} “${x.nome}”?` : `${ok ? 'Aprovar' : 'Recusar'} a mudança de “${x.nome}” de ${nomeEt(x.etapa)} para ${nomeEt(x.pedido.para)}?`, !ok))) return;
+  if (ok && tem + 1 < nec) {
+    commit(st => { const y = st[col].find(z => z.id === id); if (!y || !y.pedido) return; y.pedido.assin = [...(y.pedido.assin || []), { por: quemSou(), tok: USER_TOK || '', em: reg_em() }];
+      const outros = aprovMen(col, y.etapa).filter(t => t !== USER_TOK);
+      novaNota(st, col, id, `Assinou (${tem + 1} de ${nec}) ${fim ? 'a finalização' : `a mudança de etapa ${nomeEt(y.etapa)} → ${nomeEt(y.pedido.para)}`}. Falta ${nec - tem - 1} assinatura.`, { sis: true, men: outros }); }, true);
+    notify(`Assinatura registrada (${tem + 1} de ${nec}).`, 'success'); return;
+  }
   commit(st => { const y = st[col].find(z => z.id === id); if (!y || !y.pedido) return;
-    const reg = { de: y.etapa, para: y.pedido.para, por: y.pedido.por, pedidoEm: y.pedido.em, aprov: quemSou(), em: reg_em(), res: ok ? 'aprovado' : 'recusado' };
+    const quem = ok ? [...(y.pedido.assin || []).map(a => a.por), quemSou()].join(' + ') : quemSou();
+    const reg = { de: y.etapa, para: y.pedido.para, por: y.pedido.por, pedidoEm: y.pedido.em, aprov: quem, em: reg_em(), res: ok ? 'aprovado' : 'recusado' };
     if (ok) { if (fim) y.concluido = { por: reg.aprov, em: reg.em }; else y.etapa = y.pedido.para; }
     y.hist = [reg, ...(y.hist || [])].slice(0, 50); delete y.pedido;
     const prox = ok && !fim ? respGente(respDe(col, y.etapa)).map(p => '@' + p.id) : [];
@@ -1281,7 +1328,7 @@ async function etDecidir(col, id, ok) {
 const reg_em = () => new Date().toISOString();
 
 /* Converter módulo ⇄ processo sem perder o que foi lançado */
-const SO_MOD = [['escopo', 'Escopo'], ['objetivo', 'Problema que resolve'], ['indicador', 'Indicador de sucesso'], ['proximos', 'Próximos passos'], ['dep', 'Dependências'], ['prioridade', 'Prioridade'], ['sistema', 'Sistema'], ['sponsor', 'Sponsor'], ['dono', 'Gestor da área'], ['coord', 'Coord. técnico'], ['dev', 'Desenvolvimento'], ['proc', 'Processos (analista)'], ['keyuser', 'Key User']];
+const SO_MOD = [['escopo', 'Escopo'], ['objetivo', 'Problema que resolve'], ['indicador', 'Indicador de sucesso'], ['proximos', 'Próximos passos'], ['dep', 'Dependências'], ['prioridade', 'Prioridade'], ['sistema', 'Sistema'], ['sponsor', 'Diretor responsável'], ['dono', 'Gestor da área'], ['coord', 'Coord. técnico'], ['dev', 'Desenvolvimento'], ['proc', 'Processos (analista)'], ['keyuser', 'Key User']];
 const SO_PROC = [['area', 'Área'], ['gatilho', 'Começa quando'], ['entrega', 'Termina com'], ['passos', 'Sequência de trabalho'], ['frequencia', 'Frequência'], ['prazo', 'Prazo / SLA'], ['escal', 'Escalonamento'], ['integ', 'Integração'], ['obs', 'Observações'], ['resp', 'Responsável'], ['exec', 'Executor'], ['aprov', 'Aprovador'], ['cons', 'Consultado'], ['inf', 'Informado'], ['sup', 'Suplente']];
 function anterior(col, x) {
   if (!x.convertido) return '';
@@ -1373,7 +1420,7 @@ function todasNotas() {
   return out.sort((a, b) => String(b.n.em).localeCompare(String(a.n.em)));
 }
 function nMencoes() { try { const m = leituraMapa(); return todasNotas().filter(({ n }) => meMenciona(n) && !lida(n, m)).length; } catch (e) { return 0; } }
-function nAprovMinhas() { try { return paraMim().length + (podeTri() ? S.ideias.filter(i => i.status === 'Em análise').length : 0); } catch (e) { return 0; } }
+function nAprovMinhas() { try { return paraMim().length + (podeTri() ? S.ideias.filter(i => i.status === 'Em análise' && !jaAssinei(i.assin)).length : 0); } catch (e) { return 0; } }
 const IC_MSG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
 const IC_AT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.9 7.9"/></svg>';
 const IC_LIST = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6h.01M4 12h.01M4 18h.01"/></svg>';
@@ -1425,7 +1472,7 @@ function pedidosPendentes() {
   ['modulos', 'processos'].forEach(col => (S[col] || []).forEach(x => { if (x.pedido) out.push({ col, x }); }));
   return out.sort((a, b) => String(a.x.pedido.em).localeCompare(String(b.x.pedido.em)));
 }
-const paraMim = () => pedidosPendentes().filter(({ col }) => podeAprovar(col));
+const paraMim = () => pedidosPendentes().filter(({ col, x }) => podeAprovarX(col, x));
 const meusPedidos = () => pedidosPendentes().filter(({ x }) => x.pedido.por === quemSou());
 function linhaAprov({ col, x }, comBotoes) {
   const p = x.pedido, nm = nomeEt;
@@ -1434,7 +1481,8 @@ function linhaAprov({ col, x }, comBotoes) {
       ${(x.cond || 'Normal') !== 'Normal' ? `<span class="cond cond-${esc(norm(x.cond))}">${esc(x.cond)}</span>` : ''}</div>
     <div class="aprov-m"><b>${esc(nm(x.etapa))} → ${esc(nm(p.para))}</b> <span class="muted">· pedido por ${esc(p.por)} em ${esc(dataBR(p.em))}</span></div>
     ${trilha(x)}
-    <div class="ped-bt">${comBotoes && podeAprovar(col) ? `<button class="fi-btn fi-btn--primary bt-s" data-act="et-ok" data-col="${col}" data-id="${esc(x.id)}">${p.para === FIM ? 'Assinar e finalizar' : '✓ Aprovar'}</button><button class="fi-btn bt-s" data-act="et-no" data-col="${col}" data-id="${esc(x.id)}">✕ Recusar</button>` : ''}
+    ${assinLinha(p.assin, assinNec(col, x.etapa))}
+    <div class="ped-bt">${comBotoes && podeAprovarX(col, x) ? `<button class="fi-btn fi-btn--primary bt-s" data-act="et-ok" data-col="${col}" data-id="${esc(x.id)}">${p.para === FIM ? 'Assinar e finalizar' : '✓ Aprovar'}</button><button class="fi-btn bt-s" data-act="et-no" data-col="${col}" data-id="${esc(x.id)}">✕ Recusar</button>` : ''}
       ${podeCad(col, 'editar') ? `<button class="fi-btn bt-s" data-act="et-cancel" data-col="${col}" data-id="${esc(x.id)}">Cancelar pedido</button>` : ''}</div>
   </div>`;
 }
@@ -1457,12 +1505,12 @@ function fillLog() {
 }
 function vAprovacoes() {
   const k = r => r.col + ':' + r.x.id, mim = paraMim(), mk = new Set(mim.map(k)), meus = meusPedidos().filter(r => !mk.has(k(r))), meusK = new Set(meus.map(k)), todos = pedidosPendentes();
-  const sou = podeAprovar('modulos') || podeAprovar('processos'), tri = podeTri() ? S.ideias.filter(i => i.status === 'Em análise') : [];
+  const sou = S.etapas.some(e => souAprov('modulos', e.id) || souAprov('processos', e.id)), tri = podeTri() ? S.ideias.filter(i => i.status === 'Em análise' && !jaAssinei(i.assin)) : [];
   return `${tri.length ? `<div class="sec"><span>Novas demandas aguardando decisão</span> <span class="count">${tri.length}</span></div><div class="fi-card" style="padding:10px 14px;margin-bottom:8px">${tri.map(i => `<button class="tri-row" data-act="cheio-de" data-col="ideias" data-id="${esc(i.id)}" title="Abrir a demanda completa"><span class="cod">${esc(i.cod || '')}</span><b>${esc(i.titulo)}</b> <span class="muted">${esc([i.porNome, dataBR(i.em)].filter(Boolean).map(t => '· ' + t).join(' '))}</span><span class="tri-go">Abrir ↗</span></button>`).join('')}</div>` : ''}
   
     ${sou ? `<div class="sec"><span>Aguardando sua aprovação</span> <span class="count">${mim.length}</span></div>
       ${mim.length ? `<div class="aprov-list">${mim.map(r => linhaAprov(r, true)).join('')}</div>` : `<div class="fi-card fi-empty">Nenhuma aprovação pendente para você.</div>`}` :
-      `<div class="fi-alert" style="margin-bottom:12px">Somente a Direção (sponsors) ou o admin aprovam mudanças de etapa${USER_TOK ? '' : '. Seu e-mail de login não está em ADM → Participantes, por isso a ferramenta não sabe quem você é'}.</div>`}
+      `<div class="fi-alert" style="margin-bottom:12px">Você não está entre os aprovadores de nenhuma etapa (definidos em ADM → Responsáveis)${USER_TOK ? '' : '. Seu e-mail de login não está em ADM → Participantes, por isso a ferramenta não sabe quem você é'}.</div>`}
     <div class="sec"><span>Seus pedidos aguardando aprovação</span> <span class="count">${meus.length}</span></div>
     ${meus.length ? `<div class="aprov-list">${meus.map(r => linhaAprov(r, false)).join('')}</div>` : `<div class="muted" style="font-size:.84rem">Você não tem pedidos pendentes.</div>`}
     ${!sou && todos.length > meus.length ? `<div class="sec"><span>Outros pedidos pendentes</span> <span class="count">${todos.length - meus.length}</span></div>
@@ -1470,7 +1518,7 @@ function vAprovacoes() {
 }
 function vAtualizacoes() {
   const guia = ui.updTab || 'mensagens', nAprov = paraMim().length;
-  const nTri = podeTri() ? S.ideias.filter(i => i.status === 'Em análise').length : 0;
+  const nTri = podeTri() ? S.ideias.filter(i => i.status === 'Em análise' && !jaAssinei(i.assin)).length : 0;
   const abas = `<div class="upd-tabs"><button class="${guia === 'mensagens' ? 'on' : ''}" data-act="upd-tab" data-id="mensagens"><i class="ico">${IC_MSG}</i>Mensagens <b>${nNaoLidas()}</b></button><button class="${guia === 'aprovacoes' ? 'on' : ''}" data-act="upd-tab" data-id="aprovacoes"><i class="ico">${IC_PEN}</i>Aprovações <b class="${nAprov + nTri ? 'tem' : ''}">${nAprov + nTri}</b></button><button class="${guia === 'log' ? 'on' : ''}" data-act="upd-tab" data-id="log"><i class="ico">${IC_LIST}</i>Registro de atividades <b>${(S.log || []).length}</b></button></div>`;
   if (guia === 'log') {
     $('#view').className = 'fi-page fam-ink-exec';
@@ -1511,7 +1559,12 @@ function COND(col, x) {
 }
 
 /* Visualização de um cartão em página inteira */
-const BT_CHEIO = (col, x) => ui.cheio ? '' : `<button class="bt-cheio" data-act="cheio" data-col="${col}" data-id="${esc(x.id)}" title="Ver em página inteira">⤢</button>`;
+const BT_CHEIO = (col, x) => ui.cheio ? `<button class="rm bt-fechar" data-act="cheio-sair" title="Fechar a visualização">✕</button>` : `<button class="bt-cheio" data-act="cheio" data-col="${col}" data-id="${esc(x.id)}" title="Ver em página inteira">⤢</button>`;
+/* Excluir cartão: somente admin, na parte de baixo (dentro do cartão na grade; abaixo do cartão em página inteira) */
+const IC_LIXO = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v6M14 11v6"/></svg>';
+const BT_EXCL = (col, x) => `<button class="bt-excl" data-act="rm" data-col="${col}" data-id="${esc(x.id)}" title="Excluir este cartão definitivamente">${IC_LIXO} Excluir card</button>`;
+const EXCL_IN = (col, x) => isAdm && !ui.cheio ? `<div class="excl-in">${BT_EXCL(col, x)}</div>` : '';
+const EXCL_FORA = (col, l) => isAdm && ui.cheio && ui.cheio.col === col && l.length ? `<div class="excl-fora">${BT_EXCL(col, l[0])}</div>` : '';
 function barraCheio(col) {
   if (!ui.cheio || ui.cheio.col !== col) return '';
   const x = byId(col, ui.cheio.id);
@@ -1625,7 +1678,7 @@ function fillModulos() {
     const np = procsDoModulo(m.id).length, mc = k => campoCfg('modulos', k).mostrar !== false;
     return `<div class="fi-card item" data-card="${esc(m.id)}">
       <div class="card-top"><div class="grow"><h3>${T(P(m, 'nome'), { one: 1 })}</h3>
-        <div class="sub">Dependências: ${T(P(m, 'dep'), { ph: '—' })}</div></div>${COD(m)}${BT_CHEIO('modulos', m)}${RM('modulos', m.id)}</div>
+        <div class="sub">Dependências: ${T(P(m, 'dep'), { ph: '—' })}</div></div>${COD(m)}${BT_CHEIO('modulos', m)}</div>
       <div class="row">${SEL(P(m, 'prioridade'), 'prioridades', { title: 'Prioridade' })}${COND('modulos', m)}<span class="tag">Etapa: ${esc(nome('etapas', m.etapa))}</span>${CONV('modulos', m)}${CRIAR_REL('modulos', m)}</div>
       ${trilha(m)}${etapaCtl('modulos', m)}${anterior('modulos', m)}${triagemBloco(m)}
       <div class="vinc"><div class="k">Processos vinculados</div>${VINCS('modulos', m)}</div>
@@ -1640,7 +1693,8 @@ function fillModulos() {
       ${cxBloco('modulos', m)}
       ${notasBloco('modulos', m)}
       <div class="foot"><span>${np} processo(s) vinculado(s)</span>${np ? `<button class="fi-btn" style="min-height:28px;padding:3px 10px" data-act="proc-mod" data-id="${esc(m.id)}">Ver processos</button>` : ''}</div>
-    </div>`; }).join('')}</div>`;
+      ${EXCL_IN('modulos', m)}
+    </div>`; }).join('')}</div>${EXCL_FORA('modulos', l)}`;
 }
 
 /* Busca por palavra-chave: procura em todo o texto do cartão (campos, pessoas, áreas, vínculos, campos extras, anotações).
@@ -1745,7 +1799,7 @@ function fillProcessos() {
         <div class="sub row">${REF(P(p, 'area'), 'areas', { tag: 1, empty: 'Sem área' })}${COND('processos', p)}<span class="tag">Etapa: ${esc(nome('etapas', p.etapa))}</span>${CONV('processos', p)}${CRIAR_REL('processos', p)}</div>
         <div class="vinc"><div class="k">Módulos envolvidos</div>${VINCS('processos', p)}</div>
         <div class="vinc"><div class="k">Processos relacionados</div>${RELS('processos', p)}</div>${trilha(p)}${etapaCtl('processos', p)}</div>
-        ${COD(p)}${BT_CHEIO('processos', p)}${RM('processos', p.id)}</div>
+        ${COD(p)}${BT_CHEIO('processos', p)}</div>
       <div class="raci">${PEOPLE_FIELDS.processos.map(([k, lb]) => `<div><div class="k"><i>${L[k]}</i>${lb}</div>${PPL(P(p, k), { single: k === 'resp' })}</div>`).join('')}</div>
       <div class="proc-bottom">
         <div><div class="k">Prazo / SLA</div>${T(P(p, 'prazo'), { ph: 'A definir' })}</div>
@@ -1759,7 +1813,8 @@ function fillProcessos() {
       <div style="padding:0 18px">${triagemBloco(p)}</div>
       <div style="padding:0 18px">${cxBloco('processos', p)}</div>
       <div class="proc-notas">${notasBloco('processos', p)}</div>
-    </div>`).join('')}</div>`;
+      ${EXCL_IN('processos', p) ? `<div style="padding:0 18px 12px">${EXCL_IN('processos', p)}</div>` : ''}
+    </div>`).join('')}</div>${EXCL_FORA('processos', l)}`;
 }
 
 /* ---------- Implantação ---------- */
@@ -1784,7 +1839,19 @@ function vImplantacao() {
 
 /* ---------- Triagem (antigo Backlog) ---------- */
 const triCampos = () => (S.triagem && S.triagem.campos) || TRIAGEM_PADRAO.campos;
-const podeTri = () => canEdit && (isAdm || ((S.triagem || {}).aprovar !== 'admin' && souDiretor()));
+const podeTri = () => souAprov('ideias', '');
+/* Com 2 assinaturas: o 1º aprovador registra a assinatura (e a sugestão de módulo/processo/atrelar); o 2º conclui. Reprovar: basta um. */
+function triVoto(i, col, acao) {
+  if (jaAssinei(i.assin)) { notify('Você já assinou esta demanda. Falta a outra assinatura.', 'warning'); return true; }
+  const nec = assinNec('ideias', ''), tem = (i.assin || []).length;
+  if (tem + 1 >= nec) return false;
+  const como = `${acao === 'atrelar' ? 'atrelar a' : 'aprovar como'} ${col === 'modulos' ? 'módulo' : 'processo'}`;
+  commit(st => { const y = st.ideias.find(z => z.id === i.id); if (!y) return; y.assin = [...(y.assin || []), { por: quemSou(), tok: USER_TOK || '', em: new Date().toISOString(), como }];
+    registrar(st, 'ideias', i.id, `Assinou (${tem + 1} de ${nec}) a demanda “${y.titulo}”: ${como}.`, 'Triagem');
+    novaNota(st, 'ideias', i.id, `Assinou (${tem + 1} de ${nec}): ${como}. Falta ${nec - tem - 1} assinatura.`, { sis: true, men: aprovMen('ideias', '').filter(t => t !== USER_TOK) }); }, true);
+  notify(`Assinatura registrada (${tem + 1} de ${nec}). A decisão é concluída pela próxima assinatura.`, 'success');
+  return true;
+}
 function triValor(c, v) { return c.tipo === 'setor' ? (nome('areas', v) || v || '') : (v || ''); }
 function triResumo(i) { return triCampos().map((c, k) => ({ pergunta: c.pergunta, resposta: k === 0 ? i.titulo : triValor(c, (i.resp || {})[c.id]) })); }
 /* Roadmap da triagem: 1 Solicitação → 2 Em análise → 3 Decisão (aprovada, atrelada ou reprovada) */
@@ -1806,7 +1873,7 @@ function triagemUm(t) {
 function vBacklog() {
   const l = S.ideias.filter(i => (!ui.ideiaStatus || i.status === ui.ideiaStatus) && naArea('ideias', i, ui.ideiaArea) && naSol('ideias', i, ui.ideiaSol) && bate('ideias', i, ui.ideiaQ)).sort((a, b) => String(b.em || '').localeCompare(String(a.em || '')));
   if (ui.cheio && ui.cheio.col === 'ideias') { const x = byId('ideias', ui.cheio.id); l.splice(0, l.length, ...(x ? [x] : [])); }
-  const P = (i, k) => `ideias.#${i.id}.${k}`, cs = triCampos(), ap = podeTri();
+  const P = (i, k) => `ideias.#${i.id}.${k}`, cs = triCampos(), ap = podeTri(), apI = aprovDe('ideias'), necI = assinNec('ideias', '');
   $('#view').className = 'fi-page fam-ink-exec';
   $('#view').innerHTML = `
     ${head('backlog', `<button class="fi-btn" data-act="export-xlsx" data-col="ideias" title="Baixar a lista em Excel (.xlsx)">⭳ Excel</button>${canEdit ? `<button class="fi-btn fi-btn--primary" data-act="tri-nova">＋ Nova demanda</button>` : ''}`)}
@@ -1816,21 +1883,23 @@ function vBacklog() {
     ${!l.length ? `<div class="fi-card fi-empty">Nenhuma demanda nesta seleção${ui.ideiaQ ? ` para “${esc(ui.ideiaQ)}”` : ''}.</div>` : `<div class="${ui.cheio ? 'cheio' : 'gauto'}">${l.map(i => {
       const aberta = i.status === 'Em análise', meu = (i.autor || []).includes(USER_TOK) || i.porTok === meuTok();
       return `<div class="fi-card item tri" data-card="${esc(i.id)}">
-        <div class="card-top"><h3 class="grow">${T(P(i, 'titulo'), { one: 1 })}</h3>${pill(i.status)}${COD(i)}${BT_CHEIO('ideias', i)}${(isAdm || (meu && aberta && ui.edit)) ? `<button class="rm" data-act="rm" data-col="ideias" data-id="${esc(i.id)}" title="Excluir">✕</button>` : ''}</div>
+        <div class="card-top"><h3 class="grow">${T(P(i, 'titulo'), { one: 1 })}</h3>${pill(i.status)}${COD(i)}${BT_CHEIO('ideias', i)}</div>
         <div class="muted" style="font-size:.74rem">Cadastrado${i.em ? ` em ${esc(dataBR(i.em))}` : ''}${(i.cadPor || i.porNome) ? ` por ${esc(i.cadPor || i.porNome)}` : ''}</div>
         ${trilhaTri(i)}
         ${cs.slice(1).map((c, k) => `${k + 1 === solAntes(cs) ? SOLIC(i, ui.edit && canEdit) : ''}<div><div class="k">${esc(c.pergunta)}</div>${c.tipo === 'setor' ? REF(P(i, 'resp.' + c.id), 'areas', { tag: 1, empty: '—' }) : c.tipo === 'prioridade' ? SEL(P(i, 'resp.' + c.id), 'prioridades', { empty: '—' }) : T(P(i, 'resp.' + c.id), { tag: 'div', cls: 'txt', ph: '—' })}</div>`).join('')}${solAntes(cs) === cs.length ? SOLIC(i, ui.edit && canEdit) : ''}
         ${i.status === 'Aprovada' && i.virou ? `<div class="fim">✔ ${i.virou.atrelado ? 'Atrelada ao' : 'Aprovada como'} ${i.virou.col === 'modulos' ? 'módulo' : 'processo'}${i.decisao ? ` por ${esc(i.decisao.por)}` : ''} · <button class="vchip" data-act="cheio-de" data-col="${i.virou.col}" data-id="${esc(i.virou.id)}">${esc(rotItem(i.virou.col, byId(i.virou.col, i.virou.id)) || 'abrir')} ↗</button></div>` : ''}
         ${i.status === 'Reprovada' ? `<div class="ped"><span>Reprovada${i.decisao ? ` por ${esc(i.decisao.por)} em ${esc(dataBR(i.decisao.em))}` : ''}${i.decisao && i.decisao.motivo ? ` — ${esc(i.decisao.motivo)}` : ''}</span></div>` : ''}
-        ${aberta && ap ? `<div class="ped-bt">
+        ${aberta ? `${assinLinha(i.assin, necI)}${(i.assin || []).length ? `<div class="muted" style="font-size:.74rem">${(i.assin || []).map(a => `${esc(a.por)}: ${esc(a.como || 'aprovou')}`).join(' · ')}</div>` : ''}${apI.criterios ? `<details class="crit"><summary>Critérios para aprovar</summary><div class="txt" style="white-space:pre-wrap">${esc(apI.criterios)}</div></details>` : ''}` : ''}
+        ${aberta && ap && !jaAssinei(i.assin) ? `<div class="ped-bt">
           <button class="fi-btn fi-btn--primary bt-s" data-act="tri-aprovar" data-col="modulos" data-id="${esc(i.id)}">✓ Aprovar como módulo</button>
           <button class="fi-btn fi-btn--primary bt-s" data-act="tri-aprovar" data-col="processos" data-id="${esc(i.id)}">✓ Aprovar como processo</button>
           <button class="fi-btn bt-s" data-act="tri-atrelar" data-col="modulos" data-id="${esc(i.id)}"><i class="ico">${IC_LINK}</i>Atrelar a módulo existente</button>
           <button class="fi-btn bt-s" data-act="tri-atrelar" data-col="processos" data-id="${esc(i.id)}"><i class="ico">${IC_LINK}</i>Atrelar a processo existente</button>
-          <button class="fi-btn bt-s" data-act="tri-descartar" data-id="${esc(i.id)}">✕ Reprovar</button></div>` : aberta ? `<div class="muted" style="font-size:.74rem">Em análise pela Direção.</div>` : ''}
+          <button class="fi-btn bt-s" data-act="tri-descartar" data-id="${esc(i.id)}">✕ Reprovar</button></div>` : aberta ? `<div class="muted" style="font-size:.74rem">${ap ? 'Você já assinou · aguardando a outra assinatura.' : `Em análise · aprova: ${esc(aprovRot(apI.quem))}${necI > 1 ? ` (${necI} assinaturas)` : ''}.`}</div>` : ''}
         ${cxBloco('ideias', i)}
         ${notasBloco('ideias', i)}
-      </div>`; }).join('')}</div>`}`;
+        ${EXCL_IN('ideias', i)}
+      </div>`; }).join('')}</div>${EXCL_FORA('ideias', l)}`}`;
 }
 /* "Solicitado por": pessoa que pediu a nova demanda (editável). Fica logo acima do campo de área. */
 const SOL_PERG = 'Solicitado por';
@@ -1876,7 +1945,8 @@ function triOk() {
 }
 function triAprovar(col, id) {
   const i = byId('ideias', id); if (!i) return;
-  if (!podeTri()) { notify('Somente a Direção (ou admin) aprova novas demandas.', 'warning'); return; }
+  if (!podeTri()) { notify(`Quem aprova novas demandas: ${aprovRot(aprovDe('ideias').quem)}.`, 'warning'); return; }
+  if (triVoto(i, col, 'aprovar')) return;
   const cs = triCampos(), vals = { nome: UP(i.titulo) };
   const longo = cs.slice(1).filter(c => c.tipo === 'area' || c.tipo === 'texto').map(c => (i.resp || {})[c.id]).filter(Boolean).join('\n\n');
   const setor = (cs.find(c => c.tipo === 'setor') || {}).id, prio = (cs.find(c => c.tipo === 'prioridade') || {}).id;
@@ -1885,7 +1955,8 @@ function triAprovar(col, id) {
 }
 function triAtrelar(col, id) {
   const i = byId('ideias', id); if (!i) return;
-  if (!podeTri()) { notify('Somente a Direção (ou admin) decide novas demandas.', 'warning'); return; }
+  if (!podeTri()) { notify(`Quem aprova novas demandas: ${aprovRot(aprovDe('ideias').quem)}.`, 'warning'); return; }
+  if (triVoto(i, col, 'atrelar')) return;
   const ops = [...S[col]].sort((a, b) => String(a.cod).localeCompare(String(b.cod)));
   modal.innerHTML = `<div class="m-head"><h2>Atrelar “${esc(i.titulo)}” a ${col === 'modulos' ? 'um módulo' : 'um processo'} existente</h2><button class="rm" data-act="close" title="Fechar">✕</button></div>
     <div class="m-body"><input class="fi-input" id="atrQ" placeholder="Filtrar por ID ou nome…" autocomplete="off">
@@ -1998,7 +2069,7 @@ function vSistemas() {
    ===================================================================== */
 function vAdm() {
   const s = ui.admSec === 'cadastro' ? 'cad-modulos' : ui.admSec;
-  const nav = [['participantes', 'Participantes', S.participantes.length], ['areas', 'Áreas / Setores', S.areas.length], ['tipos', 'Papéis no projeto', S.tipos.length], ['listas', 'Listas de opções', Object.keys(S.listas).length], ['triagem', 'Novas Demandas', 3 + cxDe('ideias').length], ['cad-modulos', 'Módulos', CAMPOS.modulos.length + cxDe('modulos').length], ['cad-processos', 'Processos', CAMPOS.processos.length + cxDe('processos').length], ['cad-sistemas', 'Sistemas', SIS_CAMPOS.length + cxDe('sistemas').length], ['responsaveis', 'Responsáveis', S.etapas.length]];
+  const nav = [['participantes', 'Participantes', S.participantes.length], ['areas', 'Áreas / Setores', S.areas.length], ['tipos', 'Papéis no projeto', S.tipos.length], ['listas', 'Listas de opções', Object.keys(S.listas).length], ['triagem', 'Novas Demandas', 3 + cxDe('ideias').length], ['cad-modulos', 'Módulos', CAMPOS.modulos.length + cxDe('modulos').length], ['cad-processos', 'Processos', CAMPOS.processos.length + cxDe('processos').length], ['cad-sistemas', 'Sistemas', SIS_CAMPOS.length + cxDe('sistemas').length], ['responsaveis', 'Responsáveis e aprovação', 3]];
   $('#view').className = 'fi-page fam-ink-adm';
   $('#view').innerHTML = `
     ${head('adm')}
@@ -2021,7 +2092,7 @@ function vAdm() {
         <td class="nw">${SEL(P(p, 'status'), 'stParticipante')}</td><td class="wide">${T(P(p, 'resp'))}</td><td>${T(P(p, 'foco'))}</td>
         <td class="nw"><button class="fi-btn" style="min-height:28px;padding:3px 10px" data-act="person" data-id="${esc(p.id)}">${usage(p.id).length}</button></td><td class="nw">${RM('participantes', p.id)}</td></tr>`).join('')}
       </tbody></table></div>
-      <div class="fi-alert" style="margin-top:12px">“Agente” fica reservado para futuros agentes de IA. Para tirar alguém do projeto sem perder o histórico, prefira o status <b>Inativo</b>. Trocar sponsors, responsáveis e demais papéis: use os botões ＋ e × nas guias Módulos, Processos, Implantação e Sistemas.</div>`;
+      <div class="fi-alert" style="margin-top:12px">“Agente” fica reservado para futuros agentes de IA. Para tirar alguém do projeto sem perder o histórico, prefira o status <b>Inativo</b>. Trocar diretores responsáveis, responsáveis e demais papéis: use os botões ＋ e × nas guias Módulos, Processos, Implantação e Sistemas.</div>`;
   } else if (s === 'areas') {
     const P = (a, k) => `areas.#${a.id}.${k}`;
     body.innerHTML = `${aviso}${sec('admAreas', S.areas.length, ADD('areas', 'Área'))}
@@ -2051,17 +2122,36 @@ function vAdm() {
         <td class="wide"><input class="fi-input" data-cfg="triagem.campos.${k}.ajuda" value="${esc(c.ajuda || '')}" ${dis}></td>
         <td class="nw">${k === 0 ? 'Texto curto (nome)' : `<select class="fi-select" data-cfg="triagem.campos.${k}.tipo" ${dis}>${TRI_TIPOS.map(([v, l]) => `<option value="${v}"${c.tipo === v ? ' selected' : ''}>${l}</option>`).join('')}</select>`}</td>
         <td class="nw">Sim</td></tr>`).join('')}</tbody></table></div>
-      <label class="fi-field" style="max-width:320px;margin-top:12px"><span class="fi-label">Quem aprova as novas demandas</span><select class="fi-select" data-cfg="triagem.aprovar" ${dis}>${[['diretores', 'Direção (sponsors) e admin'], ['admin', 'Somente admin']].map(([v, l]) => `<option value="${v}"${(S.triagem || {}).aprovar === v ? ' selected' : ''}>${l}</option>`).join('')}</select></label>
+      <div class="fi-field" style="max-width:420px;margin-top:12px"><span class="fi-label">Quem aprova as novas demandas</span><button class="fi-btn bt-s" data-act="adm-go" data-id="responsaveis" data-rt="ideias">Definido em ADM → Responsáveis → Novas Demandas ↗</button></div>
       <div style="margin-top:14px">${cxTabelaAdm('ideias', ed)}</div>
       ${ed ? `<button class="fi-btn" style="margin-top:12px" data-act="tri-reset">↺ Voltar ao padrão</button>` : ''}`;
   } else if (s === 'responsaveis') {
-    const ed = ui.edit && isAdm, dis = ed ? '' : 'disabled';
-    const opts = v => `<option value="direcao"${v === 'direcao' ? ' selected' : ''}>Direção (diretoria)</option><optgroup label="Papel no projeto">${S.tipos.map(t => `<option value="tipo:${esc(t.id)}"${v === 'tipo:' + t.id ? ' selected' : ''}>${esc(t.nome)}</option>`).join('')}</optgroup><optgroup label="Pessoa">${S.participantes.filter(p => p.status !== 'Inativo' || v === 'pessoa:' + p.id).map(p => `<option value="pessoa:${esc(p.id)}"${v === 'pessoa:' + p.id ? ' selected' : ''}>${esc(p.nome)}</option>`).join('')}</optgroup><option value=""${!v ? ' selected' : ''}>Qualquer editor</option>`;
-    const cel = (col, e) => { const v = respDe(col, e.id), g = respGente(v).map(p => p.nome); return `<select class="fi-select" data-resp="${col}:${esc(e.id)}" ${dis}>${opts(v)}</select><div class="muted" style="font-size:.72rem;margin-top:3px">${g.length ? esc(g.join(', ')) : (v ? 'ninguém com este papel' : 'todos com acesso Editar')}</div>`; };
+    const ed = ui.edit && isAdm, dis = ed ? '' : 'disabled', rt = ui.respTab || 'modulos';
+    const pessoasOpt = v => `<optgroup label="Papel no projeto">${S.tipos.map(t => `<option value="tipo:${esc(t.id)}"${v === 'tipo:' + t.id ? ' selected' : ''}>${esc(t.nome)}</option>`).join('')}</optgroup><optgroup label="Pessoa">${ABC(S.participantes.filter(p => p.status !== 'Inativo' || v === 'pessoa:' + p.id)).map(p => `<option value="pessoa:${esc(p.id)}"${v === 'pessoa:' + p.id ? ' selected' : ''}>${esc(p.nome)}</option>`).join('')}</optgroup>`;
+    const opts = v => `<option value="direcao"${v === 'direcao' ? ' selected' : ''}>Direção (diretoria)</option>${pessoasOpt(v)}<option value=""${!v ? ' selected' : ''}>Qualquer editor</option>`;
+    const optsAp = v => `<option value="direcao"${v === 'direcao' ? ' selected' : ''}>Direção (diretoria)</option>${pessoasOpt(v)}<option value="admin"${v === 'admin' ? ' selected' : ''}>Somente admin</option>`;
+    const gente = (v, vazio) => { const g = respGente(v).map(p => p.nome); return `<div class="muted" style="font-size:.72rem;margin-top:3px">${v === 'admin' ? 'administradores da ferramenta' : g.length ? esc(g.join(', ')) : vazio}</div>`; };
+    const cel = (col, e) => { const v = respDe(col, e.id); return `<select class="fi-select" data-resp="${col}:${esc(e.id)}" ${dis}>${opts(v)}</select>${gente(v, v ? 'ninguém com este papel' : 'todos com acesso Editar')}`; };
+    const celAp = (col, et) => { const a = aprovDe(col, et); return `<select class="fi-select" data-aprov="${col}:${esc(et)}:quem" ${dis}>${optsAp(a.quem)}</select>${gente(a.quem, 'ninguém com este papel')}`; };
+    const celN = (col, et) => { const a = aprovDe(col, et), g = aprovGente(a.quem).length, pode2 = g >= 2;
+      return `<select class="fi-select" data-aprov="${col}:${esc(et)}:n" ${dis}${pode2 ? '' : ' title="Disponível quando o grupo que aprova tem 2 ou mais pessoas"'}><option value="1"${(+a.n || 1) < 2 || !pode2 ? ' selected' : ''}>1 assinatura (qualquer um)</option>${pode2 ? `<option value="2"${+a.n >= 2 ? ' selected' : ''}>2 assinaturas</option>` : ''}</select>${pode2 ? '' : `<div class="muted" style="font-size:.72rem;margin-top:3px">grupo com ${g || 1} pessoa — sempre 1</div>`}`; };
+    const guias = [['modulos', 'Módulos'], ['processos', 'Processos'], ['ideias', 'Novas Demandas']];
+    let corpo;
+    if (rt === 'ideias') {
+      const a = aprovDe('ideias');
+      corpo = `<div class="fi-alert" style="margin-bottom:12px">Novas Demandas têm só 3 etapas: <b>1. Solicitação</b> (qualquer pessoa com acesso de edição envia) → <b>2. Em análise</b> → <b>3. Decisão</b>. Aqui você define quem decide. Com <b>2 assinaturas</b>, o primeiro aprovador registra a assinatura e a sugestão (aprovar como módulo/processo ou atrelar) e o segundo conclui; para <b>reprovar</b> basta um. O admin sempre pode assinar.</div>
+        <div class="fi-table-wrap"><table class="fi-table sheet"><thead><tr><th>Etapa</th><th>Quem faz</th><th>Assinaturas</th></tr></thead><tbody>
+          <tr><td class="nw"><b>1. Solicitação</b></td><td>Qualquer pessoa com acesso de edição</td><td class="muted">—</td></tr>
+          <tr><td class="nw"><b>2. Em análise → 3. Decisão</b><div class="muted" style="font-size:.72rem">aprovar, atrelar ou reprovar</div></td><td>${celAp('ideias', '')}</td><td>${celN('ideias', '')}</td></tr></tbody></table></div>
+        <label class="fi-field" style="margin-top:14px"><span class="fi-label">Critérios para aprovar (aparece no cartão da demanda em análise)</span><textarea class="fi-input" rows="5" data-aprov="ideias::criterios" ${dis} placeholder="Ex.: alinhada às prioridades do ano; benefício claro para a área; existe dono no setor; não duplica módulo existente (se duplicar, atrelar)…">${esc(a.criterios || '')}</textarea></label>`;
+    } else {
+      corpo = `<div class="fi-alert" style="margin-bottom:12px">Em cada etapa, defina <b>quem pede</b> a mudança de etapa (só essas pessoas e o admin veem “Solicitar avanço” no cartão) e <b>quem aprova</b>. Quando quem aprova é um grupo com 2 ou mais pessoas (ex.: Direção), escolha se basta <b>1 assinatura</b> ou se são precisas <b>2</b>. Recusar: basta um. Na última etapa, quem aprova assina e finaliza. O admin sempre pode assinar. O papel de cada pessoa é definido em ADM → Participantes.</div>
+        <div class="fi-table-wrap"><table class="fi-table sheet"><thead><tr><th>Etapa</th><th>Quem pede a mudança</th><th>Quem aprova</th><th>Assinaturas</th></tr></thead>
+        <tbody>${S.etapas.map((e, i) => `<tr><td class="nw"><b>${i + 1}. ${esc(e.nome)}</b>${i === S.etapas.length - 1 ? '<div class="muted" style="font-size:.72rem">assina e finaliza</div>' : ''}</td><td>${cel(rt, e)}</td><td>${celAp(rt, e.id)}</td><td>${celN(rt, e.id)}</td></tr>`).join('')}</tbody></table></div>`;
+    }
     body.innerHTML = `${ed ? '' : `<div class="fi-alert" style="margin-bottom:12px">Clique em <b>✎ Editar</b> no topo para alterar.</div>`}${sec('admResp')}
-      <div class="fi-alert" style="margin-bottom:12px">Em cada etapa, defina quem (um papel no projeto ou uma pessoa específica) é responsável por <b>submeter à Direção</b> o pedido de mudança de etapa do cartão. Só essas pessoas (e o admin) veem o botão “Solicitar avanço” no cartão, e o nome aparece no próprio cartão. Quem aprova é sempre a Direção. Na última etapa, o responsável libera para entrega e a Direção assina e finaliza. O papel de cada pessoa é definido em ADM → Participantes.</div>
-      <div class="fi-table-wrap"><table class="fi-table sheet"><thead><tr><th>Etapa</th><th>Módulos — quem pede a mudança</th><th>Processos — quem pede a mudança</th><th>Quem aprova</th></tr></thead>
-      <tbody>${S.etapas.map((e, i) => `<tr><td class="nw"><b>${i + 1}. ${esc(e.nome)}</b></td><td>${cel('modulos', e)}</td><td>${cel('processos', e)}</td><td class="nw">${i === S.etapas.length - 1 ? 'Direção assina e finaliza' : 'Direção'}</td></tr>`).join('')}</tbody></table></div>
+      <div class="subnav">${guias.map(([k, l]) => `<button class="${rt === k ? 'on' : ''}" data-act="resp-tab" data-id="${k}">${l}</button>`).join('')}</div>
+      ${corpo}
       ${ed ? `<button class="fi-btn" style="margin-top:12px" data-act="resp-reset">↺ Voltar ao padrão</button>` : ''}`;
   } else if (s === 'cad-sistemas') {
     const ed = ui.edit && isAdm, dis = ed ? '' : 'disabled';
@@ -2081,7 +2171,7 @@ function vAdm() {
     const perm = (col, a, lb) => `<label class="fi-field"><span class="fi-label">${lb}</span><select class="fi-select" data-cfg="cadastro.${col}.${a}" ${dis}>${[['editores', 'Quem tem acesso Editar'], ['admin', 'Somente admin']].map(([v, l]) => `<option value="${v}"${cfgCad(col)[a] === v ? ' selected' : ''}>${l}</option>`).join('')}</select></label>`;
     const tabela = col => `<div class="fi-card card-pad" style="margin-bottom:16px">
       <h3 style="font-size:1rem;margin-bottom:10px">${col === 'modulos' ? 'Módulos' : 'Processos'}</h3>
-      <div class="fi-grid fi-grid--4" style="margin-bottom:12px">${perm(col, 'criar', 'Quem pode cadastrar')}${perm(col, 'editar', 'Quem pode editar e pedir mudança de etapa')}${perm(col, 'excluir', 'Quem pode excluir')}<label class="fi-field"><span class="fi-label">Quem aprova mudança de etapa</span><select class="fi-select" data-cfg="cadastro.${col}.aprovar" ${dis}>${[['diretores', 'Direção (sponsors) e admin'], ['admin', 'Somente admin']].map(([v, l]) => `<option value="${v}"${cfgCad(col).aprovar === v ? ' selected' : ''}>${l}</option>`).join('')}</select></label></div>
+      <div class="fi-grid fi-grid--4" style="margin-bottom:12px">${perm(col, 'criar', 'Quem pode cadastrar')}${perm(col, 'editar', 'Quem pode editar e pedir mudança de etapa')}${perm(col, 'excluir', 'Quem pode excluir')}<div class="fi-field"><span class="fi-label">Quem aprova mudança de etapa</span><button class="fi-btn bt-s" data-act="adm-go" data-id="responsaveis" data-rt="${col}">Definido em ADM → Responsáveis ↗</button></div></div>
       <div class="fi-table-wrap"><table class="fi-table sheet"><thead><tr><th>Campo</th><th>Pergunta na ficha</th><th>Ajuda (texto de exemplo)</th><th>Mostrar</th><th>Obrigatório</th></tr></thead>
       <tbody>${CAMPOS[col].map(c => { const f = cfgCad(col).campos[c.k] || {}, b = `cadastro.${col}.campos.${c.k}`;
         return `<tr><td class="nw"><b>${esc(c.k === '_vinc' ? VINC[col].rot + ' vinculados' : c.k === '_rel' ? (col === 'modulos' ? 'Módulos' : 'Processos') + ' relacionados' : c.k)}</b><div class="muted" style="font-size:.7rem">${esc(c.tipo)}</div></td>
@@ -2264,7 +2354,7 @@ function openPicker(p, single) {
   modal.innerHTML = `<div class="m-head"><h2>${single ? 'Definir' : 'Adicionar'} pessoa</h2><button class="rm" data-act="close" title="Fechar">✕</button></div>
     <div class="m-body">
       <label class="fi-field"><span class="fi-label">Participante cadastrado</span><select class="fi-select" id="pkSel"><option value="">—</option>${ativos.map(x => `<option value="@${esc(x.id)}">${esc(x.nome)}${papel(x) ? ' — ' + esc(papel(x)) : ''}</option>`).join('')}</select></label>
-      ${soDir ? `<span class="fi-field__help">Sponsor: somente participantes da Direção (ADM → Participantes, papel no projeto do grupo Direção).</span>` : `<label class="fi-field"><span class="fi-label">ou texto livre</span><input class="fi-input" id="pkTxt" placeholder="ex.: Gestor da área, Financeiro, Solicitante"><span class="fi-field__help">Se o texto for o nome de um participante, ele é vinculado ao cadastro.</span></label>`}
+      ${soDir ? `<span class="fi-field__help">Diretor responsável: somente participantes da Direção (ADM → Participantes, papel no projeto do grupo Direção).</span>` : `<label class="fi-field"><span class="fi-label">ou texto livre</span><input class="fi-input" id="pkTxt" placeholder="ex.: Gestor da área, Financeiro, Solicitante"><span class="fi-field__help">Se o texto for o nome de um participante, ele é vinculado ao cadastro.</span></label>`}
     </div>
     <div class="m-foot"><button class="fi-btn" data-act="close">Cancelar</button><button class="fi-btn fi-btn--primary" data-act="pk-ok" data-p="${esc(p)}" data-single="${single ? 1 : ''}">${single ? 'Definir' : 'Adicionar'}</button></div>`;
   modal.showModal(); $('#pkSel').focus();
@@ -2438,7 +2528,7 @@ document.addEventListener('click', async e => {
     case 'vinc-ok': vincOk(el.dataset.col, id); break;
     case 'vinc-rm': vincRm(el.dataset.col, id, el.dataset.o); break;
     case 'vinc-ir': if (modal.open) modal.close(); ui.cheio = null; if (el.dataset.col === 'processos') { ui.procMod = ''; ui.procQ = (byId('processos', id) || {}).nome || ''; ui.procArea = '*'; ui.procSol = ''; ui.procStatus = ''; go('processos'); } else { ui.modQ = (byId('modulos', id) || {}).nome || ''; ui.modPrio = ''; go('modulos'); } break;
-    case 'rm': removeItem(el.dataset.col, id); break;
+    case 'rm': if (['modulos', 'processos', 'ideias'].includes(el.dataset.col) && !isAdm) { notify('Somente o admin exclui cartões.', 'warning'); break; } await removeItem(el.dataset.col, id); if (ui.cheio && ui.cheio.id === id && !byId(ui.cheio.col, id)) { ui.cheio = null; render(); } break;
     case 'ppl-add': openPicker(el.dataset.p, !!el.dataset.single); break;
     case 'ppl-rm': commit(st => { const arr = getP(st, el.dataset.p) || []; arr.splice(+el.dataset.i, 1); }, true); break;
     case 'pk-ok': pickerOk(el.dataset.p, !!el.dataset.single); break;
@@ -2461,7 +2551,8 @@ document.addEventListener('click', async e => {
     case 'tri-analise': commit(st => { const i = st.ideias.find(z => z.id === id); if (!i) return; i.status = 'Em análise'; registrar(st, 'ideias', id, `Colocou em análise a demanda “${i.titulo}”.`, 'Triagem'); }, true); break;
     case 'log-f': ui.logF = id; render(); break;
     case 'log-item-x': ui.logItem = ''; render(); break;
-    case 'adm-go': if (modal.open) modal.close(); ui.admSec = id; go('adm'); break;
+    case 'resp-tab': ui.respTab = id; render(); break;
+    case 'adm-go': if (modal.open) modal.close(); ui.admSec = id; if (el.dataset.rt) ui.respTab = el.dataset.rt; go('adm'); break;
     case 'export-csv': exportCsv(); break;
     case 'export-xlsx': exportXlsx(el.dataset.col); break;
     case 'cx-add': if (isAdm) commit(st => { const c = el.dataset.col; st.camposExtra = st.camposExtra || {}; (st.camposExtra[c] = st.camposExtra[c] || []).push({ id: 'cx' + Date.now().toString(36), pergunta: 'Nova pergunta', ajuda: '', tipo: 'texto', opcoes: '', mostrar: true, obrig: false }); }, true); break;
@@ -2471,7 +2562,7 @@ document.addEventListener('click', async e => {
     case 'sis-ok': sisOk(); break;
     case 'sis-reset': if (await ask('Voltar a ficha de sistemas às perguntas padrão? Os campos adicionais não são apagados.')) commit(st => { st.cadastroSis = { campos: {} }; }, true); break;
     case 'tri-reset': if (await ask('Voltar as perguntas de Novas Demandas ao padrão?')) commit(st => { st.triagem = clone(TRIAGEM_PADRAO); }, true); break;
-    case 'resp-reset': if (await ask('Voltar os responsáveis por etapa ao padrão?')) commit(st => { st.responsaveis = { modulos: Object.assign({}, RESP_PADRAO), processos: Object.assign({}, RESP_PADRAO) }; }, true); break;
+    case 'resp-reset': if (await ask('Voltar responsáveis e aprovadores ao padrão (Direção, 1 assinatura)?')) commit(st => { st.aprovadores = {}; st.responsaveis = { modulos: Object.assign({}, RESP_PADRAO), processos: Object.assign({}, RESP_PADRAO) }; }, true); break;
     case 'cad-reset': if (await ask('Voltar a ficha de módulos e processos às perguntas e permissões padrão? Os campos adicionais não são apagados.')) commit(st => { st.cadastro = cadPadrao(); }, true); break;
     case 'export-json': download(`projeto-fiorella-${today()}.json`, JSON.stringify(S, null, 2), 'application/json'); break;
     case 'import-json': $('#importFile').click(); break;
@@ -2499,6 +2590,10 @@ document.addEventListener('keydown', e => {
 });
 document.addEventListener('change', e => {
   const t = e.target;
+  if (t.dataset && t.dataset.aprov && isAdm) { const [c, et, campo] = t.dataset.aprov.split(':'), v = campo === 'n' ? +t.value : t.value;
+    commit(st => { st.aprovadores = st.aprovadores || {}; st.aprovadores[c] = st.aprovadores[c] || {};
+      const alvo = c === 'ideias' ? st.aprovadores[c] : (st.aprovadores[c][et] = st.aprovadores[c][et] || { quem: 'direcao', n: 1 });
+      alvo[campo] = v; if (campo === 'quem' && aprovGente(v).length < 2) alvo.n = 1; }, true); return; }
   if (t.dataset && t.dataset.resp && isAdm) { const [c, et] = t.dataset.resp.split(':'), v = t.value; commit(st => { st.responsaveis = st.responsaveis || {}; st.responsaveis[c] = Object.assign({}, RESP_PADRAO, st.responsaveis[c] || {}); st.responsaveis[c][et] = v; }, true); return; }
   if (t.dataset && t.dataset.cxp) { const p = t.dataset.cxp, v = t.value; commit(st => { const parts = p.split('.'), it = st[parts[0]].find(z => z.id === parts[1].slice(1)); if (!it) return; it.extra = it.extra || {}; it.extra[parts[3]] = v; }, false); return; }
   if (t.dataset && t.dataset.solic) { const id = t.dataset.solic, v = t.value; commit(st => { const y = st.ideias.find(z => z.id === id); if (!y || (y.porNome || '') === v) return; if (!y.cadPor) y.cadPor = y.porNome; y.porNome = v;
